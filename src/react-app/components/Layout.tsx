@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, Outlet } from 'react-router';
-import { 
-  Menu, 
-  X, 
-  MessageCircle, 
-  Users, 
-  UserCheck, 
-  CreditCard, 
+import { Link, useLocation, Outlet } from 'react-router-dom';
+import {
+  Menu,
+  X,
+  MessageCircle,
+  Users,
+  UserCheck,
+  CreditCard,
   Home,
   BookOpen,
   User
@@ -67,11 +67,10 @@ const Layout: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`group flex items-center px-2 py-2 text-base font-medium rounded-md transition-all duration-200 ${
-                    location.pathname === item.href
+                  className={`group flex items-center px-2 py-2 text-base font-medium rounded-md transition-all duration-200 ${location.pathname === item.href
                       ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900 shadow-sm'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <PulsingHeart color={item.color} size="sm" className="mr-3" />
@@ -96,11 +95,10 @@ const Layout: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                    location.pathname === item.href
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${location.pathname === item.href
                       ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900 shadow-sm'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <PulsingHeart color={item.color} size="sm" className="mr-3" />
                   {item.name}

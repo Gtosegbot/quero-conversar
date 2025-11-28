@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router';
-import { 
-  Send, 
-  Phone, 
-  PhoneOff, 
-  Video as VideoIcon, 
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Send,
+  Phone,
+  PhoneOff,
+  Video as VideoIcon,
   VideoOff,
   Mic,
   MicOff,
@@ -131,13 +131,13 @@ const ChatRoom: React.FC = () => {
   const startVideoCall = async () => {
     try {
       setIsVideoCall(true);
-      
+
       // Get user media
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
-        audio: true 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
       });
-      
+
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
@@ -164,7 +164,7 @@ const ChatRoom: React.FC = () => {
   const endVideoCall = () => {
     setIsVideoCall(false);
     setIsAudioCall(false);
-    
+
     // Stop all tracks
     if (localVideoRef.current?.srcObject) {
       const stream = localVideoRef.current.srcObject as MediaStream;
@@ -228,16 +228,15 @@ const ChatRoom: React.FC = () => {
                 {type === 'professional' ? (professional?.name || 'Profissional') : 'Chat'}
               </h1>
               <div className="flex items-center">
-                <div className={`w-2 h-2 rounded-full mr-2 ${
-                  professional?.is_online ? 'bg-green-500' : 'bg-gray-400'
-                }`}></div>
+                <div className={`w-2 h-2 rounded-full mr-2 ${professional?.is_online ? 'bg-green-500' : 'bg-gray-400'
+                  }`}></div>
                 <p className="text-sm text-gray-600">
                   {professional?.is_online ? 'Online' : 'Offline'} • {professional?.specialty}
                 </p>
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             {!isVideoCall && !isAudioCall && (
               <>
@@ -257,35 +256,33 @@ const ChatRoom: React.FC = () => {
                 </button>
               </>
             )}
-            
+
             {(isVideoCall || isAudioCall) && (
               <div className="flex items-center space-x-2">
                 <button
                   onClick={toggleMute}
-                  className={`p-3 rounded-lg transition-colors ${
-                    isMuted 
-                      ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                  className={`p-3 rounded-lg transition-colors ${isMuted
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+                    }`}
                   title={isMuted ? 'Ativar microfone' : 'Silenciar'}
                 >
                   {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                 </button>
-                
+
                 {isVideoCall && (
                   <button
                     onClick={toggleVideo}
-                    className={`p-3 rounded-lg transition-colors ${
-                      !isVideoOn 
-                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                    className={`p-3 rounded-lg transition-colors ${!isVideoOn
+                        ? 'bg-red-100 text-red-600 hover:bg-red-200'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                      }`}
                     title={isVideoOn ? 'Desativar vídeo' : 'Ativar vídeo'}
                   >
                     {isVideoOn ? <VideoIcon className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
                   </button>
                 )}
-                
+
                 <button
                   onClick={endVideoCall}
                   className="p-3 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
@@ -325,16 +322,14 @@ const ChatRoom: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message) => (
-            <div key={message.id} className={`flex ${
-              message.user_name === 'Você' ? 'justify-end' : 'justify-start'
-            }`}>
-              <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                message.message_type === 'system'
+            <div key={message.id} className={`flex ${message.user_name === 'Você' ? 'justify-end' : 'justify-start'
+              }`}>
+              <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${message.message_type === 'system'
                   ? 'bg-gray-100 text-gray-600 text-center text-sm'
                   : message.user_name === 'Você'
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                     : 'bg-white text-gray-800 shadow-lg'
-              }`}>
+                }`}>
                 {message.message_type === 'chat' && message.user_name !== 'Você' && (
                   <div className="flex items-center mb-2">
                     <PulsingHeart color="text-purple-600" size="sm" />
@@ -344,9 +339,8 @@ const ChatRoom: React.FC = () => {
                   </div>
                 )}
                 <p className="text-sm whitespace-pre-line">{message.content}</p>
-                <p className={`text-xs mt-2 ${
-                  message.user_name === 'Você' ? 'text-purple-100' : 'text-gray-500'
-                }`}>
+                <p className={`text-xs mt-2 ${message.user_name === 'Você' ? 'text-purple-100' : 'text-gray-500'
+                  }`}>
                   {new Date(message.timestamp).toLocaleTimeString()}
                 </p>
               </div>

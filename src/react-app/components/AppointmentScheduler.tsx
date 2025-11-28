@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, DollarSign, Video, User } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import PulsingHeart from './PulsingHeart';
 
 
@@ -34,7 +34,7 @@ const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
   });
 
   const hourlyRate = professional.hourly_rate || professional.hourlyRate || 100;
-  
+
   const durationOptions = [
     { value: 30, label: '30 minutos', price: hourlyRate * 0.5 },
     { value: 45, label: '45 minutos', price: hourlyRate * 0.75 },
@@ -71,7 +71,7 @@ const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
     const slots: TimeSlot[] = [];
     const startHour = 8;
     const endHour = 18;
-    
+
     for (let hour = startHour; hour < endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
@@ -88,11 +88,11 @@ const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
       alert('Por favor, selecione data e horário');
       return;
     }
-    
+
     // Store appointment data and redirect to payment
     const selectedDateTime = `${selectedDate}T${selectedTime}:00`;
     const totalAmount = getSelectedPrice();
-    
+
     sessionStorage.setItem('pendingPayment', JSON.stringify({
       type: 'appointment',
       amount: totalAmount,
@@ -101,11 +101,11 @@ const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
       duration: duration,
       description: `Consulta com ${professional.name}`
     }));
-    
+
     navigate('/payment');
   };
 
-  
+
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr + 'T00:00:00');
@@ -122,8 +122,8 @@ const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
   };
 
   // Remove the payment and confirmation steps as we now redirect to /payment
-  
-  
+
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -134,8 +134,8 @@ const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
             <div className="flex items-center">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mr-4">
                 {professional.avatar ? (
-                  <img 
-                    src={professional.avatar} 
+                  <img
+                    src={professional.avatar}
                     alt={professional.name}
                     className="w-12 h-12 rounded-full object-cover"
                   />
@@ -195,11 +195,10 @@ const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
                   {durationOptions.map((option) => (
                     <label
                       key={option.value}
-                      className={`block p-3 border-2 rounded-lg cursor-pointer transition-colors ${
-                        duration === option.value
+                      className={`block p-3 border-2 rounded-lg cursor-pointer transition-colors ${duration === option.value
                           ? 'border-purple-500 bg-purple-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                        }`}
                     >
                       <input
                         type="radio"
@@ -280,13 +279,12 @@ const AppointmentScheduler: React.FC<AppointmentSchedulerProps> = ({
                           key={slot.time}
                           onClick={() => slot.available && setSelectedTime(slot.time)}
                           disabled={!slot.available}
-                          className={`p-2 text-sm rounded-lg border transition-colors ${
-                            selectedTime === slot.time
+                          className={`p-2 text-sm rounded-lg border transition-colors ${selectedTime === slot.time
                               ? 'border-purple-500 bg-purple-500 text-white'
                               : slot.available
-                              ? 'border-gray-300 hover:border-purple-300 hover:bg-purple-50'
-                              : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                          }`}
+                                ? 'border-gray-300 hover:border-purple-300 hover:bg-purple-50'
+                                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                            }`}
                         >
                           {slot.time}
                         </button>

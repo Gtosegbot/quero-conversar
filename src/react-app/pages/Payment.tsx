@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, CheckCircle, QrCode } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import PaymentCheckout from '../components/PaymentCheckout';
 import PulsingHeart from '../components/PulsingHeart';
 
@@ -24,14 +24,14 @@ const Payment: React.FC = () => {
 
   const handlePaymentSuccess = (result: any) => {
     setPaymentResult(result);
-    
+
     // Clear pending payment
     sessionStorage.removeItem('pendingPayment');
-    
+
     // Update user plan if it's a subscription
     if (paymentData?.type === 'subscription') {
       localStorage.setItem('userPlan', paymentData.planId);
-      
+
       // In a real app, you'd make an API call to update the user's plan
       setTimeout(() => {
         navigate('/dashboard');
@@ -65,24 +65,24 @@ const Payment: React.FC = () => {
               <p className="text-gray-600 mb-6">
                 Use o QR Code abaixo ou o código PIX para completar seu pagamento
               </p>
-              
+
               {paymentResult.qr_code && (
                 <div className="bg-gray-100 p-4 rounded-lg mb-4">
-                  <img 
-                    src={paymentResult.qr_code} 
-                    alt="QR Code PIX" 
+                  <img
+                    src={paymentResult.qr_code}
+                    alt="QR Code PIX"
                     className="mx-auto max-w-48"
                   />
                 </div>
               )}
-              
+
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <p className="text-sm text-blue-800">
                   Após o pagamento, você será redirecionado automaticamente.
                   Este processo pode levar alguns minutos.
                 </p>
               </div>
-              
+
               <button
                 onClick={() => navigate('/dashboard')}
                 className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors"
@@ -99,13 +99,13 @@ const Payment: React.FC = () => {
               <p className="text-gray-600 mb-6">
                 Seu pagamento foi processado com sucesso. Você será redirecionado em alguns segundos.
               </p>
-              
+
               <div className="bg-green-50 p-4 rounded-lg mb-6">
                 <p className="text-sm text-green-800">
                   <strong>ID da Transação:</strong> {paymentResult.payment_id}
                 </p>
               </div>
-              
+
               <button
                 onClick={() => navigate('/dashboard')}
                 className="w-full py-3 px-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-colors"

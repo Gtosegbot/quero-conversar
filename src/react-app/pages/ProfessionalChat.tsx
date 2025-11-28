@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, User, Video, FileText, Clock } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
 
@@ -69,7 +69,7 @@ const ProfessionalChat: React.FC = () => {
       // Try to load from localStorage first for immediate persistence
       const localStorageKey = `professional_chat_${professionalId}`;
       const localMessages = localStorage.getItem(localStorageKey);
-      
+
       if (localMessages) {
         setMessages(JSON.parse(localMessages));
       }
@@ -129,11 +129,11 @@ Como posso te ajudar hoje?`,
 
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
-    
+
     // Save to localStorage immediately for persistence
     const localStorageKey = `professional_chat_${professionalId}`;
     localStorage.setItem(localStorageKey, JSON.stringify(updatedMessages));
-    
+
     const messageToSend = newMessage;
     setNewMessage('');
     setIsLoading(true);
@@ -155,7 +155,7 @@ Como posso te ajudar hoje?`,
       } else {
         console.warn('Backend sync failed, but message saved locally');
       }
-      
+
       // Simulate professional response
       setTimeout(() => {
         const professionalResponse: Message = {
@@ -166,7 +166,7 @@ Como posso te ajudar hoje?`,
           created_at: new Date().toISOString(),
           message_type: 'chat'
         };
-        
+
         setMessages(prev => {
           const newMessages = [...prev, professionalResponse];
           // Save updated messages with professional response
@@ -174,7 +174,7 @@ Como posso te ajudar hoje?`,
           return newMessages;
         });
       }, 2000);
-      
+
     } catch (error) {
       console.error('Error sending message:', error);
       // Message is already saved locally, so no need to remove it
@@ -186,16 +186,16 @@ Como posso te ajudar hoje?`,
   const generateProfessionalResponse = (_userMessage: string): string => {
     const responses = [
       `Obrigado por compartilhar isso comigo. Entendo sua preocupação e gostaria de explorar isso mais profundamente. Que tal agendarmos uma consulta para conversarmos com mais calma?`,
-      
+
       `Percebo que você está passando por um momento desafiador. É normal sentir-se assim, e estou aqui para te apoiar. Podemos trabalhar isso juntos através de estratégias específicas.`,
-      
+
       `Sua situação é compreensível e você não está sozinho(a). Baseado no que você compartilhou, sugiro que conversemos numa consulta individual onde posso dar orientações mais direcionadas.`,
-      
+
       `Agradeço sua confiança em dividir isso comigo. Para oferecer o melhor suporte, seria ideal termos uma sessão focada nisso. Você gostaria de agendar um horário?`,
-      
+
       `Entendo perfeitamente sua situação. Isso que você está sentindo tem tratamento e podemos trabalhar isso juntos. Vou te orientar com algumas estratégias específicas.`
     ];
-    
+
     return responses[Math.floor(Math.random() * responses.length)];
   };
 
@@ -232,7 +232,7 @@ Como posso te ajudar hoje?`,
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            
+
             <div className="flex items-center">
               <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                 <User className="w-6 h-6 text-white" />
@@ -253,7 +253,7 @@ Como posso te ajudar hoje?`,
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <button
               onClick={handleVideoCall}
@@ -262,7 +262,7 @@ Como posso te ajudar hoje?`,
             >
               <Video className="w-5 h-5" />
             </button>
-            
+
             <button
               onClick={handleScheduleAppointment}
               className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors"
@@ -270,7 +270,7 @@ Como posso te ajudar hoje?`,
             >
               <Clock className="w-5 h-5" />
             </button>
-            
+
             <button
               onClick={handleShareDocument}
               className="p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-700 transition-colors"
@@ -286,8 +286,8 @@ Como posso te ajudar hoje?`,
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-sm">
-            💬 Chat profissional seguro • 
-            ⚡ Resposta em até 2 horas • 
+            💬 Chat profissional seguro •
+            ⚡ Resposta em até 2 horas •
             💰 R$ {professional?.hourly_rate}/hora para consultas
           </p>
         </div>
@@ -297,16 +297,14 @@ Como posso te ajudar hoje?`,
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-4">
           {messages.map((message) => (
-            <div key={message.id} className={`flex ${
-              message.user_name === 'Você' ? 'justify-end' : 'justify-start'
-            }`}>
-              <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                message.user_name === 'Você'
+            <div key={message.id} className={`flex ${message.user_name === 'Você' ? 'justify-end' : 'justify-start'
+              }`}>
+              <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${message.user_name === 'Você'
                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
                   : message.message_type === 'system'
-                  ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border'
-                  : 'bg-white text-gray-800 shadow-lg border'
-              }`}>
+                    ? 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border'
+                    : 'bg-white text-gray-800 shadow-lg border'
+                }`}>
                 {message.user_name !== 'Você' && (
                   <div className="flex items-center mb-2">
                     {message.message_type === 'system' ? (
@@ -322,15 +320,14 @@ Como posso te ajudar hoje?`,
                   </div>
                 )}
                 <p className="text-sm whitespace-pre-line">{message.content}</p>
-                <p className={`text-xs mt-2 ${
-                  message.user_name === 'Você' ? 'text-blue-100' : 'text-gray-500'
-                }`}>
+                <p className={`text-xs mt-2 ${message.user_name === 'Você' ? 'text-blue-100' : 'text-gray-500'
+                  }`}>
                   {new Date(message.created_at).toLocaleTimeString()}
                 </p>
               </div>
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="flex justify-start">
               <div className="max-w-xs lg:max-w-md px-4 py-3 rounded-2xl bg-white shadow-lg border">
@@ -344,13 +341,13 @@ Como posso te ajudar hoje?`,
                 </div>
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Shield, FileText, Users, Briefcase, Home } from 'lucide-react';
 
 interface Policy {
@@ -124,7 +124,7 @@ const Policies: React.FC = () => {
                 <strong>Dúvidas:</strong> Se você tiver alguma dúvida sobre nossas políticas, entre em contato através do chat ou comunidade.
               </p>
               <p>
-                <strong>Modificações:</strong> Nos reservamos o direito de modificar estas políticas a qualquer momento. 
+                <strong>Modificações:</strong> Nos reservamos o direito de modificar estas políticas a qualquer momento.
                 Sempre notificaremos os usuários sobre mudanças importantes.
               </p>
             </div>
@@ -136,7 +136,7 @@ const Policies: React.FC = () => {
 
   // Individual policy page
   const currentPolicyType = policyTypes.find(p => p.type === type);
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-6">
       <div className="max-w-4xl mx-auto">

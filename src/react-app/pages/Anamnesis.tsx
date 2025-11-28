@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { Heart, ArrowRight, CheckCircle } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
 import { db } from '../../firebase-config';
