@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Landing from "@/react-app/pages/Landing";
 import Layout from "@/react-app/components/Layout";
 import Anamnesis from "@/react-app/pages/Anamnesis";
@@ -49,7 +49,7 @@ export default function App() {
           <Route index element={<Community />} />
           <Route path=":roomId" element={<CommunityChatRoom />} />
         </Route>
-        
+
         <Route path="/professionals" element={<Layout />}>
           <Route index element={<Professionals />} />
         </Route>
