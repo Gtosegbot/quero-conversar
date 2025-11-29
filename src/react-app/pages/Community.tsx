@@ -223,7 +223,20 @@ const Community: React.FC = () => {
 
         {/* Create Room Button */}
         <div className="fixed bottom-6 right-6">
-          <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110">
+          <button
+            onClick={() => {
+              const user = JSON.parse(localStorage.getItem('user') || '{}');
+              const isSuperAdmin = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'].some(email => user.email?.includes(email));
+
+              if (isSuperAdmin) {
+                // TODO: Open Create Room Modal
+                alert('Funcionalidade de criar sala (Admin) - Em breve');
+              } else {
+                alert('A criação de novas salas é exclusiva para Administradores. Por favor, solicite a criação de uma sala através do nosso contato: contato@queroconversar.shop');
+              }
+            }}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+          >
             <Plus className="w-6 h-6" />
           </button>
         </div>

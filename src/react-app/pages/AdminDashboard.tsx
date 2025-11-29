@@ -26,6 +26,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../firebase-config';
 import AdminDataManagement from './AdminDataManagement';
+import KnowledgeUpload from '../components/KnowledgeUpload';
 import { SimpleBarChart, SimpleLineChart } from '../components/ChartComponents';
 
 interface TaskTemplate {
@@ -143,6 +144,15 @@ const CuratorTab: React.FC = () => {
             <p className="text-sm text-gray-400">Clique em "Analisar Agora" para ler as conversas da comunidade.</p>
           </div>
         )}
+      </div>
+
+      {/* Section 1.5: Knowledge Upload (Direct Ingestion) */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+          <FileText className="w-6 h-6 text-green-600 mr-2" />
+          Upload de Conhecimento (RAG)
+        </h2>
+        <KnowledgeUpload />
       </div>
 
       {/* Section 2: Curator Studio (The Brain) */}

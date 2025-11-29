@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import PulsingHeart from '../PulsingHeart';
 import PodcastGallery from '../PodcastGallery';
-import KnowledgeUpload from '../KnowledgeUpload';
+
 import CelebrationModal from '../CelebrationModal';
 import { db } from '../../../firebase-config';
 import { doc, onSnapshot, collection, query, where, getDocs, increment, setDoc } from 'firebase/firestore';
@@ -191,8 +191,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, userStats }) => {
                     {/* Daily Podcast Gallery - Prime Time Feature */}
                     <PodcastGallery />
 
-                    {/* Knowledge Upload Section - Admin Only */}
-                    {userStats.role === 'admin' && <KnowledgeUpload />}
+
 
                     {/* Quick Actions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

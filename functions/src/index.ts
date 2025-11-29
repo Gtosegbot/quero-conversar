@@ -269,16 +269,18 @@ export const onNewMessage = functions.firestore
                 }
             }
 
-            // 3. Retrieve History
+            // 3. Retrieve History (excluding current message)
             const historySnap = await db.collection(`conversations/${conversationId}/messages`)
                 .orderBy("createdAt", "asc")
-                .limitToLast(10)
+                .limitToLast(11) // Fetch 11 to ensure we have context even if we filter one out
                 .get();
 
-            const history = historySnap.docs.map(doc => ({
-                role: doc.data().type === "user" ? "user" : "model",
-                parts: [{ text: doc.data().content }]
-            }));
+            const history = historySnap.docs
+                .filter(doc => doc.id !== snap.id) // Exclude current message
+                .map(doc => ({
+                    role: doc.data().type === "user" ? "user" : "model",
+                    parts: [{ text: doc.data().content }]
+                }));
 
             // 4. Generate Response
             const chat = model.startChat({
@@ -290,7 +292,7 @@ export const onNewMessage = functions.firestore
             });
 
             const result = await chat.sendMessage(message.content);
-            const response = result.response.text();
+            const response = result.response.candidates[0].content.parts[0].text;
 
             await db.collection(`conversations/${conversationId}/messages`).add({
                 type: "bot",
@@ -301,7 +303,6 @@ export const onNewMessage = functions.firestore
         } catch (error) {
             console.error("Error generating response:", error);
         }
-    });
     });
 
 export * from './payment-functions';
