@@ -137,23 +137,6 @@ const Chat: React.FC = () => {
         createdAt: serverTimestamp()
       });
 
-      // 2. Call RAG Service (Dra. Clara)
-      // Convert current messages to history format for Gemini
-      const history = messages.map(m => ({
-        role: m.type === 'user' ? 'user' : 'model',
-        parts: [{ text: m.content }]
-      }));
-
-      const { RAGService } = await import('../../services/RAGService');
-      const response = await RAGService.sendMessage(messageContent, history);
-
-      // 3. Add Bot Response to Firestore
-      await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
-        type: 'bot',
-        content: response,
-        createdAt: serverTimestamp()
-      });
-
       setIsLoading(false);
 
     } catch (error) {
