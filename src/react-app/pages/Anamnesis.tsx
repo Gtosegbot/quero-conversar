@@ -273,21 +273,7 @@ export default function Anamnesis() {
               </div>
             ))}
 
-            {/* Current question */}
-            {currentQuestion_text && !isCompleted && (
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center animate-pulse">
-                    <Heart className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-gray-800 font-medium leading-relaxed">
-                      {currentQuestion_text}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+
 
             <div ref={messagesEndRef} />
           </div>
