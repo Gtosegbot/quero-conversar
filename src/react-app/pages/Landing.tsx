@@ -429,7 +429,7 @@ const Landing: React.FC = () => {
                 <strong>Contato:</strong> <a href="mailto:contato@queroconversar.shop" className="text-purple-400 hover:text-purple-300">contato@queroconversar.shop</a>
               </p>
             </div>
-            <div>
+            <div id="termos">
               <h3 className="text-lg font-semibold mb-4">Links Úteis</h3>
               <ul className="space-y-2">
                 <li><Link to="/auth?redirect=/terms" className="text-gray-400 hover:text-white transition-colors">Termos de Serviço</Link></li>

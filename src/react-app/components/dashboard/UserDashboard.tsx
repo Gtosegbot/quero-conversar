@@ -191,8 +191,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, userStats }) => {
                     {/* Daily Podcast Gallery - Prime Time Feature */}
                     <PodcastGallery />
 
-                    {/* Knowledge Upload Section */}
-                    <KnowledgeUpload />
+                    {/* Knowledge Upload Section - Admin Only */}
+                    {userStats.role === 'admin' && <KnowledgeUpload />}
 
                     {/* Quick Actions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
