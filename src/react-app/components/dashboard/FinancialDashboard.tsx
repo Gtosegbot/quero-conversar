@@ -1,13 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, CreditCard, Download, Loader2 } from 'lucide-react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../../firebase-config';
-import { calculateSplit, formatCurrency, UserRole } from '../../../services/FinancialService';
-
-interface FinancialDashboardProps {
-    user: any;
-    role: UserRole;
-    isModerator: boolean;
 }
 
 interface Transaction {

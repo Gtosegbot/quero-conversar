@@ -14,7 +14,7 @@ import PulsingHeart from '../PulsingHeart';
 import PodcastGallery from '../PodcastGallery';
 import KnowledgeUpload from '../KnowledgeUpload';
 import CelebrationModal from '../CelebrationModal';
-import { db } from '../../firebase-config';
+import { db } from '../../../firebase-config';
 import { doc, onSnapshot, collection, query, where, getDocs, increment, setDoc } from 'firebase/firestore';
 
 interface DailyTask {

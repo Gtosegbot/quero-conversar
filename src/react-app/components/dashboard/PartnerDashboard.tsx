@@ -3,18 +3,6 @@ import {
     Package,
     Video,
     BarChart2,
-    Plus,
-    Trash2,
-    Edit,
-    Loader2
-} from 'lucide-react';
-import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../../../firebase-config';
-import ProductUploadForm from './ProductUploadForm';
-import ContentUploadForm from './ContentUploadForm';
-
-interface PartnerDashboardProps {
-    user: any;
     userStats: any;
 }
 
@@ -92,8 +80,8 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
                     <button
                         onClick={() => setActiveTab('products')}
                         className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'products'
-                                ? 'text-orange-600 border-b-2 border-orange-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-orange-600 border-b-2 border-orange-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <div className="flex items-center">
@@ -104,8 +92,8 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
                     <button
                         onClick={() => setActiveTab('content')}
                         className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'content'
-                                ? 'text-orange-600 border-b-2 border-orange-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-orange-600 border-b-2 border-orange-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <div className="flex items-center">
@@ -116,8 +104,8 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
                     <button
                         onClick={() => setActiveTab('stats')}
                         className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'stats'
-                                ? 'text-orange-600 border-b-2 border-orange-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-orange-600 border-b-2 border-orange-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <div className="flex items-center">

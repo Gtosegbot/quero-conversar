@@ -1,14 +1,3 @@
-import React, { useState } from 'react';
-import { Upload, X, Loader2, DollarSign, Package } from 'lucide-react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from '../../../firebase-config';
-
-interface ProductUploadFormProps {
-    userId: string;
-    onSuccess: () => void;
-    onCancel: () => void;
-}
 
 const ProductUploadForm: React.FC<ProductUploadFormProps> = ({ userId, onSuccess, onCancel }) => {
     const [isLoading, setIsLoading] = useState(false);

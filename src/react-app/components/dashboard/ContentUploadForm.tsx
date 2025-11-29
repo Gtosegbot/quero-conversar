@@ -1,13 +1,3 @@
-import React, { useState } from 'react';
-import { Video, X, Loader2, Link as LinkIcon } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../firebase-config';
-
-interface ContentUploadFormProps {
-    userId: string;
-    onSuccess: () => void;
-    onCancel: () => void;
-}
 
 const ContentUploadForm: React.FC<ContentUploadFormProps> = ({ userId, onSuccess, onCancel }) => {
     const [isLoading, setIsLoading] = useState(false);

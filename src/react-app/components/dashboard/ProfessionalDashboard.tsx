@@ -1,52 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar as CalendarIcon,
-    Video,
-    Users,
-    Settings,
-    Loader2
-} from 'lucide-react';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
-import { db } from '../../../firebase-config';
-import ScheduleManager from '../scheduling/ScheduleManager';
 
-interface ProfessionalDashboardProps {
-    user: any;
-    userStats: any;
-}
-
-const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, userStats }) => {
+const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({user, userStats}) => {
     const [activeTab, setActiveTab] = useState<'schedule' | 'appointments' | 'settings'>('schedule');
-    const [appointments, setAppointments] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+        const [appointments, setAppointments] = useState<any[]>([]);
+        const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!user) return;
 
         // Fetch Appointments
         const q = query(
-            collection(db, 'appointments'),
-            where('professionalId', '==', user.uid),
-            orderBy('date', 'asc')
+        collection(db, 'appointments'),
+        where('professionalId', '==', user.uid),
+        orderBy('date', 'asc')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            setIsLoading(false);
+        setIsLoading(false);
         });
 
         return () => unsubscribe();
     }, [user]);
 
-    if (isLoading) {
+        if (isLoading) {
         return (
-            <div className="flex justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            </div>
+        <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        </div>
         );
     }
 
-    return (
+        return (
         <div className="space-y-8">
             {/* Header */}
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -70,8 +57,8 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
                     <button
                         onClick={() => setActiveTab('schedule')}
                         className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'schedule'
-                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <div className="flex items-center">
@@ -82,8 +69,8 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
                     <button
                         onClick={() => setActiveTab('appointments')}
                         className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'appointments'
-                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <div className="flex items-center">
@@ -94,8 +81,8 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
                     <button
                         onClick={() => setActiveTab('settings')}
                         className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'settings'
-                                ? 'text-blue-600 border-b-2 border-blue-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <div className="flex items-center">
@@ -169,7 +156,7 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
                 )}
             </div>
         </div>
-    );
+        );
 };
 
-export default ProfessionalDashboard;
+        export default ProfessionalDashboard;
