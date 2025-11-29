@@ -11,7 +11,7 @@ const storage = admin.storage();
 
 // Initialize Vertex AI
 const vertexAI = new VertexAI({ project: process.env.GCLOUD_PROJECT || "quero-conversar-app", location: "us-central1" });
-const model = vertexAI.preview.getGenerativeModel({ model: "gemini-1.5-pro" });
+const model = vertexAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
 // Initialize TTS Client
 const ttsClient = new TextToSpeechClient();

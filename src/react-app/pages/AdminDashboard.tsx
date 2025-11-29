@@ -1199,6 +1199,11 @@ const AdminDashboard: React.FC = () => {
         {activeTab === 'data-management' && (
           <AdminDataManagement />
         )}
+
+        {/* Curator Tab */}
+        {activeTab === 'curator' && (
+          <CuratorTab />
+        )}
       </div>
     </div>
   );
