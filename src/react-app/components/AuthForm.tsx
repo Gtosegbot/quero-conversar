@@ -53,13 +53,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       }
 
       // Check anamnesis status
-      const anamnesisRef = doc(db, 'users', user.uid, 'anamnesis', 'initial');
-      const anamnesisSnap = await getDoc(anamnesisRef);
-
-      if (anamnesisSnap.exists() && anamnesisSnap.data().completed) {
+      if (userData.anamnesisCompleted) {
         navigate('/dashboard');
       } else {
-        navigate('/anamnesis');
+        // Double check if it was just created (fallback)
+        const anamnesisRef = doc(db, 'users', user.uid, 'anamnesis', 'initial');
+        const anamnesisSnap = await getDoc(anamnesisRef);
+
+        if (anamnesisSnap.exists()) {
+          // Update user doc if missing flag
+          await setDoc(userRef, { anamnesisCompleted: true }, { merge: true });
+          navigate('/dashboard');
+        } else {
+          navigate('/anamnesis');
+        }
       }
 
     } catch (err: any) {

@@ -11,7 +11,8 @@ import {
   serverTimestamp,
   where,
   limit,
-  getDocs
+  getDocs,
+  doc
 } from 'firebase/firestore';
 
 interface Message {
@@ -36,9 +37,9 @@ const Chat: React.FC = () => {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const [userContext] = useState<UserContext>({
+  const [userContext, setUserContext] = useState<UserContext>({
     name: 'Usuário',
-    dailyInteractions: 0, // TODO: Fetch from DB
+    dailyInteractions: 0,
     maxDailyInteractions: 15,
     plan: 'free'
   });
@@ -56,8 +57,25 @@ const Chat: React.FC = () => {
     const userId = getUserId();
     if (!userId) return;
 
+    // 1. Listen to User Profile (Plan & Role)
+    const userRef = doc(db, 'users', userId);
+    const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const isPremium = data.plan === 'premium' || data.plan === 'enterprise' || data.role === 'admin';
+
+        setUserContext({
+          name: data.name || 'Usuário',
+          dailyInteractions: data.dailyInteractions || 0,
+          maxDailyInteractions: isPremium ? 9999 : 15,
+          plan: isPremium ? 'premium' : 'free'
+        });
+      }
+    });
+
+    // 2. Setup Conversation
     const setupConversation = async () => {
-      // 1. Check for existing active conversation
+      // Check for existing active conversation
       const conversationsRef = collection(db, 'conversations');
       const q = query(
         conversationsRef,
@@ -84,11 +102,11 @@ const Chat: React.FC = () => {
 
       setConversationId(convId);
 
-      // 2. Listen to messages
+      // Listen to messages
       const messagesRef = collection(db, 'conversations', convId, 'messages');
       const messagesQuery = query(messagesRef, orderBy('createdAt', 'asc'));
 
-      const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
         const loadedMessages: Message[] = snapshot.docs.map(doc => ({
           id: doc.id,
           type: doc.data().type,
@@ -101,10 +119,16 @@ const Chat: React.FC = () => {
         setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       });
 
-      return () => unsubscribe();
+      return () => unsubscribeMessages();
     };
 
-    setupConversation();
+    let cleanupConversation: (() => void) | undefined;
+    setupConversation().then(cleanup => { cleanupConversation = cleanup; });
+
+    return () => {
+      unsubscribeUser();
+      if (cleanupConversation) cleanupConversation();
+    };
   }, []);
 
   const handleSendMessage = async () => {

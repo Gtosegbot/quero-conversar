@@ -39,7 +39,9 @@ const Layout: React.FC = () => {
     { name: 'Profissionais', href: '/professionals', icon: UserCheck, color: 'text-orange-500' },
     { name: 'Meu Perfil', href: '/profile', icon: User, color: 'text-pink-500' },
     { name: 'Planos', href: '/plans', icon: CreditCard, color: 'text-indigo-500' },
-    { name: 'Documentação', href: '/docs', icon: BookOpen, color: 'text-teal-500' },
+    { name: 'Galeria', href: '/gallery', icon: BookOpen, color: 'text-teal-500' },
+    { name: 'Upload', href: '/upload', icon: BookOpen, color: 'text-red-500' },
+    { name: 'Documentação', href: '/docs', icon: BookOpen, color: 'text-gray-500' },
   ];
 
   return (
@@ -68,8 +70,8 @@ const Layout: React.FC = () => {
                   key={item.name}
                   to={item.href}
                   className={`group flex items-center px-2 py-2 text-base font-medium rounded-md transition-all duration-200 ${location.pathname === item.href
-                      ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900 shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900 shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   onClick={() => setSidebarOpen(false)}
                 >
@@ -96,8 +98,8 @@ const Layout: React.FC = () => {
                   key={item.name}
                   to={item.href}
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-all duration-200 ${location.pathname === item.href
-                      ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900 shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-900 shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <PulsingHeart color={item.color} size="sm" className="mr-3" />

@@ -88,7 +88,7 @@ const Landing: React.FC = () => {
               <a href="#como-funciona" className="text-gray-600 hover:text-purple-600 transition-colors">Como Funciona</a>
               <a href="#profissionais" className="text-gray-600 hover:text-purple-600 transition-colors">Para Profissionais</a>
               <a href="#termos" className="text-gray-600 hover:text-purple-600 transition-colors">Termos</a>
-              <a href="mailto:contato@queroconversar.shop" className="text-gray-600 hover:text-purple-600 transition-colors">Contato</a>
+              <a href="#contato" className="text-gray-600 hover:text-purple-600 transition-colors">Contato</a>
             </nav>
             <Link
               to="/auth"
@@ -414,7 +414,7 @@ const Landing: React.FC = () => {
       </section>
 
       {/* Footer */}
-      <footer id="termos" className="bg-gray-900 text-white py-16">
+      <footer id="contato" className="bg-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
