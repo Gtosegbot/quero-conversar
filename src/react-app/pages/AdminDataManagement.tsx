@@ -109,8 +109,9 @@ const AdminDataManagement: React.FC = () => {
           </h2>
         </div>
         <p className="text-red-800 mb-4">
-          Esta seção permite remover dados fictícios/demonstrativos do sistema. 
+          Esta seção permite remover dados fictícios/demonstrativos do sistema.
           Use com cuidado - as exclusões são permanentes.
+          Esta seção exibe os dados reais do banco de dados. Use com extremo cuidado.
         </p>
       </div>
 
@@ -134,13 +135,13 @@ const AdminDataManagement: React.FC = () => {
                 const tasks = await import('../../data/tasks.json');
                 const { collection, addDoc, getDocs, query, where } = await import('firebase/firestore');
                 const { db } = await import('../../../firebase-config');
-                
+
                 const templatesRef = collection(db, 'task_templates');
-                
+
                 // Check if already seeded to avoid duplicates (simple check)
                 const q = query(templatesRef, where('title', '==', tasks.default[0].title));
                 const snap = await getDocs(q);
-                
+
                 if (!snap.empty) {
                   alert('Parece que as tarefas já foram importadas!');
                   setLoading(false);
@@ -177,7 +178,7 @@ const AdminDataManagement: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Profissionais Mock ({mockData.professionals.length})
+              Profissionais ({mockData.professionals.length})
             </h3>
             <p className="text-gray-600">Profissionais fictícios para demonstração</p>
           </div>
@@ -207,7 +208,7 @@ const AdminDataManagement: React.FC = () => {
             </div>
           ))}
           {mockData.professionals.length === 0 && (
-            <p className="text-gray-500 text-center py-4">Nenhum profissional mock encontrado</p>
+            <p className="text-gray-500 text-center py-4">Nenhum profissional encontrado</p>
           )}
         </div>
       </div>
@@ -217,7 +218,7 @@ const AdminDataManagement: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Usuários Mock ({mockData.users.length})
+              Usuários ({mockData.users.length})
             </h3>
             <p className="text-gray-600">Usuários fictícios para demonstração</p>
           </div>
@@ -247,7 +248,7 @@ const AdminDataManagement: React.FC = () => {
             </div>
           ))}
           {mockData.users.length === 0 && (
-            <p className="text-gray-500 text-center py-4">Nenhum usuário mock encontrado</p>
+            <p className="text-gray-500 text-center py-4">Nenhum usuário encontrado</p>
           )}
         </div>
       </div>
@@ -257,7 +258,7 @@ const AdminDataManagement: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Consultas Mock ({mockData.appointments.length})
+              Consultas ({mockData.appointments.length})
             </h3>
             <p className="text-gray-600">Consultas fictícias para demonstração</p>
           </div>
@@ -289,7 +290,7 @@ const AdminDataManagement: React.FC = () => {
             </div>
           ))}
           {mockData.appointments.length === 0 && (
-            <p className="text-gray-500 text-center py-4">Nenhuma consulta mock encontrada</p>
+            <p className="text-gray-500 text-center py-4">Nenhuma consulta encontrada</p>
           )}
         </div>
       </div>
@@ -299,7 +300,7 @@ const AdminDataManagement: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Documentos Mock ({mockData.documents.length})
+              Conteúdos/Documentos ({mockData.documents.length})
             </h3>
             <p className="text-gray-600">Documentos fictícios para demonstração</p>
           </div>
@@ -317,8 +318,8 @@ const AdminDataManagement: React.FC = () => {
           {mockData.documents.map((doc) => (
             <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div>
-                <span className="font-medium">{doc.original_filename}</span>
-                <span className="text-gray-600 ml-2">({doc.document_type})</span>
+                <span className="font-medium">{doc.title || doc.original_filename}</span>
+                <span className="text-gray-600 ml-2">({doc.type || doc.document_type})</span>
               </div>
               <button
                 onClick={() => handleDeleteSpecific('documents', doc.id)}
@@ -329,7 +330,7 @@ const AdminDataManagement: React.FC = () => {
             </div>
           ))}
           {mockData.documents.length === 0 && (
-            <p className="text-gray-500 text-center py-4">Nenhum documento mock encontrado</p>
+            <p className="text-gray-500 text-center py-4">Nenhum documento encontrado</p>
           )}
         </div>
       </div>
@@ -350,7 +351,7 @@ const AdminDataManagement: React.FC = () => {
             <AlertTriangle className="w-5 h-5 mr-2" />
             Remover Todos os Dados Mock
           </button>
-          
+
           <button
             onClick={loadMockData}
             disabled={loading}
