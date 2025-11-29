@@ -59,6 +59,13 @@ const CommunityChatRoom: React.FC = () => {
         })) as Message[];
         setMessages(loadedMessages);
         setIsLoading(false);
+      }, (error) => {
+        console.error("Error fetching messages:", error);
+        setIsLoading(false);
+        // If the error is about missing index, we might want to alert the user or log it clearly
+        if (error.message.includes('index')) {
+          console.error("Missing Firestore Index. Check console for link to create it.");
+        }
       });
 
       return () => unsubscribe();
