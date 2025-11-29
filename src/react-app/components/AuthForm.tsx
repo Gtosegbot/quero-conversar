@@ -30,6 +30,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       let userData;
 
       if (!userSnap.exists()) {
+        // Check for referral code in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const referralId = urlParams.get('ref');
+
         // Create new user document
         userData = {
           uid: user.uid,
@@ -38,7 +42,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
           photoURL: user.photoURL,
           createdAt: new Date().toISOString(),
           plan: 'free',
-          role: 'user'
+          role: 'user',
+          referredBy: referralId || null // Store referrer ID
         };
         await setDoc(userRef, userData);
       } else {

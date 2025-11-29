@@ -305,5 +305,34 @@ export const onNewMessage = functions.firestore
         }
     });
 
+/**
+ * 5. Referral System (Award XP)
+ */
+export const onUserCreated = functions.firestore
+    .document("users/{userId}")
+    .onCreate(async (snap, context) => {
+        const newUser = snap.data();
+        const referrerId = newUser.referredBy;
+
+        if (!referrerId) return null;
+
+        try {
+            // Award 50 XP to the referrer
+            const referrerRef = db.collection("users").doc(referrerId);
+
+            await referrerRef.update({
+                energyPoints: admin.firestore.FieldValue.increment(50),
+                // Optional: Add notification logic here
+            });
+
+            console.log(`Awarded 50 XP to ${referrerId} for referring ${newUser.uid}`);
+            return { success: true };
+
+        } catch (error) {
+            console.error("Error awarding referral XP:", error);
+            return null;
+        }
+    });
+
 export * from './payment-functions';
 export * from './rag-functions';

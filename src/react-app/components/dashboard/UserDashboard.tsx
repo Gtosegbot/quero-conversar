@@ -200,8 +200,6 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, userStats }) => {
                     {/* Daily Podcast Gallery - Prime Time Feature */}
                     <PodcastGallery />
 
-
-
                     {/* Quick Actions */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Link
@@ -254,10 +252,9 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, userStats }) => {
 
                         <button
                             onClick={() => {
-                                // Simulate referral for now or open modal
-                                const referralLink = `https://queroconversar.shop/invite/${user.uid}`;
+                                const referralLink = `${window.location.origin}/auth?ref=${user.uid}`;
                                 navigator.clipboard.writeText(referralLink);
-                                alert(`Link de indicação copiado: ${referralLink}\n\n(Simulação: Ao indicar, você ganhará 50 XP!)`);
+                                alert(`Link de indicação copiado: ${referralLink}\n\n(Compartilhe este link para ganhar XP quando seus amigos se cadastrarem!)`);
                             }}
                             className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-left"
                         >
@@ -326,138 +323,155 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, userStats }) => {
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm font-medium text-purple-600">
                                                     +{task.points} pontos
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Right Column - Stats */}
-                                    <div className="space-y-8">
-                                        {/* Energy Level & Phase */}
-                                        <div className="bg-white rounded-xl shadow-lg p-6">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center">
-                                                    {/* Dynamic Heart Color based on Phase */}
-                                                    <PulsingHeart
-                                                        color={
-                                                            userStats.level >= 10 ? 'text-red-600' :
-                                                                userStats.level >= 5 ? 'text-purple-600' :
-                                                                    'text-blue-500'
-                                                        }
-                                                        size="md"
-                                                    />
-                                                    <div className="ml-3">
-                                                        <span className="text-lg font-semibold text-gray-900">Nível {userStats.level}</span>
-                                                        <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{
-                                                            color: userStats.level >= 10 ? '#dc2626' : userStats.level >= 5 ? '#9333ea' : '#3b82f6'
-                                                        }}>
-                                                            {userStats.level >= 10 ? 'Fase 3: Líder' :
-                                                                userStats.level >= 5 ? 'Fase 2: Guardião' :
-                                                                    'Fase 1: Iniciante'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <span className="text-2xl font-bold text-gray-700">{userStats.energyPoints} XP</span>
-                                            </div>
-
-                                            <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                                                <div
-                                                    className={`h-3 rounded-full transition-all duration-300 ${userStats.level >= 10 ? 'bg-gradient-to-r from-red-500 to-red-600' :
-                                                        userStats.level >= 5 ? 'bg-gradient-to-r from-purple-500 to-purple-600' :
-                                                            'bg-gradient-to-r from-blue-400 to-blue-500'
-                                                        }`}
-                                                    style={{ width: `${energyPercentage}%` }}
-                                                ></div>
-                                            </div>
-                                            <p className="text-sm text-gray-600 mb-4">
-                                                {userStats.energyPoints} / {userStats.maxEnergy} para o próximo nível
-                                            </p>
-
-                                            {/* Phase 3 Benefit: Request Moderation */}
-                                            {userStats.level >= 10 && (
-                                                <div className="mt-4 pt-4 border-t border-gray-100">
-                                                    <p className="text-sm text-gray-600 mb-2">
-                                                        🏆 <strong>Parabéns!</strong> Você atingiu a Fase 3. Sua experiência pode ajudar outros.
-                                                    </p>
+                                                </span>
+                                                {!task.completed && (
                                                     <button
-                                                        onClick={() => alert('Sua solicitação para se tornar Moderador foi enviada para análise!')}
-                                                        className="w-full py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors flex items-center justify-center"
+                                                        onClick={() => completeTask(task.id)}
+                                                        className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-3 py-1 rounded-md text-sm hover:from-purple-700 hover:to-pink-700 transition-all duration-200"
                                                     >
-                                                        <Shield className="w-4 h-4 mr-2" />
-                                                        Solicitar ser Moderador
+                                                        Concluir
                                                     </button>
-                                                </div>
-                                            )}
+                                                )}
+                                            </div>
                                         </div>
-
-                                        {/* Daily Interactions */}
-                                        <div className="bg-white rounded-xl shadow-lg p-6">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center">
-                                                    <PulsingHeart color="text-blue-500" size="md" />
-                                                    <span className="ml-3 text-lg font-semibold text-gray-900">Interações Hoje</span>
-                                                </div>
-                                                <span className="text-2xl font-bold text-blue-600">
-                                                    {userStats.dailyInteractions}/{userStats.maxDailyInteractions}
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                                                <div
-                                                    className="bg-gradient-to-r from-blue-400 to-cyan-500 h-3 rounded-full transition-all duration-300"
-                                                    style={{ width: `${interactionsPercentage}%` }}
-                                                ></div>
-                                            </div>
-                                            <p className="text-sm text-gray-600">
-                                                {userStats.plan === 'free' ? 'Plano Grátis' : 'Plano Premium'}
-                                            </p>
-                                        </div>
-
-                                        {/* Tasks Completed */}
-                                        <div className="bg-white rounded-xl shadow-lg p-6">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="flex items-center">
-                                                    <PulsingHeart color="text-purple-500" size="md" />
-                                                    <span className="ml-3 text-lg font-semibold text-gray-900">Tarefas Hoje</span>
-                                                </div>
-                                                <span className="text-2xl font-bold text-purple-600">
-                                                    {completedTasks}/{dailyTasks.length}
-                                                </span>
-                                            </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                                                <div
-                                                    className="bg-gradient-to-r from-purple-400 to-pink-500 h-3 rounded-full transition-all duration-300"
-                                                    style={{ width: `${(completedTasks / dailyTasks.length) * 100}%` }}
-                                                ></div>
-                                            </div>
-                                            <p className="text-sm text-gray-600">
-                                                Continue assim! 💪
-                                            </p>
-                                        </div>
-
-                                        {/* Upgrade Banner for Free Users */}
-                                        {userStats.plan === 'free' && userStats.dailyInteractions >= userStats.maxDailyInteractions * 0.8 && (
-                                            <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <h3 className="text-xl font-bold mb-2">Está gostando da experiência?</h3>
-                                                        <p className="text-purple-100 mb-4">
-                                                            Você está próximo do limite diário. Considere fazer upgrade para acesso ilimitado!
-                                                        </p>
-                                                        <Link
-                                                            to="/plans"
-                                                            className="inline-flex items-center bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-                                                        >
-                                                            Ver Planos
-                                                            <ArrowRight className="w-4 h-4 ml-2" />
-                                                        </Link>
-                                                    </div>
-                                                    <PulsingHeart color="text-pink-300" size="xl" />
-                                                </div>
-                                            </div>
+                                        {task.completed && (
+                                            <CheckCircle className="w-6 h-6 text-green-500 ml-2" />
                                         )}
                                     </div>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column - Stats */}
+                <div className="space-y-8">
+                    {/* Energy Level & Phase */}
+                    <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                                {/* Dynamic Heart Color based on Phase */}
+                                <PulsingHeart
+                                    color={
+                                        userStats.level >= 10 ? 'text-red-600' :
+                                            userStats.level >= 5 ? 'text-purple-600' :
+                                                'text-blue-500'
+                                    }
+                                    size="md"
+                                />
+                                <div className="ml-3">
+                                    <span className="text-lg font-semibold text-gray-900">Nível {userStats.level}</span>
+                                    <p className="text-xs font-bold uppercase tracking-wider mt-0.5" style={{
+                                        color: userStats.level >= 10 ? '#dc2626' : userStats.level >= 5 ? '#9333ea' : '#3b82f6'
+                                    }}>
+                                        {userStats.level >= 10 ? 'Fase 3: Líder' :
+                                            userStats.level >= 5 ? 'Fase 2: Guardião' :
+                                                'Fase 1: Iniciante'}
+                                    </p>
+                                </div>
+                            </div>
+                            <span className="text-2xl font-bold text-gray-700">{userStats.energyPoints} XP</span>
+                        </div>
+
+                        <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                            <div
+                                className={`h-3 rounded-full transition-all duration-300 ${userStats.level >= 10 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                                    userStats.level >= 5 ? 'bg-gradient-to-r from-purple-500 to-purple-600' :
+                                        'bg-gradient-to-r from-blue-400 to-blue-500'
+                                    }`}
+                                style={{ width: `${energyPercentage}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-4">
+                            {userStats.energyPoints} / {userStats.maxEnergy} para o próximo nível
+                        </p>
+
+                        {/* Phase 3 Benefit: Request Moderation */}
+                        {userStats.level >= 10 && (
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                <p className="text-sm text-gray-600 mb-2">
+                                    🏆 <strong>Parabéns!</strong> Você atingiu a Fase 3. Sua experiência pode ajudar outros.
+                                </p>
+                                <button
+                                    onClick={() => alert('Sua solicitação para se tornar Moderador foi enviada para análise!')}
+                                    className="w-full py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors flex items-center justify-center"
+                                >
+                                    <Shield className="w-4 h-4 mr-2" />
+                                    Solicitar ser Moderador
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Daily Interactions */}
+                    <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                                <PulsingHeart color="text-blue-500" size="md" />
+                                <span className="ml-3 text-lg font-semibold text-gray-900">Interações Hoje</span>
+                            </div>
+                            <span className="text-2xl font-bold text-blue-600">
+                                {userStats.dailyInteractions}/{userStats.maxDailyInteractions}
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                            <div
+                                className="bg-gradient-to-r from-blue-400 to-cyan-500 h-3 rounded-full transition-all duration-300"
+                                style={{ width: `${interactionsPercentage}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                            {userStats.plan === 'free' ? 'Plano Grátis' : 'Plano Premium'}
+                        </p>
+                    </div>
+
+                    {/* Tasks Completed */}
+                    <div className="bg-white rounded-xl shadow-lg p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                                <PulsingHeart color="text-purple-500" size="md" />
+                                <span className="ml-3 text-lg font-semibold text-gray-900">Tarefas Hoje</span>
+                            </div>
+                            <span className="text-2xl font-bold text-purple-600">
+                                {completedTasks}/{dailyTasks.length}
+                            </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                            <div
+                                className="bg-gradient-to-r from-purple-400 to-pink-500 h-3 rounded-full transition-all duration-300"
+                                style={{ width: `${(completedTasks / dailyTasks.length) * 100}%` }}
+                            ></div>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                            Continue assim! 💪
+                        </p>
+                    </div>
+
+                    {/* Upgrade Banner for Free Users */}
+                    {userStats.plan === 'free' && userStats.dailyInteractions >= userStats.maxDailyInteractions * 0.8 && (
+                        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-white">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-xl font-bold mb-2">Está gostando da experiência?</h3>
+                                    <p className="text-purple-100 mb-4">
+                                        Você está próximo do limite diário. Considere fazer upgrade para acesso ilimitado!
+                                    </p>
+                                    <Link
+                                        to="/plans"
+                                        className="inline-flex items-center bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+                                    >
+                                        Ver Planos
+                                        <ArrowRight className="w-4 h-4 ml-2" />
+                                    </Link>
+                                </div>
+                                <PulsingHeart color="text-pink-300" size="xl" />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
         </>
-                        );
+    );
 };
 
-                        export default UserDashboard;
+export default UserDashboard;

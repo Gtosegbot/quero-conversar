@@ -20,6 +20,8 @@ interface Message {
   type: 'user' | 'bot';
   content: string;
   timestamp: Date;
+  level?: number;
+  role?: string;
 }
 
 interface UserContext {
@@ -27,6 +29,8 @@ interface UserContext {
   dailyInteractions: number;
   maxDailyInteractions: number;
   plan: 'free' | 'premium';
+  level: number;
+  role: string;
 }
 
 const Chat: React.FC = () => {
@@ -41,7 +45,9 @@ const Chat: React.FC = () => {
     name: 'Usuário',
     dailyInteractions: 0,
     maxDailyInteractions: 15,
-    plan: 'free'
+    plan: 'free',
+    level: 1,
+    role: 'user'
   });
 
   const getUserId = () => {
@@ -68,7 +74,9 @@ const Chat: React.FC = () => {
           name: data.name || 'Usuário',
           dailyInteractions: data.dailyInteractions || 0,
           maxDailyInteractions: isPremium ? 9999 : 15,
-          plan: isPremium ? 'premium' : 'free'
+          plan: isPremium ? 'premium' : 'free',
+          level: data.level || 1,
+          role: data.role || 'user'
         });
       }
     });
@@ -111,7 +119,9 @@ const Chat: React.FC = () => {
           id: doc.id,
           type: doc.data().type,
           content: doc.data().content,
-          timestamp: doc.data().createdAt?.toDate() || new Date()
+          timestamp: doc.data().createdAt?.toDate() || new Date(),
+          level: doc.data().level,
+          role: doc.data().role
         }));
         setMessages(loadedMessages);
 
@@ -158,7 +168,9 @@ const Chat: React.FC = () => {
       await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
         type: 'user',
         content: messageContent,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        level: userContext.level,
+        role: userContext.role
       });
 
       setIsLoading(false);
@@ -179,6 +191,27 @@ const Chat: React.FC = () => {
 
   const interactionsRemaining = userContext.maxDailyInteractions - userContext.dailyInteractions;
   const showLimitWarning = userContext.plan === 'free' && interactionsRemaining <= 3;
+
+  const getHeartColor = (role?: string, level?: number) => {
+    if (role === 'admin') return 'text-yellow-500'; // Gold for Admins
+    if (role === 'professional') return 'text-orange-500'; // Orange for Professionals
+    if (role === 'moderator') return 'text-green-600'; // Green for Moderators
+    if (role === 'partner') return 'text-cyan-500'; // Cyan for Partners
+
+    // Default User Levels
+    if (!level) return 'text-blue-500';
+    if (level >= 10) return 'text-red-600'; // Leader
+    if (level >= 5) return 'text-purple-600'; // Guardian
+    return 'text-blue-500'; // Beginner
+  };
+
+  const getRoleLabel = (role?: string, level?: number) => {
+    if (role === 'admin') return 'Administrador';
+    if (role === 'professional') return 'Profissional';
+    if (role === 'moderator') return 'Moderador';
+    if (role === 'partner') return 'Parceiro';
+    return `Nível ${level || 1}`;
+  };
 
   return (
     <div className="h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex flex-col">
@@ -243,6 +276,12 @@ const Chat: React.FC = () => {
                   <div className="flex items-center mb-2">
                     <PulsingHeart color="text-purple-600" size="sm" />
                     <span className="ml-2 text-sm font-semibold text-purple-700">Dra. Clara</span>
+                  </div>
+                )}
+                {message.type === 'user' && (
+                  <div className="flex items-center justify-end mb-1">
+                    <span className="mr-2 text-xs text-purple-200">{getRoleLabel(message.role, message.level)}</span>
+                    <PulsingHeart color={getHeartColor(message.role, message.level)} size="sm" />
                   </div>
                 )}
                 <p className="text-sm whitespace-pre-line">{message.content}</p>
