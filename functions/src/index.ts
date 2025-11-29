@@ -3,7 +3,9 @@ import * as admin from "firebase-admin";
 import { VertexAI } from "@google-cloud/vertexai";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 
-admin.initializeApp();
+if (admin.apps.length === 0) {
+    admin.initializeApp();
+}
 const db = admin.firestore();
 const storage = admin.storage();
 

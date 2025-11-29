@@ -4,11 +4,16 @@ import * as admin from 'firebase-admin';
 
 // Initialize Stripe with Secret Key (from environment config)
 // Run: firebase functions:config:set stripe.secret="sk_live_..."
-const stripe = new Stripe(functions.config().stripe.secret, {
+const stripeConfig = functions.config().stripe;
+const stripeSecret = stripeConfig ? stripeConfig.secret : "MISSING_SECRET";
+
+const stripe = new Stripe(stripeSecret, {
     apiVersion: '2023-10-16',
 });
 
-admin.initializeApp();
+if (admin.apps.length === 0) {
+    admin.initializeApp();
+}
 const db = admin.firestore();
 
 /**

@@ -32,10 +32,14 @@ const stripe_1 = __importDefault(require("stripe"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Stripe with Secret Key (from environment config)
 // Run: firebase functions:config:set stripe.secret="sk_live_..."
-const stripe = new stripe_1.default(functions.config().stripe.secret, {
+const stripeConfig = functions.config().stripe;
+const stripeSecret = stripeConfig ? stripeConfig.secret : "MISSING_SECRET";
+const stripe = new stripe_1.default(stripeSecret, {
     apiVersion: '2023-10-16',
 });
-admin.initializeApp();
+if (admin.apps.length === 0) {
+    admin.initializeApp();
+}
 const db = admin.firestore();
 /**
  * Creates a Payment Intent for a Subscription or One-time purchase.
@@ -74,7 +78,6 @@ exports.createPaymentIntent = functions.https.onCall(async (data, context) => {
  * Logic: 75% to Professional, 25% to Platform.
  */
 exports.createSplitPaymentIntent = functions.https.onCall(async (data, context) => {
-    var _a;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
     }
@@ -82,7 +85,7 @@ exports.createSplitPaymentIntent = functions.https.onCall(async (data, context) 
     try {
         // 1. Get Professional's Stripe Account ID from Firestore
         const proDoc = await db.collection('users').doc(professionalId).get();
-        const proStripeId = (_a = proDoc.data()) === null || _a === void 0 ? void 0 : _a.stripeAccountId;
+        const proStripeId = proDoc.data()?.stripeAccountId;
         if (!proStripeId) {
             throw new functions.https.HttpsError('failed-precondition', 'Professional not onboarded to Stripe');
         }

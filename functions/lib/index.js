@@ -31,7 +31,9 @@ const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const vertexai_1 = require("@google-cloud/vertexai");
 const text_to_speech_1 = require("@google-cloud/text-to-speech");
-admin.initializeApp();
+if (admin.apps.length === 0) {
+    admin.initializeApp();
+}
 const db = admin.firestore();
 const storage = admin.storage();
 // Initialize Vertex AI
@@ -80,7 +82,7 @@ exports.analyzeTrends = functions.https.onCall(async (data, context) => {
     `;
         const result = await model.generateContent(prompt);
         const responseText = result.response.candidates[0].content.parts[0].text;
-        const jsonString = responseText === null || responseText === void 0 ? void 0 : responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        const jsonString = responseText?.replace(/```json/g, "").replace(/```/g, "").trim();
         const trendsData = JSON.parse(jsonString || "{}");
         // 3. Save to Firestore
         const insightRef = await db.collection("admin_insights").add({
@@ -124,10 +126,16 @@ exports.generateStudy = functions.https.onCall(async (data, context) => {
     `;
         const result = await model.generateContent(prompt);
         const responseText = result.response.candidates[0].content.parts[0].text;
-        const jsonString = responseText === null || responseText === void 0 ? void 0 : responseText.replace(/```json/g, "").replace(/```/g, "").trim();
+        const jsonString = responseText?.replace(/```json/g, "").replace(/```/g, "").trim();
         const studyData = JSON.parse(jsonString || "{}");
         // Save to Knowledge Base
-        const studyRef = await db.collection("knowledge_base").add(Object.assign(Object.assign({}, studyData), { topic: topic, source: sourceUrl || "Community Trend", createdAt: admin.firestore.FieldValue.serverTimestamp(), active: true }));
+        const studyRef = await db.collection("knowledge_base").add({
+            ...studyData,
+            topic: topic,
+            source: sourceUrl || "Community Trend",
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            active: true
+        });
         return { success: true, id: studyRef.id, study: studyData };
     }
     catch (error) {
@@ -221,7 +229,6 @@ exports.generateDailyPodcast = functions.https.onCall(async (data, context) => {
 exports.onNewMessage = functions.firestore
     .document("conversations/{conversationId}/messages/{messageId}")
     .onCreate(async (snap, context) => {
-    var _a;
     const message = snap.data();
     const conversationId = context.params.conversationId;
     if (message.type !== "user")
@@ -229,7 +236,7 @@ exports.onNewMessage = functions.firestore
     try {
         // 0. Get User ID from Conversation
         const conversationDoc = await db.doc(`conversations/${conversationId}`).get();
-        const userId = (_a = conversationDoc.data()) === null || _a === void 0 ? void 0 : _a.userId;
+        const userId = conversationDoc.data()?.userId;
         // 1. Retrieve Context from Knowledge Base
         const knowledgeSnap = await db.collection("knowledge_base")
             .where("active", "==", true)

@@ -30,13 +30,15 @@ const vertexai_1 = require("@google-cloud/vertexai");
 // Initialize Vertex AI
 const vertexAI = new vertexai_1.VertexAI({ project: process.env.GCLOUD_PROJECT || 'quero-conversar-app', location: 'us-central1' });
 const model = vertexAI.getGenerativeModel({ model: 'gemini-1.5-pro-preview-0409' });
+if (admin.apps.length === 0) {
+    admin.initializeApp();
+}
 const db = admin.firestore();
 /**
  * Chat with Dra. Clara (RAG Enabled).
  * Uses Gemini 1.5 Pro with System Instructions and Context Injection.
  */
 exports.chatWithDraClara = functions.https.onCall(async (data, context) => {
-    var _a;
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
     }
@@ -46,13 +48,13 @@ exports.chatWithDraClara = functions.https.onCall(async (data, context) => {
         // 1. Fetch User Context (Plan, Name, Anamnesis)
         const userDoc = await db.collection('users').doc(userId).get();
         const userData = userDoc.data();
-        const userPlan = (userData === null || userData === void 0 ? void 0 : userData.plan) || 'free';
-        const userName = (userData === null || userData === void 0 ? void 0 : userData.name) || 'Usuário';
+        const userPlan = userData?.plan || 'free';
+        const userName = userData?.name || 'Usuário';
         // 2. Retrieve Knowledge Base Context (RAG)
         let contextText = "";
         if (fileId) {
             const fileDoc = await db.collection('documents').doc(fileId).get();
-            contextText = ((_a = fileDoc.data()) === null || _a === void 0 ? void 0 : _a.extractedText) || "";
+            contextText = fileDoc.data()?.extractedText || "";
         }
         else {
             contextText = "Base de Conhecimento Geral: O Quero Conversar é uma plataforma de bem-estar...";
