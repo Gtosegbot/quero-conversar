@@ -18,6 +18,8 @@ import AdminDashboard from "@/react-app/pages/AdminDashboard";
 import ProfessionalChat from "@/react-app/pages/ProfessionalChat";
 import ModerationDashboard from "@/react-app/pages/ModerationDashboard";
 import Policies from "@/react-app/pages/Policies";
+import Gallery from "@/react-app/pages/Gallery";
+import Upload from "@/react-app/pages/Upload";
 
 export default function App() {
   return (
@@ -61,6 +63,12 @@ export default function App() {
         </Route>
         <Route path="/docs" element={<Layout />}>
           <Route index element={<Legal />} />
+        </Route>
+        <Route path="/gallery" element={<Layout />}>
+          <Route index element={<Gallery />} />
+        </Route>
+        <Route path="/upload" element={<Layout />}>
+          <Route index element={<Upload />} />
         </Route>
       </Routes>
     </Router>

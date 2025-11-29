@@ -114,6 +114,64 @@ const AdminDataManagement: React.FC = () => {
         </p>
       </div>
 
+      {/* Seed Data Section */}
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-purple-900 flex items-center">
+              <RefreshCw className="w-5 h-5 mr-2" />
+              Popular Banco de Dados (Gamificação)
+            </h3>
+            <p className="text-purple-800">
+              Carregar as 50 tarefas padrão (Níveis 1, 2 e 3) para o Firestore.
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              if (!confirm('Isso irá adicionar 50 tarefas ao banco de dados. Continuar?')) return;
+              setLoading(true);
+              try {
+                const tasks = await import('../../data/tasks.json');
+                const { collection, addDoc, getDocs, query, where } = await import('firebase/firestore');
+                const { db } = await import('../../../firebase-config');
+                
+                const templatesRef = collection(db, 'task_templates');
+                
+                // Check if already seeded to avoid duplicates (simple check)
+                const q = query(templatesRef, where('title', '==', tasks.default[0].title));
+                const snap = await getDocs(q);
+                
+                if (!snap.empty) {
+                  alert('Parece que as tarefas já foram importadas!');
+                  setLoading(false);
+                  return;
+                }
+
+                let count = 0;
+                for (const task of tasks.default) {
+                  await addDoc(templatesRef, {
+                    ...task,
+                    is_active: true,
+                    created_at: new Date()
+                  });
+                  count++;
+                }
+                alert(`${count} tarefas importadas com sucesso!`);
+              } catch (error) {
+                console.error('Error seeding tasks:', error);
+                alert('Erro ao importar tarefas.');
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 font-bold shadow-md"
+          >
+            Carregar 50 Tarefas
+          </button>
+        </div>
+      </div>
+
       {/* Professionals Section */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">

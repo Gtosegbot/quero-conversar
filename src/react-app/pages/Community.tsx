@@ -222,17 +222,88 @@ const Community: React.FC = () => {
         )}
 
         {/* Create Room Button */}
-        <div className="fixed bottom-6 right-6">
+        <div className="fixed bottom-6 right-6 flex flex-col gap-4">
+          {/* Seed Button (Admin Only) */}
           <button
-            onClick={() => {
+            onClick={async () => {
               const user = JSON.parse(localStorage.getItem('user') || '{}');
               const isSuperAdmin = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'].some(email => user.email?.includes(email));
 
-              if (isSuperAdmin) {
-                // TODO: Open Create Room Modal
-                alert('Funcionalidade de criar sala (Admin) - Em breve');
-              } else {
-                alert('A criação de novas salas é exclusiva para Administradores. Por favor, solicite a criação de uma sala através do nosso contato: contato@queroconversar.shop');
+              if (!isSuperAdmin) return;
+
+              if (!confirm('Criar 6 salas padrão?')) return;
+
+              const defaultRooms = [
+                { name: 'Ansiedade e Pânico', description: 'Espaço seguro para compartilhar experiências e técnicas de superação.', category: 'mental' },
+                { name: 'Depressão e Solidão', description: 'Você não está sozinho. Apoio mútuo e acolhimento.', category: 'mental' },
+                { name: 'Relacionamentos', description: 'Conversas sobre amor, família e amizades.', category: 'general' },
+                { name: 'Carreira e Propósito', description: 'Discuta desafios profissionais e encontre seu caminho.', category: 'general' },
+                { name: 'Mindfulness e Meditação', description: 'Práticas de atenção plena para o dia a dia.', category: 'spiritual' },
+                { name: 'Saúde Física e Bem-estar', description: 'Dicas de alimentação, exercícios e sono.', category: 'physical' }
+              ];
+
+              try {
+                for (const room of defaultRooms) {
+                  await addDoc(collection(db, 'community_rooms'), {
+                    ...room,
+                    memberCount: 0,
+                    lastActivity: 'Agora',
+                    isActive: true,
+                    createdAt: new Date()
+                  });
+                }
+                alert('Salas criadas com sucesso!');
+              } catch (error) {
+                console.error('Error seeding rooms:', error);
+                alert('Erro ao criar salas.');
+              }
+            }}
+            className="bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-900 transition-all"
+            title="Criar Salas Padrão (Admin)"
+          >
+            <Filter className="w-6 h-6" />
+          </button>
+
+          {/* Create Room Button */}
+          <button
+            onClick={async () => {
+              const user = JSON.parse(localStorage.getItem('user') || '{}');
+              const role = localStorage.getItem('userRole');
+              const isSuperAdmin = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'].some(email => user.email?.includes(email));
+              const canCreate = isSuperAdmin || role === 'professional' || role === 'partner';
+
+              if (!canCreate) {
+                alert('A criação de novas salas é exclusiva para Profissionais e Parceiros.');
+                return;
+              }
+
+              const name = prompt('Nome da nova sala:');
+              if (!name) return;
+
+              const description = prompt('Descrição da sala:');
+              if (!description) return;
+
+              const category = prompt('Categoria (mental, physical, spiritual, general):')?.toLowerCase();
+              if (!category || !['mental', 'physical', 'spiritual', 'general'].includes(category)) {
+                alert('Categoria inválida.');
+                return;
+              }
+
+              try {
+                await addDoc(collection(db, 'community_rooms'), {
+                  name,
+                  description,
+                  category,
+                  memberCount: 1,
+                  lastActivity: 'Agora',
+                  isActive: true,
+                  createdAt: new Date(),
+                  createdBy: user.uid
+                });
+                alert('Sala criada com sucesso!');
+              } catch (error) {
+                console.error('Error creating room:', error);
+                alert('Erro ao criar sala.');
               }
             }}
             className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"

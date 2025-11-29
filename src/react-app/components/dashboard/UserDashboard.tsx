@@ -72,13 +72,53 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, userStats }) => {
 
     const loadDailyTasks = async (userId: string) => {
         try {
-            // 1. Fetch Active Task Templates
+            // 1. Check LocalStorage for today's selection
+            const today = new Date().toISOString().split('T')[0];
+            const storedSelection = localStorage.getItem(`daily_tasks_${userId}`);
+            let selectedIds: string[] = [];
+
+            if (storedSelection) {
+                const parsed = JSON.parse(storedSelection);
+                if (parsed.date === today) {
+                    selectedIds = parsed.ids;
+                }
+            }
+
+            // 2. Fetch All Active Templates (if needed)
+            // We fetch all to ensure we have the data, even if we have IDs. 
+            // Optimization: In a real app, we might fetch only IDs if we had them, but here we need the full objects.
             const templatesQuery = query(collection(db, 'task_templates'), where('is_active', '==', true));
             const templatesSnap = await getDocs(templatesQuery);
-            const templates = templatesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+            const allTemplates = templatesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
 
-            // 2. Fetch User's Completed Tasks for Today
-            const today = new Date().toISOString().split('T')[0];
+            // 3. If no valid selection for today, generate one
+            if (selectedIds.length === 0 && allTemplates.length > 0) {
+                const easy = allTemplates.filter((t: any) => t.difficulty === 'easy');
+                const medium = allTemplates.filter((t: any) => t.difficulty === 'medium');
+                const hard = allTemplates.filter((t: any) => t.difficulty === 'hard');
+
+                const shuffle = (array: any[]) => array.sort(() => 0.5 - Math.random());
+
+                const selected = [
+                    ...shuffle(easy).slice(0, 1),   // 1 Easy
+                    ...shuffle(medium).slice(0, 2), // 2 Medium
+                    ...shuffle(hard).slice(0, 1)    // 1 Hard
+                ];
+
+                // Fallback if not enough tasks in a category
+                if (selected.length < 4) {
+                    const remaining = allTemplates.filter((t: any) => !selected.includes(t));
+                    selected.push(...shuffle(remaining).slice(0, 4 - selected.length));
+                }
+
+                selectedIds = selected.map((t: any) => t.id);
+                localStorage.setItem(`daily_tasks_${userId}`, JSON.stringify({ date: today, ids: selectedIds }));
+            }
+
+            // 4. Filter templates to match selected IDs
+            const dailyTemplates = allTemplates.filter((t: any) => selectedIds.includes(t.id));
+
+            // 5. Fetch User's Completed Tasks for Today
             const completedQuery = query(
                 collection(db, 'users', userId, 'completed_tasks'),
                 where('date', '==', today)
@@ -86,8 +126,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, userStats }) => {
             const completedSnap = await getDocs(completedQuery);
             const completedIds = new Set(completedSnap.docs.map(doc => doc.data().taskId));
 
-            // 3. Merge
-            const tasks = templates.map((t: any) => ({
+            // 6. Merge
+            const tasks = dailyTemplates.map((t: any) => ({
                 id: t.id,
                 title: t.title,
                 description: t.description,
