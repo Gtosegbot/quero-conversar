@@ -3,6 +3,18 @@ import {
     Package,
     Video,
     BarChart2,
+    Plus,
+    Trash2,
+    Edit,
+    Loader2
+} from 'lucide-react';
+import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { db } from '../../../firebase-config';
+import ProductUploadForm from './ProductUploadForm';
+import ContentUploadForm from './ContentUploadForm';
+
+interface PartnerDashboardProps {
+    user: any;
     userStats: any;
 }
 

@@ -1,39 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import {
     Calendar as CalendarIcon,
+    Video,
+    Users,
+    Settings,
+    Loader2
+} from 'lucide-react';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { db } from '../../../firebase-config';
+import ScheduleManager from '../scheduling/ScheduleManager';
 
-const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({user, userStats}) => {
+interface ProfessionalDashboardProps {
+    user: any;
+    userStats: any;
+}
+
+const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, userStats }) => {
     const [activeTab, setActiveTab] = useState<'schedule' | 'appointments' | 'settings'>('schedule');
-        const [appointments, setAppointments] = useState<any[]>([]);
-        const [isLoading, setIsLoading] = useState(true);
+    const [appointments, setAppointments] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!user) return;
 
         // Fetch Appointments
         const q = query(
-        collection(db, 'appointments'),
-        where('professionalId', '==', user.uid),
-        orderBy('date', 'asc')
+            collection(db, 'appointments'),
+            where('professionalId', '==', user.uid),
+            orderBy('date', 'asc')
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setIsLoading(false);
+            setIsLoading(false);
         });
 
         return () => unsubscribe();
     }, [user]);
 
-        if (isLoading) {
+    if (isLoading) {
         return (
-        <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        </div>
+            <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
         );
     }
 
-        return (
+    return (
         <div className="space-y-8">
             {/* Header */}
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -156,7 +169,7 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({user, user
                 )}
             </div>
         </div>
-        );
+    );
 };
 
-        export default ProfessionalDashboard;
+export default ProfessionalDashboard;
