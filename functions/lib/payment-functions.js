@@ -89,7 +89,6 @@ exports.createSplitPaymentIntent = functions.https.onCall(async (data, context) 
         // 2. Calculate Split (e.g., 75/25)
         const totalAmount = Math.round(amount * 100);
         const platformFee = Math.round(totalAmount * 0.25); // 25% fee
-        const proAmount = totalAmount - platformFee;
         // 3. Create PaymentIntent with Transfer Data
         const paymentIntent = await stripe.paymentIntents.create({
             amount: totalAmount,
@@ -157,7 +156,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
  * Internal helper to update Firestore after successful payment.
  */
 async function handleSuccessfulPayment(paymentIntent) {
-    const { userId, type, professionalId, appointmentId } = paymentIntent.metadata;
+    const { userId, type, appointmentId } = paymentIntent.metadata;
     if (type === 'subscription') {
         // Upgrade user to Premium
         await db.collection('users').doc(userId).update({

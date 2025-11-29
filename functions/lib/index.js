@@ -26,7 +26,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onNewMessage = exports.generateDailyPodcast = exports.generateStudy = exports.analyzeTrends = void 0;
+exports.onUserCreated = exports.onNewMessage = exports.generateDailyPodcast = exports.generateStudy = exports.analyzeTrends = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const vertexai_1 = require("@google-cloud/vertexai");
@@ -270,23 +270,48 @@ exports.onNewMessage = functions.firestore
             parts: [{ text: doc.data().content }]
         }));
         // 4. Generate Response
+        // Initialize model with system instruction if possible, or prepend to history
         const chat = model.startChat({
             history: history,
-            systemInstruction: {
-                role: "system",
-                parts: [{ text: SYSTEM_PROMPT + "\n\nBASE DE CONHECIMENTO (Estudos Recentes):\n" + knowledgeContext + socialContext }]
-            }
         });
-        const result = await chat.sendMessage(message.content);
+        const fullPrompt = `${SYSTEM_PROMPT}\n\nBASE DE CONHECIMENTO (Estudos Recentes):\n${knowledgeContext}${socialContext}\n\nUsuário: ${message.content}`;
+        const result = await chat.sendMessage(fullPrompt);
         const response = result.response.candidates[0].content.parts[0].text;
         await db.collection(`conversations/${conversationId}/messages`).add({
             type: "bot",
             content: response,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
+        return null;
     }
     catch (error) {
         console.error("Error generating response:", error);
+        return null;
+    }
+});
+/**
+ * 5. Referral System (Award XP)
+ */
+exports.onUserCreated = functions.firestore
+    .document("users/{userId}")
+    .onCreate(async (snap, context) => {
+    const newUser = snap.data();
+    const referrerId = newUser.referredBy;
+    if (!referrerId)
+        return null;
+    try {
+        // Award 50 XP to the referrer
+        const referrerRef = db.collection("users").doc(referrerId);
+        await referrerRef.update({
+            energyPoints: admin.firestore.FieldValue.increment(50),
+            // Optional: Add notification logic here
+        });
+        console.log(`Awarded 50 XP to ${referrerId} for referring ${newUser.uid}`);
+        return { success: true };
+    }
+    catch (error) {
+        console.error("Error awarding referral XP:", error);
+        return null;
     }
 });
 __exportStar(require("./payment-functions"), exports);

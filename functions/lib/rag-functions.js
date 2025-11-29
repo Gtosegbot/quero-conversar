@@ -28,10 +28,8 @@ const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const vertexai_1 = require("@google-cloud/vertexai");
 // Initialize Vertex AI
-// Ensure you have enabled Vertex AI API in Google Cloud Console
-const vertexAI = new vertexai_1.VertexAI({ project: process.env.GCLOUD_PROJECT, location: 'us-central1' });
+const vertexAI = new vertexai_1.VertexAI({ project: process.env.GCLOUD_PROJECT || 'quero-conversar-app', location: 'us-central1' });
 const model = vertexAI.getGenerativeModel({ model: 'gemini-1.5-pro-preview-0409' });
-admin.initializeApp();
 const db = admin.firestore();
 /**
  * Chat with Dra. Clara (RAG Enabled).
@@ -51,18 +49,12 @@ exports.chatWithDraClara = functions.https.onCall(async (data, context) => {
         const userPlan = (userData === null || userData === void 0 ? void 0 : userData.plan) || 'free';
         const userName = (userData === null || userData === void 0 ? void 0 : userData.name) || 'Usuário';
         // 2. Retrieve Knowledge Base Context (RAG)
-        // If fileId is provided, fetch that specific file's content (File Search)
-        // Otherwise, search the general vector store (Simulated here)
         let contextText = "";
         if (fileId) {
-            // Fetch specific file content from Firestore/Storage
             const fileDoc = await db.collection('documents').doc(fileId).get();
             contextText = ((_a = fileDoc.data()) === null || _a === void 0 ? void 0 : _a.extractedText) || "";
         }
         else {
-            // General RAG: Retrieve relevant chunks based on query
-            // const relevantChunks = await vectorSearch(message);
-            // contextText = relevantChunks.join("\n");
             contextText = "Base de Conhecimento Geral: O Quero Conversar é uma plataforma de bem-estar...";
         }
         // 3. Construct System Prompt
@@ -80,15 +72,13 @@ exports.chatWithDraClara = functions.https.onCall(async (data, context) => {
         - Acolha o usuário com empatia.
         - Use o contexto recuperado para dar respostas embasadas.
         - Se o usuário estiver em crise (risco de vida), use o Protocolo de Emergência (CVV 188).
-        - Mantenha respostas concisas para usuários do plano Free.
-        - Seja calorosa e profissional.
         `;
         // 4. Call Gemini
         const chat = model.startChat({
-            systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
             history: history || [],
         });
-        const result = await chat.sendMessage(message);
+        const fullPrompt = `${systemPrompt}\n\nUsuário: ${message}`;
+        const result = await chat.sendMessage(fullPrompt);
         const response = result.response.candidates[0].content.parts[0].text;
         // 5. Save Interaction to Firestore
         await db.collection('conversations').doc(userId).collection('messages').add({
