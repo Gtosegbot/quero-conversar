@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { collection, getDocs, query, where, addDoc, deleteDoc, doc, writeBatch, limit } from 'firebase/firestore';
+import { db } from '../../firebase-config';
+import tasksData from '../../data/tasks.json';
 import { Trash2, UserX, FileX, AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface MockData {
@@ -25,69 +28,86 @@ const AdminDataManagement: React.FC = () => {
   const loadMockData = async () => {
     setLoading(true);
     try {
-      // Fetch mock data from database
-      const [professionals, appointments, users, documents] = await Promise.all([
-        fetch('/api/admin/mock-professionals').then(r => r.json()),
-        fetch('/api/admin/mock-appointments').then(r => r.json()),
-        fetch('/api/admin/mock-users').then(r => r.json()),
-        fetch('/api/admin/mock-documents').then(r => r.json()),
+      // Fetch data from Firestore (limit to 20 for safety in this view)
+      const [profSnap, apptSnap, userSnap, docSnap] = await Promise.all([
+        getDocs(query(collection(db, 'professionals'), limit(20))),
+        getDocs(query(collection(db, 'appointments'), limit(20))),
+        getDocs(query(collection(db, 'users'), limit(20))),
+        getDocs(query(collection(db, 'content_library'), limit(20))),
       ]);
 
       setMockData({
-        professionals: professionals.data || [],
-        appointments: appointments.data || [],
-        users: users.data || [],
-        documents: documents.data || [],
+        professionals: profSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+        appointments: apptSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+        users: userSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+        documents: docSnap.docs.map(d => ({ id: d.id, ...d.data() })),
       });
     } catch (error) {
-      console.error('Error loading mock data:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteCategory = async (category: string) => {
-    if (!confirm(`Tem certeza que deseja remover todos os dados mock de ${category}? Esta ação não pode ser desfeita.`)) {
+    if (!confirm(`ATENÇÃO: Isso irá apagar TODOS os dados carregados de ${category}. Continuar?`)) {
       return;
     }
 
     setDeleting(category);
     try {
-      const response = await fetch(`/api/admin/delete-mock-data/${category}`, {
-        method: 'DELETE',
-      });
+      const batch = writeBatch(db);
+      const collectionsToDelete = [];
 
-      if (response.ok) {
-        await loadMockData(); // Reload data
+      if (category === 'all') {
+        collectionsToDelete.push('professionals', 'appointments', 'users', 'content_library');
       } else {
-        alert('Erro ao deletar dados');
+        switch (category) {
+          case 'professionals': collectionsToDelete.push('professionals'); break;
+          case 'appointments': collectionsToDelete.push('appointments'); break;
+          case 'users': collectionsToDelete.push('users'); break;
+          case 'documents': collectionsToDelete.push('content_library'); break;
+        }
       }
+
+      for (const colName of collectionsToDelete) {
+        const q = query(collection(db, colName), limit(500));
+        const snapshot = await getDocs(q);
+        snapshot.docs.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+      }
+
+      await batch.commit();
+      await loadMockData();
+      alert('Dados excluídos com sucesso.');
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Erro ao deletar dados');
+      alert('Erro ao deletar dados.');
     } finally {
       setDeleting('');
     }
   };
 
-  const handleDeleteSpecific = async (category: string, id: number) => {
-    if (!confirm('Tem certeza que deseja remover este item?')) {
-      return;
-    }
+  const handleDeleteSpecific = async (category: string, id: string) => {
+    if (!confirm('Tem certeza que deseja remover este item?')) return;
 
     try {
-      const response = await fetch(`/api/admin/delete-mock-item/${category}/${id}`, {
-        method: 'DELETE',
-      });
+      let collectionName = '';
+      switch (category) {
+        case 'professionals': collectionName = 'professionals'; break;
+        case 'appointments': collectionName = 'appointments'; break;
+        case 'users': collectionName = 'users'; break;
+        case 'documents': collectionName = 'content_library'; break;
+      }
 
-      if (response.ok) {
-        await loadMockData(); // Reload data
-      } else {
-        alert('Erro ao deletar item');
+      if (collectionName) {
+        await deleteDoc(doc(db, collectionName, id));
+        await loadMockData();
       }
     } catch (error) {
       console.error('Delete error:', error);
-      alert('Erro ao deletar item');
+      alert('Erro ao deletar item.');
     }
   };
 
@@ -132,14 +152,10 @@ const AdminDataManagement: React.FC = () => {
               if (!confirm('Isso irá adicionar 50 tarefas ao banco de dados. Continuar?')) return;
               setLoading(true);
               try {
-                const tasks = await import('../../data/tasks.json');
-                const { collection, addDoc, getDocs, query, where } = await import('firebase/firestore');
-                const { db } = await import('../../../firebase-config');
-
                 const templatesRef = collection(db, 'task_templates');
 
                 // Check if already seeded to avoid duplicates (simple check)
-                const q = query(templatesRef, where('title', '==', tasks.default[0].title));
+                const q = query(templatesRef, where('title', '==', tasksData[0].title));
                 const snap = await getDocs(q);
 
                 if (!snap.empty) {
@@ -149,7 +165,7 @@ const AdminDataManagement: React.FC = () => {
                 }
 
                 let count = 0;
-                for (const task of tasks.default) {
+                for (const task of tasksData) {
                   await addDoc(templatesRef, {
                     ...task,
                     is_active: true,
