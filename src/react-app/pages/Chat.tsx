@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Settings, Zap, AlertCircle } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
-import { db } from '../../firebase-config';
+import { db, auth } from '../../firebase-config';
 import {
   collection,
   query,
@@ -142,7 +142,10 @@ const Chat: React.FC = () => {
   }, []);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !conversationId) return;
+    if (!newMessage.trim()) return;
+
+    const user = auth.currentUser;
+    if (!user) return;
 
     // Check daily limit for free users
     if (userContext.plan === 'free' && userContext.dailyInteractions >= userContext.maxDailyInteractions) {
@@ -160,12 +163,38 @@ const Chat: React.FC = () => {
     }
 
     const messageContent = newMessage;
-    setNewMessage('');
+    setNewMessage(''); // Clear input immediately
     setIsLoading(true);
 
+    // Optimistic Update
+    const tempId = Date.now().toString();
+    const optimisticMessage: Message = {
+      id: tempId,
+      type: 'user',
+      content: messageContent,
+      timestamp: new Date(),
+      level: userContext.level,
+      role: userContext.role
+    };
+    setMessages(prev => [...prev, optimisticMessage]);
+
     try {
-      // 1. Add User Message to Firestore (Optimistic UI)
-      await addDoc(collection(db, 'conversations', conversationId, 'messages'), {
+      let currentConversationId = conversationId;
+
+      // Ensure conversation exists
+      if (!currentConversationId) {
+        const conversationsRef = collection(db, 'conversations');
+        const newConv = await addDoc(conversationsRef, {
+          userId: user.uid,
+          createdAt: serverTimestamp(),
+          status: 'active'
+        });
+        currentConversationId = newConv.id;
+        setConversationId(currentConversationId);
+      }
+
+      // Add User Message to Firestore
+      await addDoc(collection(db, 'conversations', currentConversationId, 'messages'), {
         type: 'user',
         content: messageContent,
         createdAt: serverTimestamp(),
@@ -178,6 +207,8 @@ const Chat: React.FC = () => {
     } catch (error) {
       console.error('Error sending message:', error);
       setIsLoading(false);
+      // Rollback optimistic update
+      setMessages(prev => prev.filter(m => m.id !== tempId));
       alert("Erro ao conectar com a Dra. Clara. Tente novamente.");
     }
   };
