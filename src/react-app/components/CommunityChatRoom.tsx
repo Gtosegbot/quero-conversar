@@ -38,6 +38,7 @@ const CommunityChatRoom: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -62,9 +63,10 @@ const CommunityChatRoom: React.FC = () => {
       }, (error) => {
         console.error("Error fetching messages:", error);
         setIsLoading(false);
-        // If the error is about missing index, we might want to alert the user or log it clearly
-        if (error.message.includes('index')) {
-          console.error("Missing Firestore Index. Check console for link to create it.");
+        if (error.code === 'failed-precondition') {
+          setErrorMessage("Erro de configuração: Índice do Firestore ausente. Por favor, avise o administrador para rodar 'firebase deploy --only firestore:indexes'.");
+        } else {
+          setErrorMessage(`Erro ao carregar mensagens: ${error.message}`);
         }
       });
 
@@ -221,6 +223,14 @@ const CommunityChatRoom: React.FC = () => {
       {/* Messages Area */}
       <div className="max-w-4xl mx-auto flex flex-col h-[calc(100vh-120px)]">
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <strong className="font-bold">Erro: </strong>
+              <span className="block sm:inline">{errorMessage}</span>
+            </div>
+          )}
+
           {/* Welcome Message */}
           <div className="text-center py-8">
             <PulsingHeart color="text-purple-600" size="lg" className="mx-auto mb-4" />
