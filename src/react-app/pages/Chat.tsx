@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Settings, Zap, AlertCircle } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
+import TypewriterEffect from '../components/TypewriterEffect';
 import { db, auth } from '../../firebase-config';
 import {
   collection,
@@ -315,10 +316,6 @@ const Chat: React.FC = () => {
                     <PulsingHeart color={getHeartColor(message.role, message.level)} size="sm" />
                   </div>
                 )}
-                import TypewriterEffect from '../components/TypewriterEffect';
-
-                // ... (inside the component)
-
                 {message.type === 'bot' ? (
                   <p className="text-sm">
                     <TypewriterEffect text={message.content} speed={20} />
