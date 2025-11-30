@@ -29,7 +29,7 @@ interface RoomInfo {
 }
 
 // Firestore References
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase-config';
 
 const CommunityChatRoom: React.FC = () => {
@@ -81,23 +81,26 @@ const CommunityChatRoom: React.FC = () => {
   };
 
   const loadRoomData = async () => {
-    // In a real app, fetch from 'community_rooms' collection
-    // For now, we keep the mock for room info or fetch it if you prefer
-    // Let's assume we fetch it or keep the mock for the room metadata only
-    const mockRoomData: RoomInfo = {
-      id: roomId!,
-      name: roomId === '1' ? 'Ansiedade e Gestão Emocional' :
-        roomId === '2' ? 'Exercícios e Bem-estar Físico' :
-          roomId === '3' ? 'Meditação e Espiritualidade' :
-            roomId === '4' ? 'Apoio Mútuo Geral' :
-              roomId === '5' ? 'Relacionamentos e Família' :
-                'Produtividade e Foco',
-      description: 'Sala de apoio mútuo e discussão',
-      category: 'mental',
-      member_count: 150,
-      is_active: true
-    };
-    setRoomInfo(mockRoomData);
+    if (!roomId) return;
+    try {
+      const roomRef = doc(db, 'community_rooms', roomId);
+      const roomSnap = await getDoc(roomRef);
+
+      if (roomSnap.exists()) {
+        setRoomInfo({ id: roomSnap.id, ...roomSnap.data() } as RoomInfo);
+      } else {
+        // Fallback for the default static rooms if they aren't in DB yet, 
+        // or just show a generic name. 
+        // Ideally, we should have seeded these. 
+        // For now, let's try to infer name from ID if it's one of the defaults, 
+        // but better to rely on DB.
+        console.log("Room not found in DB, using fallback or waiting for seed.");
+        // Optional: You could keep the mock as a fallback here if you really want, 
+        // but the goal is to use real data.
+      }
+    } catch (error) {
+      console.error("Error loading room info:", error);
+    }
   };
 
   const sendMessage = async () => {
