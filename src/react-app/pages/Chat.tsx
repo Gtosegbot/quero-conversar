@@ -318,7 +318,7 @@ const Chat: React.FC = () => {
                 )}
                 {message.type === 'bot' ? (
                   <p className="text-sm">
-                    <TypewriterEffect text={message.content} speed={20} />
+                    <TypewriterEffect text={message.content} speed={50} />
                   </p>
                 ) : (
                   <p className="text-sm whitespace-pre-line">{message.content}</p>
