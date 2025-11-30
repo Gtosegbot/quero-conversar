@@ -81,7 +81,7 @@ exports.chatWithDraClara = functions.https.onCall(async (data, context) => {
         });
         const fullPrompt = `${systemPrompt}\n\nUsuário: ${message}`;
         const result = await chat.sendMessage(fullPrompt);
-        const response = result.response.candidates[0].content.parts[0].text;
+        const response = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
         // 5. Save Interaction to Firestore
         await db.collection('conversations').doc(userId).collection('messages').add({
             type: 'user',

@@ -55,7 +55,7 @@ export const analyzeTrends = functions.https.onCall(async (data, context) => {
     `;
 
         const result = await model.generateContent(prompt);
-        const responseText = result.response.candidates[0].content.parts[0].text;
+        const responseText = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
         const jsonString = responseText?.replace(/```json/g, "").replace(/```/g, "").trim();
         const trendsData = JSON.parse(jsonString || "{}");
 
@@ -98,7 +98,7 @@ export const generateStudy = functions.https.onCall(async (data, context) => {
     `;
 
         const result = await model.generateContent(prompt);
-        const responseText = result.response.candidates[0].content.parts[0].text;
+        const responseText = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
         const jsonString = responseText?.replace(/```json/g, "").replace(/```/g, "").trim();
         const studyData = JSON.parse(jsonString || "{}");
 
@@ -139,7 +139,7 @@ export const generateDailyPodcast = functions.https.onCall(async (data, context)
     `;
 
         const result = await model.generateContent(scriptPrompt);
-        const scriptText = result.response.candidates[0].content.parts[0].text;
+        const scriptText = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!scriptText) throw new Error("Failed to generate script.");
 
@@ -300,7 +300,7 @@ export const onNewMessage = functions.firestore
 
             console.log("[onNewMessage] Sending prompt to Gemini with Web Search...");
             const result = await chat.sendMessage(fullPrompt);
-            const response = result.response.candidates[0].content.parts[0].text;
+            const response = result.response.candidates?.[0]?.content?.parts?.[0]?.text;
             console.log("[onNewMessage] Received response from Gemini.");
 
             await db.collection(`conversations/${conversationId}/messages`).add({
@@ -316,7 +316,7 @@ export const onNewMessage = functions.firestore
             // Fallback message if AI fails
             await db.collection(`conversations/${conversationId}/messages`).add({
                 type: "bot",
-                content: "Sinto muito, tive um pequeno lapso de conexão. Poderia repetir, por favor?",
+                content: `Sinto muito, tive um pequeno lapso de conexão. (Erro Técnico: ${error instanceof Error ? error.message : String(error)})`,
                 createdAt: admin.firestore.FieldValue.serverTimestamp()
             });
             return null;

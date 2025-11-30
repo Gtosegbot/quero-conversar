@@ -315,7 +315,17 @@ const Chat: React.FC = () => {
                     <PulsingHeart color={getHeartColor(message.role, message.level)} size="sm" />
                   </div>
                 )}
-                <p className="text-sm whitespace-pre-line">{message.content}</p>
+                import TypewriterEffect from '../components/TypewriterEffect';
+
+                // ... (inside the component)
+
+                {message.type === 'bot' ? (
+                  <p className="text-sm">
+                    <TypewriterEffect text={message.content} speed={20} />
+                  </p>
+                ) : (
+                  <p className="text-sm whitespace-pre-line">{message.content}</p>
+                )}
                 <p className={`text-xs mt-2 ${message.type === 'user' ? 'text-purple-100' : 'text-gray-500'
                   }`}>
                   {message.timestamp.toLocaleTimeString()}
