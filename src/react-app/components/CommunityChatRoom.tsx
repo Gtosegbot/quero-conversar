@@ -12,7 +12,7 @@ import PulsingHeart from './PulsingHeart';
 
 interface Message {
   id: string;
-  user_id: number;
+  user_id: string;
   user_name: string;
   content: string;
   created_at: string;
@@ -109,19 +109,40 @@ const CommunityChatRoom: React.FC = () => {
     const user = auth.currentUser;
     if (!user) return;
 
+    const messageContent = newMessage;
+    setNewMessage(''); // Clear input immediately
+
+    // Optimistic Update
+    const tempId = Date.now().toString();
+    const optimisticMessage: Message = {
+      id: tempId,
+      user_id: user.uid as any, // Cast for compatibility if needed, though interface says number, usually uid is string. 
+      // Wait, interface says user_id is number? That's weird for Firebase Auth. 
+      // Let's check interface. It says number. But auth.currentUser.uid is string.
+      // I should fix the interface too, but for now let's cast or use a temp number.
+      user_name: user.displayName || 'Você',
+      content: messageContent,
+      created_at: new Date().toISOString(),
+      message_type: 'text'
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+
     try {
       await addDoc(collection(db, 'community_messages'), {
         roomId,
         user_id: user.uid,
         user_name: user.displayName || 'Usuário',
-        content: newMessage,
-        created_at: new Date().toISOString(), // Use ISO string for easier sorting in this mixed setup
+        content: messageContent,
+        created_at: new Date().toISOString(),
         message_type: 'text'
       });
-
-      setNewMessage('');
+      // No need to replace the message, onSnapshot will handle the real one and reconciliation
     } catch (error) {
       console.error('Error sending message:', error);
+      // Rollback if failed (optional, but good practice)
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      alert('Erro ao enviar mensagem. Tente novamente.');
     }
   };
 
