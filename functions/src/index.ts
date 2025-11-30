@@ -186,6 +186,9 @@ export const generateDailyPodcast = functions.https.onCall(async (data, context)
 /**
  * 4. Chat Response (Updated for Native RAG)
  */
+/**
+ * 4. Chat Response (Updated for Native RAG + Web Search)
+ */
 export const onNewMessage = functions.firestore
     .document("conversations/{conversationId}/messages/{messageId}")
     .onCreate(async (snap, context) => {
@@ -200,10 +203,25 @@ export const onNewMessage = functions.firestore
         }
 
         try {
+            // 1. Fetch User Context
             const conversationDoc = await db.doc(`conversations/${conversationId}`).get();
             const userId = conversationDoc.data()?.userId;
             console.log(`[onNewMessage] User ID: ${userId}`);
 
+            let userProfile = "";
+            if (userId) {
+                const userDoc = await db.collection("users").doc(userId).get();
+                const userData = userDoc.data();
+                userProfile = `
+                PERFIL DO PACIENTE:
+                Nome: ${userData?.name || "Usuário"}
+                Idade: ${userData?.age || "Não informado"}
+                Profissão: ${userData?.profession || "Não informado"}
+                Objetivos: ${userData?.goals || "Bem-estar geral"}
+                `;
+            }
+
+            // 2. RAG - Knowledge Base (Scientific Basis)
             const knowledgeSnap = await db.collection("knowledge_base")
                 .where("active", "==", true)
                 .orderBy("createdAt", "desc")
@@ -212,10 +230,11 @@ export const onNewMessage = functions.firestore
 
             const knowledgeContext = knowledgeSnap.docs.map(doc => {
                 const d = doc.data();
-                return `TEMA: ${d.title}\nRESUMO: ${d.summary}\nCONTEÚDO: ${d.content}\nPERSPECTIVA ESPIRITUAL: ${d.spiritual_perspective}`;
+                return `ESTUDO CIENTÍFICO: ${d.title}\nRESUMO: ${d.summary}\nCONTEÚDO: ${d.content}\n`;
             }).join("\n\n---\n\n");
             console.log(`[onNewMessage] Retrieved ${knowledgeSnap.size} knowledge docs.`);
 
+            // 3. RAG - Social Context (Community)
             let socialContext = "";
             if (userId) {
                 const communitySnap = await db.collection("community_messages")
@@ -227,17 +246,17 @@ export const onNewMessage = functions.firestore
                 if (!communitySnap.empty) {
                     const recentMessages = communitySnap.docs.map(doc => `"${doc.data().content}"`).join("\n");
                     socialContext = `
-                    \n\nCONTEXTO SOCIAL (O que o usuário falou na comunidade recentemente):
+                    CONTEXTO SOCIAL RECENTE (Comunidade):
                     ${recentMessages}
-                    
-                    INSTRUÇÃO: Use este contexto social para entender o estado emocional do usuário, mas NÃO mencione explicitamente que você "leu" essas mensagens para não parecer invasiva. Use como intuição terapêutica.
+                    (Use isso para entender o estado emocional atual, mas não cite explicitamente a menos que relevante).
                     `;
                 }
             }
 
+            // 4. Chat History
             const historySnap = await db.collection(`conversations/${conversationId}/messages`)
                 .orderBy("createdAt", "asc")
-                .limitToLast(11)
+                .limitToLast(15) // Increased context window
                 .get();
 
             const history = historySnap.docs
@@ -248,13 +267,38 @@ export const onNewMessage = functions.firestore
                 }));
             console.log(`[onNewMessage] Retrieved ${history.length} history messages.`);
 
-            const chat = model.startChat({
+            // 5. Initialize Model with Tools (Web Search)
+            // Note: Web Search requires Vertex AI setup in Google Cloud Console.
+            const generativeModel = vertexAI.getGenerativeModel({
+                model: "gemini-1.5-flash-001",
+                tools: [{
+                    googleSearchRetrieval: {} // Enable Web Search Grounding
+                }]
+            });
+
+            const chat = generativeModel.startChat({
                 history: history,
             });
 
-            const fullPrompt = `${SYSTEM_PROMPT}\n\nBASE DE CONHECIMENTO (Estudos Recentes):\n${knowledgeContext}${socialContext}\n\nUsuário: ${message.content}`;
+            const fullPrompt = `
+            ${SYSTEM_PROMPT}
 
-            console.log("[onNewMessage] Sending prompt to Gemini...");
+            ${userProfile}
+
+            BASE DE CONHECIMENTO CIENTÍFICA (Prioridade Alta):
+            ${knowledgeContext}
+
+            ${socialContext}
+
+            INSTRUÇÕES ADICIONAIS:
+            1. Se a resposta não estiver na Base de Conhecimento, use a Busca na Web (Google Search) para encontrar informações científicas confiáveis.
+            2. Cite fontes quando possível (ex: "Segundo estudos...").
+            3. Mantenha a persona da Dra. Clara: acolhedora, profissional, mas baseada em evidências.
+
+            Usuário: ${message.content}
+            `;
+
+            console.log("[onNewMessage] Sending prompt to Gemini with Web Search...");
             const result = await chat.sendMessage(fullPrompt);
             const response = result.response.candidates[0].content.parts[0].text;
             console.log("[onNewMessage] Received response from Gemini.");
@@ -269,6 +313,12 @@ export const onNewMessage = functions.firestore
 
         } catch (error) {
             console.error("Error generating response:", error);
+            // Fallback message if AI fails
+            await db.collection(`conversations/${conversationId}/messages`).add({
+                type: "bot",
+                content: "Sinto muito, tive um pequeno lapso de conexão. Poderia repetir, por favor?",
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
             return null;
         }
     });
