@@ -35,6 +35,7 @@ const Dashboard: React.FC = () => {
     role: 'user'
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [notifications, setNotifications] = useState<any[]>([]); // Added notifications state
 
   // Auth & User Data Listener
   useEffect(() => {
@@ -46,7 +47,16 @@ const Dashboard: React.FC = () => {
         const userRef = doc(db, 'users', currentUser.uid);
         const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
-            setUserStats(docSnap.data() as UserStats);
+            const data = docSnap.data() as UserStats;
+            const superAdminEmails = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'];
+            const isSuperAdmin = superAdminEmails.some(email => currentUser.email?.includes(email));
+
+            setUserStats({
+              ...data,
+              role: isSuperAdmin ? 'admin' : data.role,
+              plan: isSuperAdmin ? 'enterprise' : data.plan,
+              // Ensure maxEnergy is correct for display if needed, or let EnterpriseDashboard handle it
+            });
           } else {
             // Initialize user if not exists
             setDoc(userRef, {

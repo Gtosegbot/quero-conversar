@@ -13,21 +13,43 @@ import {
 } from 'lucide-react';
 import PulsingHeart from './PulsingHeart';
 
+import { auth, db } from '../../firebase-config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, onSnapshot } from 'firebase/firestore';
+
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userStats, setUserStats] = useState<any>({
+    role: 'user',
+    plan: 'free',
+    name: 'Usuário'
+  });
   const location = useLocation();
 
-  // Close sidebar when route changes
   useEffect(() => {
-    setSidebarOpen(false);
-  }, [location.pathname]);
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const userRef = doc(db, 'users', user.uid);
+        const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const superAdminEmails = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'];
+            const isSuperAdmin = superAdminEmails.some(email => user.email?.includes(email));
+
+            setUserStats({
+              role: isSuperAdmin ? 'admin' : (data.role || 'user'),
+              plan: isSuperAdmin ? 'enterprise' : (data.plan || 'free'),
+              name: user.displayName || 'Usuário'
+            });
+          }
+        });
+        return () => unsubscribeUser();
+      }
+    });
+    return () => unsubscribeAuth();
+  }, []);
 
   // Close sidebar when route changes
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [location.pathname]);
-
-  // Close sidebar when route changes (prevents sandwich menu issues)
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
@@ -43,6 +65,21 @@ const Layout: React.FC = () => {
     { name: 'Upload', href: '/upload', icon: BookOpen, color: 'text-red-500' },
     { name: 'Documentação', href: '/docs', icon: BookOpen, color: 'text-gray-500' },
   ];
+
+  const getHeartColor = (role: string) => {
+    if (role === 'admin') return 'text-yellow-500';
+    if (role === 'professional') return 'text-orange-500';
+    if (role === 'moderator') return 'text-green-600';
+    if (role === 'partner') return 'text-cyan-500';
+    return 'text-purple-600';
+  };
+
+  const getPlanLabel = (plan: string, role: string) => {
+    if (role === 'admin') return 'Administrador';
+    if (plan === 'enterprise') return 'Plano Enterprise';
+    if (plan === 'premium') return 'Plano Premium';
+    return 'Plano Grátis';
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
@@ -81,6 +118,15 @@ const Layout: React.FC = () => {
               ))}
             </nav>
           </div>
+          <div className="border-t border-gray-200 p-4">
+            <div className="flex items-center">
+              <PulsingHeart color={getHeartColor(userStats.role)} size="sm" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-700">{userStats.name?.split(' ')[0]}</p>
+                <p className="text-xs text-gray-500">{getPlanLabel(userStats.plan, userStats.role)}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -110,10 +156,10 @@ const Layout: React.FC = () => {
           </div>
           <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
             <div className="flex items-center">
-              <PulsingHeart color="text-green-500" size="sm" />
+              <PulsingHeart color={getHeartColor(userStats.role)} size="sm" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">Usuário</p>
-                <p className="text-xs text-gray-500">Plano Grátis</p>
+                <p className="text-sm font-medium text-gray-700">{userStats.name?.split(' ')[0]}</p>
+                <p className="text-xs text-gray-500">{getPlanLabel(userStats.plan, userStats.role)}</p>
               </div>
             </div>
           </div>

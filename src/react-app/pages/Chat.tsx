@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Settings, Zap, AlertCircle } from 'lucide-react';
+import { Send, Settings, Zap, AlertCircle, Bell } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
 import TypewriterEffect from '../components/TypewriterEffect';
 import { db, auth } from '../../firebase-config';
@@ -59,6 +59,28 @@ const Chat: React.FC = () => {
     }
     return null;
   };
+
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch active notifications for chat
+    const q = query(
+      collection(db, 'notifications'),
+      where('page_section', '==', 'chat'),
+      where('is_active', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const notifs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setNotifications(notifs);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const userId = getUserId();
@@ -276,6 +298,32 @@ const Chat: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Admin Notifications Banner */}
+      {notifications.length > 0 && (
+        <div className="bg-orange-50 border-b border-orange-100 p-3">
+          <div className="max-w-4xl mx-auto">
+            {notifications.map(notif => (
+              <div key={notif.id} className="flex items-start justify-between mb-2 last:mb-0">
+                <div className="flex items-start">
+                  <Bell className="w-5 h-5 text-orange-600 mr-2 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-orange-900">{notif.title}</p>
+                    <p className="text-sm text-orange-800">{notif.message}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}
+                  className="text-orange-500 hover:text-orange-700"
+                >
+                  <span className="sr-only">Fechar</span>
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Limit Warning */}
       {showLimitWarning && (

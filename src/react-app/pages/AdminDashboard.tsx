@@ -1089,15 +1089,24 @@ const AdminDashboard: React.FC = () => {
                 Ações Rápidas
               </h2>
               <div className="space-y-3">
-                <button className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
                   <div className="font-semibold text-gray-900">Usuários Recentes</div>
                   <div className="text-sm text-gray-600">Ver novos cadastros</div>
                 </button>
-                <button className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <button
+                  onClick={() => navigate('/moderation')}
+                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
                   <div className="font-semibold text-gray-900">Profissionais Pendentes</div>
                   <div className="text-sm text-gray-600">Aprovar verificações</div>
                 </button>
-                <button className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <button
+                  onClick={() => alert('Funcionalidade de exportação em desenvolvimento')}
+                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
                   <div className="font-semibold text-gray-900">Exportar Dados</div>
                   <div className="text-sm text-gray-600">Relatórios em CSV</div>
                 </button>
@@ -1140,7 +1149,10 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-gray-600 mb-4">
                   Configure moderadores, definir especialidades e gerenciar permissões
                 </p>
-                <button className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors">
+                <button
+                  onClick={() => navigate('/moderation')}
+                  className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
+                >
                   Configurar Moderação
                 </button>
               </div>
