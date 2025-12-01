@@ -77,7 +77,17 @@ const Payment: React.FC = () => {
               )}
 
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                <p className="text-sm text-blue-800">
+                <p className="text-sm text-blue-800 font-semibold mb-2">Chave PIX (Copia e Cola):</p>
+                <div className="flex items-center justify-between bg-white p-2 rounded border border-blue-200">
+                  <code className="text-xs text-gray-600 break-all">{paymentResult.payment_url}</code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(paymentResult.payment_url)}
+                    className="ml-2 text-blue-600 hover:text-blue-800 text-xs font-bold"
+                  >
+                    COPIAR
+                  </button>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
                   Após o pagamento, você será redirecionado automaticamente.
                   Este processo pode levar alguns minutos.
                 </p>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  User, 
-  Edit, 
-  Camera, 
-  Calendar, 
-  FileText, 
-  Video, 
+import {
+  User,
+  Edit,
+  Camera,
+  Calendar,
+  FileText,
+  Video,
   Star,
   Settings
 } from 'lucide-react';
@@ -46,7 +46,12 @@ interface UserStats {
   energy_points: number;
 }
 
+import { db, auth } from '../../firebase-config';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+
 const Profile: React.FC = () => {
+  const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [professionalProfile, setProfessionalProfile] = useState<ProfessionalProfile | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -56,67 +61,80 @@ const Profile: React.FC = () => {
   const [isProfessional, setIsProfessional] = useState(false);
 
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
+    const user = auth.currentUser;
+    if (!user) return;
 
-  const fetchUserProfile = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch user profile
-      const userResponse = await fetch('/api/user/profile');
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        setUserProfile(userData.user);
-      }
+    setLoading(true);
 
-      // Check if user is also a professional
-      const professionalResponse = await fetch('/api/user/professional-profile');
-      if (professionalResponse.ok) {
-        const professionalData = await professionalResponse.json();
-        if (professionalData.professional) {
-          setProfessionalProfile(professionalData.professional);
+    // 1. User Profile Listener
+    const userRef = doc(db, 'users', user.uid);
+    const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserProfile({
+          id: data.uid || user.uid,
+          name: data.name || user.displayName || 'Usuário',
+          email: data.email || user.email || '',
+          age: data.age,
+          plan: data.plan || 'free',
+          avatar: data.avatar || user.photoURL,
+          bio: data.bio,
+          phone: data.phone,
+          created_at: data.createdAt || new Date().toISOString()
+        } as any);
+
+        // Check professional status
+        if (data.role === 'professional') {
           setIsProfessional(true);
+          // In a real app, professional details might be in a separate collection or sub-collection
+          // For now, we assume they are merged or we'd fetch from 'professionals/{uid}'
+          setProfessionalProfile({
+            id: data.uid,
+            specialty: data.specialty || 'Geral',
+            bio: data.professionalBio || data.bio || '',
+            hourly_rate: data.hourlyRate || 150,
+            experience_years: data.experienceYears || 0,
+            is_verified: data.verified || false,
+            location: data.location,
+            languages: data.languages,
+            popularity_score: data.popularityScore || 100
+          } as any);
         }
       }
-
-      // Fetch user stats
-      const statsResponse = await fetch('/api/user/stats');
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setUserStats(statsData.stats);
-      }
-
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
       setLoading(false);
-    }
-  };
+    });
+
+    // 2. Stats Listener (Mocked or from a subcollection)
+    // For simplicity, we'll derive some stats or use placeholders if not in Firestore
+    setUserStats({
+      total_consultations: 0,
+      total_videos_watched: 0,
+      total_documents_uploaded: 0,
+      streak_days: 1,
+      level: 1,
+      energy_points: 0
+    });
+
+    return () => {
+      unsubscribeUser();
+    };
+  }, []);
 
   const handleProfileUpdate = async (updatedData: Partial<UserProfile>) => {
     try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedData),
-      });
+      const user = auth.currentUser;
+      if (!user) return;
 
-      if (response.ok) {
-        const { user } = await response.json();
-        setUserProfile(user);
-        setEditing(false);
-      }
+      await updateDoc(doc(db, 'users', user.uid), updatedData);
+      setEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
+      alert('Erro ao atualizar perfil.');
     }
   };
 
   const becomeProfessional = () => {
-    // Redirect to professional registration
-    window.location.href = '/become-professional';
+    navigate('/register-professional');
   };
 
   const tabs = [
@@ -145,21 +163,47 @@ const Profile: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               {/* Avatar */}
-              <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center">
+              <div className="relative group">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
                   {userProfile?.avatar ? (
-                    <img 
-                      src={userProfile.avatar} 
+                    <img
+                      src={userProfile.avatar}
                       alt={userProfile.name}
-                      className="w-24 h-24 rounded-full object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
                     <User className="w-12 h-12 text-purple-600" />
                   )}
                 </div>
-                <button className="absolute bottom-0 right-0 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition-colors">
+                <label className="absolute bottom-0 right-0 bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 transition-colors cursor-pointer shadow-sm">
                   <Camera className="w-4 h-4" />
-                </button>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          // Convert to Base64 for simple storage (limit to small files)
+                          // In production, use Firebase Storage: uploadBytes(ref(storage, ...), file)
+                          const reader = new FileReader();
+                          reader.onloadend = async () => {
+                            const base64String = reader.result as string;
+                            const user = auth.currentUser;
+                            if (user) {
+                              await updateDoc(doc(db, 'users', user.uid), { avatar: base64String });
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        } catch (err) {
+                          console.error("Error uploading avatar:", err);
+                          alert("Erro ao atualizar foto.");
+                        }
+                      }
+                    }}
+                  />
+                </label>
               </div>
 
               {/* User Info */}
@@ -169,11 +213,10 @@ const Profile: React.FC = () => {
                 </h1>
                 <p className="text-gray-600 mb-2">{userProfile?.email}</p>
                 <div className="flex items-center space-x-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    userProfile?.plan === 'premium' 
-                      ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white'
-                      : 'bg-gray-200 text-gray-700'
-                  }`}>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${userProfile?.plan === 'premium'
+                    ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white'
+                    : 'bg-gray-200 text-gray-700'
+                    }`}>
                     {userProfile?.plan === 'premium' ? 'Premium' : 'Gratuito'}
                   </span>
                   {isProfessional && professionalProfile?.is_verified && (
@@ -221,7 +264,7 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-green-50 rounded-lg p-4">
                 <div className="flex items-center">
                   <Calendar className="w-8 h-8 text-green-600" />
@@ -231,7 +274,7 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-blue-50 rounded-lg p-4">
                 <div className="flex items-center">
                   <Video className="w-8 h-8 text-blue-600" />
@@ -241,7 +284,7 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-orange-50 rounded-lg p-4">
                 <div className="flex items-center">
                   <FileText className="w-8 h-8 text-orange-600" />
@@ -262,45 +305,45 @@ const Profile: React.FC = () => {
               <Star className="w-6 h-6 text-yellow-500 mr-2" />
               Perfil Profissional
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Especialidade</label>
                   <p className="text-lg font-semibold text-gray-900">{professionalProfile.specialty}</p>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-gray-700">Experiência</label>
                   <p className="text-lg font-semibold text-gray-900">{professionalProfile.experience_years} anos</p>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Valor por Hora</label>
                   <p className="text-lg font-semibold text-green-600">R$ {professionalProfile.hourly_rate.toFixed(2)}</p>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-gray-700">Popularidade</label>
                   <p className="text-lg font-semibold text-purple-600">{professionalProfile.popularity_score}%</p>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Localização</label>
                   <p className="text-lg font-semibold text-gray-900">{professionalProfile.location || 'Online'}</p>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium text-gray-700">Idiomas</label>
                   <p className="text-lg font-semibold text-gray-900">{professionalProfile.languages || 'Português'}</p>
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-4">
               <label className="text-sm font-medium text-gray-700">Bio Profissional</label>
               <p className="text-gray-600 mt-1">{professionalProfile.bio}</p>
@@ -316,11 +359,10 @@ const Profile: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors flex items-center ${
-                    activeTab === tab.id
-                      ? 'border-purple-500 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+                  className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors flex items-center ${activeTab === tab.id
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                 >
                   <tab.icon className="w-4 h-4 mr-2" />
                   {tab.name}
@@ -332,7 +374,7 @@ const Profile: React.FC = () => {
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'profile' && (
-              <ProfileEditForm 
+              <ProfileEditForm
                 profile={userProfile}
                 editing={editing}
                 onSave={handleProfileUpdate}
@@ -374,11 +416,11 @@ interface ProfileEditFormProps {
   onCancel: () => void;
 }
 
-const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ 
-  profile, 
-  editing, 
-  onSave, 
-  onCancel 
+const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
+  profile,
+  editing,
+  onSave,
+  onCancel
 }) => {
   const [formData, setFormData] = useState({
     name: profile?.name || '',
@@ -404,26 +446,26 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
           <label className="text-sm font-medium text-gray-700">Nome Completo</label>
           <p className="text-lg text-gray-900">{profile?.name}</p>
         </div>
-        
+
         <div>
           <label className="text-sm font-medium text-gray-700">E-mail</label>
           <p className="text-lg text-gray-900">{profile?.email}</p>
         </div>
-        
+
         {profile?.age && (
           <div>
             <label className="text-sm font-medium text-gray-700">Idade</label>
             <p className="text-lg text-gray-900">{profile.age} anos</p>
           </div>
         )}
-        
+
         {profile?.bio && (
           <div>
             <label className="text-sm font-medium text-gray-700">Sobre mim</label>
             <p className="text-gray-900">{profile.bio}</p>
           </div>
         )}
-        
+
         <div>
           <label className="text-sm font-medium text-gray-700">Membro desde</label>
           <p className="text-lg text-gray-900">
@@ -443,11 +485,11 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         <input
           type="text"
           value={formData.name}
-          onChange={(e) => setFormData({...formData, name: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
         />
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           E-mail
@@ -455,11 +497,11 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         <input
           type="email"
           value={formData.email}
-          onChange={(e) => setFormData({...formData, email: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
         />
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Idade
@@ -469,11 +511,11 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
           min="13"
           max="120"
           value={formData.age}
-          onChange={(e) => setFormData({...formData, age: parseInt(e.target.value) || ''})}
+          onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || '' })}
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
         />
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Telefone
@@ -481,11 +523,11 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         <input
           type="tel"
           value={formData.phone}
-          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
         />
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Sobre mim
@@ -493,12 +535,12 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
         <textarea
           rows={4}
           value={formData.bio}
-          onChange={(e) => setFormData({...formData, bio: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
           placeholder="Conte um pouco sobre você..."
         />
       </div>
-      
+
       <div className="flex space-x-3">
         <button
           type="button"
@@ -537,7 +579,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ userId, isProfessio
       setLoading(true);
       const endpoint = isProfessional ? '/api/professional/appointments' : '/api/user/appointments';
       const response = await fetch(endpoint);
-      
+
       if (response.ok) {
         const data = await response.json();
         setAppointments(data.appointments || []);
@@ -565,7 +607,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ userId, isProfessio
           Nenhuma consulta agendada
         </h3>
         <p className="text-gray-500">
-          {isProfessional 
+          {isProfessional
             ? 'Seus pacientes ainda não agendaram consultas.'
             : 'Você ainda não agendou nenhuma consulta.'
           }
@@ -579,7 +621,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ userId, isProfessio
       <h3 className="text-lg font-semibold text-gray-900">
         {isProfessional ? 'Consultas Agendadas' : 'Minhas Consultas'}
       </h3>
-      
+
       {/* Appointments would be rendered here */}
       <div className="text-center py-8">
         <p className="text-gray-500">Funcionalidade em desenvolvimento...</p>

@@ -47,6 +47,9 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
     return value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2');
   };
 
+  import { db } from '../../firebase-config';
+  import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
   const handlePayment = async () => {
     setProcessing(true);
     setError('');
@@ -59,68 +62,55 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
         }
       }
 
-      // Create payment intent
-      let endpoint = '';
-      let payload = {};
+      // Create payment record in Firestore
+      const paymentData = {
+        type,
+        amount,
+        description,
+        planName: planName || null,
+        billingCycle: billingCycle || null,
+        professionalName: professionalName || null,
+        appointmentDate: appointmentDate || null,
+        paymentMethod: selectedMethod,
+        status: selectedMethod === 'pix' ? 'pending' : 'completed', // Card simulated as instant success
+        createdAt: serverTimestamp(),
+        userId: JSON.parse(localStorage.getItem('user') || '{}').uid || 'anonymous',
+        userEmail: JSON.parse(localStorage.getItem('user') || '{}').email || 'anonymous',
+        cardDetails: selectedMethod === 'card' ? {
+          last4: cardData.number.slice(-4),
+          brand: 'mastercard' // Simulated
+        } : null
+      };
 
-      if (type === 'subscription') {
-        endpoint = '/api/payments/create-subscription';
-        payload = {
-          plan_name: planName,
-          billing_cycle: billingCycle,
-          amount,
-          payment_method: selectedMethod,
-          card_data: selectedMethod === 'card' ? cardData : null,
-        };
-      } else {
-        endpoint = '/api/payments/create-appointment-payment';
-        payload = {
-          amount,
-          payment_method: selectedMethod,
-          appointment_details: {
-            professional_name: professionalName,
-            appointment_date: appointmentDate,
-            description,
-          },
-          card_data: selectedMethod === 'card' ? cardData : null,
-        };
-      }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Falha no pagamento');
-      }
-
-      const result = await response.json();
+      const docRef = await addDoc(collection(db, 'payments'), paymentData);
 
       if (selectedMethod === 'pix') {
-        // For PIX, show QR code or redirect
-        if (result.pix_qr_code || result.payment_url) {
-          onSuccess({
-            method: 'pix',
-            qr_code: result.pix_qr_code,
-            payment_url: result.payment_url,
-            payment_id: result.payment_id,
-          });
-        }
+        // Manual PIX Flow
+        const pixKey = "ff576050-99a7-4158-b4ea-1eb0db3098ac";
+        // Generate a static QR code URL (using a public API for demo purposes or a placeholder)
+        // In a real app, you'd generate this based on the payload.
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${pixKey}`;
+
+        onSuccess({
+          method: 'pix',
+          qr_code: qrCodeUrl,
+          payment_url: pixKey, // Displaying the key as the "url" or copyable text
+          payment_id: docRef.id,
+        });
       } else {
-        // For card, simulate success
+        // Card Simulation
+        // Simulate a delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         onSuccess({
           method: 'card',
-          payment_id: result.payment_id,
-          transaction_id: result.transaction_id,
+          payment_id: docRef.id,
+          transaction_id: `tx_${Math.random().toString(36).substr(2, 9)}`,
         });
       }
 
     } catch (err) {
+      console.error("Payment error:", err);
       setError(err instanceof Error ? err.message : 'Erro no pagamento');
     } finally {
       setProcessing(false);
@@ -182,22 +172,20 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
         <div className="grid grid-cols-2 gap-3 mb-6">
           <button
             onClick={() => setSelectedMethod('card')}
-            className={`p-4 rounded-lg border-2 flex items-center justify-center transition-colors ${
-              selectedMethod === 'card'
+            className={`p-4 rounded-lg border-2 flex items-center justify-center transition-colors ${selectedMethod === 'card'
                 ? 'border-purple-500 bg-purple-50'
                 : 'border-gray-200 hover:border-gray-300'
-            }`}
+              }`}
           >
             <CreditCard className="w-5 h-5 mr-2" />
             <span className="font-medium">Cartão</span>
           </button>
           <button
             onClick={() => setSelectedMethod('pix')}
-            className={`p-4 rounded-lg border-2 flex items-center justify-center transition-colors ${
-              selectedMethod === 'pix'
+            className={`p-4 rounded-lg border-2 flex items-center justify-center transition-colors ${selectedMethod === 'pix'
                 ? 'border-purple-500 bg-purple-50'
                 : 'border-gray-200 hover:border-gray-300'
-            }`}
+              }`}
           >
             <DollarSign className="w-5 h-5 mr-2" />
             <span className="font-medium">PIX</span>
