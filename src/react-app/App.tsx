@@ -28,6 +28,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<AuthForm />} />
         <Route path="/register-professional" element={<ProfessionalRegistrationForm />} />
+        <Route path="/become-professional" element={<ProfessionalRegistrationForm />} />
         <Route path="/register-partner" element={<PartnerRegistrationForm />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/admin" element={<AdminDashboard />} />

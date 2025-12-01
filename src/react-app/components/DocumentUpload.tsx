@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Upload, File, Download, Trash2, FileText, Image, Video } from 'lucide-react';
 import PulsingHeart from './PulsingHeart';
+import { db, storage } from '../../firebase-config';
+import { collection, addDoc, query, where, onSnapshot, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 interface DocumentUploadProps {
   appointmentId?: string;
@@ -10,7 +13,7 @@ interface DocumentUploadProps {
 }
 
 interface Document {
-  id: number;
+  id: string;
   filename: string;
   original_filename: string;
   file_size: number;
@@ -18,14 +21,16 @@ interface Document {
   document_type: string;
   description?: string;
   is_prescription: boolean;
-  created_at: string;
+  created_at: any;
+  url: string;
+  storagePath: string;
 }
 
-const DocumentUpload: React.FC<DocumentUploadProps> = ({ 
-  appointmentId, 
-  userType, 
-  userId, 
-  professionalId 
+const DocumentUpload: React.FC<DocumentUploadProps> = ({
+  appointmentId,
+  userType,
+  userId,
+  professionalId
 }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -33,73 +38,78 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDocuments();
-  }, [appointmentId, userId, professionalId]);
+    // Construct query
+    const constraints = [];
+    if (appointmentId) constraints.push(where('appointmentId', '==', appointmentId));
+    if (userId) constraints.push(where('userId', '==', userId));
+    if (professionalId) constraints.push(where('professionalId', '==', professionalId));
 
-  const fetchDocuments = async () => {
-    try {
-      let url = '/api/documents';
-      const params = new URLSearchParams();
-      
-      if (appointmentId) params.append('appointment_id', appointmentId);
-      if (userId) params.append('user_id', userId.toString());
-      if (professionalId) params.append('professional_id', professionalId.toString());
-      
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setDocuments(data.documents || []);
-      }
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-    } finally {
+    // If no filters, don't fetch anything to be safe (or fetch all if appropriate)
+    if (constraints.length === 0) {
       setLoading(false);
+      return;
     }
-  };
+
+    const q = query(collection(db, 'documents'), ...constraints);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Document[];
+      setDocuments(docs);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching documents:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [appointmentId, userId, professionalId]);
 
   const handleFileUpload = useCallback(async (files: FileList) => {
     if (!files.length) return;
 
     setUploading(true);
-    
+
     for (const file of Array.from(files)) {
       try {
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        if (appointmentId) formData.append('appointment_id', appointmentId);
-        if (userId) formData.append('user_id', userId.toString());
-        if (professionalId) formData.append('professional_id', professionalId.toString());
-        
-        // Determine document type based on file
+        // 1. Upload to Firebase Storage
+        const storagePath = `documents/${userId || 'anonymous'}/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, storagePath);
+
+        await uploadBytes(storageRef, file);
+        const downloadUrl = await getDownloadURL(storageRef);
+
+        // 2. Determine document type
         let documentType = 'general';
         if (file.type.includes('pdf')) documentType = 'pdf';
         else if (file.type.includes('image')) documentType = 'image';
         else if (file.type.includes('video')) documentType = 'video';
-        
-        formData.append('document_type', documentType);
-        formData.append('description', `Documento enviado via ${userType === 'professional' ? 'profissional' : 'paciente'}`);
 
-        const response = await fetch('/api/documents/upload', {
-          method: 'POST',
-          body: formData,
+        // 3. Save metadata to Firestore
+        await addDoc(collection(db, 'documents'), {
+          original_filename: file.name,
+          filename: file.name,
+          file_size: file.size,
+          file_type: file.type,
+          document_type: documentType,
+          description: `Documento enviado via ${userType === 'professional' ? 'profissional' : 'paciente'}`,
+          is_prescription: false,
+          created_at: serverTimestamp(),
+          url: downloadUrl,
+          storagePath: storagePath,
+          userId: userId,
+          professionalId: professionalId,
+          appointmentId: appointmentId
         });
 
-        if (response.ok) {
-          await fetchDocuments(); // Refresh the list
-        } else {
-          throw new Error('Upload failed');
-        }
       } catch (error) {
         console.error('Upload error:', error);
-        alert(`Erro ao enviar ${file.name}`);
+        alert(`Erro ao enviar ${file.name}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       }
     }
-    
+
     setUploading(false);
   }, [appointmentId, userId, professionalId, userType]);
 
@@ -128,39 +138,23 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     }
   };
 
-  const downloadDocument = async (document: Document) => {
-    try {
-      const response = await fetch(`/api/documents/${document.id}/download`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = window.document.createElement('a');
-        a.href = url;
-        a.download = document.original_filename;
-        window.document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        window.document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('Erro ao baixar documento');
-    }
+  const downloadDocument = (document: Document) => {
+    window.open(document.url, '_blank');
   };
 
-  const deleteDocument = async (documentId: number) => {
+  const deleteDocument = async (document: Document) => {
     if (!confirm('Tem certeza que deseja excluir este documento?')) return;
 
     try {
-      const response = await fetch(`/api/documents/${documentId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        await fetchDocuments();
-      } else {
-        throw new Error('Delete failed');
+      // 1. Delete from Storage
+      if (document.storagePath) {
+        const storageRef = ref(storage, document.storagePath);
+        await deleteObject(storageRef);
       }
+
+      // 2. Delete from Firestore
+      await deleteDoc(doc(db, 'documents', document.id));
+
     } catch (error) {
       console.error('Delete error:', error);
       alert('Erro ao excluir documento');
@@ -194,11 +188,10 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     <div className="space-y-4">
       {/* Upload Area */}
       <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          dragOver
+        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragOver
             ? 'border-purple-500 bg-purple-50'
             : 'border-gray-300 hover:border-purple-400'
-        }`}
+          }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -212,7 +205,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           onChange={handleFileInputChange}
           disabled={uploading}
         />
-        
+
         <label htmlFor="file-upload" className="cursor-pointer">
           <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
           <p className="text-sm text-gray-600 mb-1">
@@ -252,7 +245,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           <File className="w-4 h-4 mr-2" />
           Documentos ({documents.length})
         </h4>
-        
+
         {documents.length === 0 ? (
           <p className="text-gray-500 text-sm py-4 text-center">
             Nenhum documento enviado ainda
@@ -271,7 +264,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                       {doc.original_filename}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {formatFileSize(doc.file_size)} • {new Date(doc.created_at).toLocaleDateString()}
+                      {formatFileSize(doc.file_size)} • {doc.created_at?.toDate ? new Date(doc.created_at.toDate()).toLocaleDateString() : 'Data desconhecida'}
                     </p>
                     {doc.description && (
                       <p className="text-xs text-gray-600 mt-1">{doc.description}</p>
@@ -283,7 +276,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => downloadDocument(doc)}
@@ -292,16 +285,15 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                   >
                     <Download className="w-4 h-4" />
                   </button>
-                  
-                  {userType === 'professional' && (
-                    <button
-                      onClick={() => deleteDocument(doc.id)}
-                      className="p-1 text-red-600 hover:text-red-800"
-                      title="Excluir"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+
+                  {/* Allow deletion if it's the user's own document or if professional */}
+                  <button
+                    onClick={() => deleteDocument(doc)}
+                    className="p-1 text-red-600 hover:text-red-800"
+                    title="Excluir"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))}
@@ -313,3 +305,4 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 };
 
 export default DocumentUpload;
+

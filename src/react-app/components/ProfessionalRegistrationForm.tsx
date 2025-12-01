@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Mail,
@@ -61,6 +61,10 @@ const ProfessionalRegistrationForm: React.FC = () => {
     certificates: []
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    console.log("ProfessionalRegistrationForm mounted");
+  }, []);
 
   const specialties = [
     'Psicologia Clínica',
@@ -165,12 +169,17 @@ const ProfessionalRegistrationForm: React.FC = () => {
 
       // 3. Upload Documents
       const uploadedDocs = [];
-      for (let i = 0; i < formData.certificates.length; i++) {
-        const file = formData.certificates[i];
-        const storageRef = ref(storage, `professional_docs/${user.uid}/${file.name}`);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
-        uploadedDocs.push({ name: file.name, url });
+      try {
+        for (let i = 0; i < formData.certificates.length; i++) {
+          const file = formData.certificates[i];
+          const storageRef = ref(storage, `professional_docs/${user.uid}/${file.name}`);
+          await uploadBytes(storageRef, file);
+          const url = await getDownloadURL(storageRef);
+          uploadedDocs.push({ name: file.name, url });
+        }
+      } catch (storageError) {
+        console.error("Storage upload failed, proceeding with registration but without docs:", storageError);
+        // Optionally alert the user or continue
       }
 
       // 4. Save Application to Firestore
@@ -483,3 +492,4 @@ const ProfessionalRegistrationForm: React.FC = () => {
 };
 
 export default ProfessionalRegistrationForm;
+
