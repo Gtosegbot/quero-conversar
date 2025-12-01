@@ -42,6 +42,7 @@ interface FormData {
 const ProfessionalRegistrationForm: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
     email: '',
@@ -64,6 +65,11 @@ const ProfessionalRegistrationForm: React.FC = () => {
 
   useEffect(() => {
     console.log("ProfessionalRegistrationForm mounted");
+    // Simulate a short initialization check to ensure Firebase is ready
+    const timer = setTimeout(() => {
+      setIsInitializing(false);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const specialties = [
@@ -230,6 +236,14 @@ const ProfessionalRegistrationForm: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <PulsingHeart color="text-green-600" size="xl" />
+      </div>
+    );
+  }
 
   const renderStep1 = () => (
     <div className="space-y-6">
