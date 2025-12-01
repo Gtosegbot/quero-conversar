@@ -69,7 +69,9 @@ const Chat: React.FC = () => {
     const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const isPremium = data.plan === 'premium' || data.plan === 'enterprise' || data.role === 'admin';
+        const superAdminEmails = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'];
+        const isSuperAdmin = superAdminEmails.some(email => data.email?.includes(email));
+        const isPremium = data.plan === 'premium' || data.plan === 'enterprise' || data.role === 'admin' || isSuperAdmin;
 
         setUserContext({
           name: data.name || 'Usuário',
@@ -77,7 +79,7 @@ const Chat: React.FC = () => {
           maxDailyInteractions: isPremium ? 9999 : 15,
           plan: isPremium ? 'premium' : 'free',
           level: data.level || 1,
-          role: data.role || 'user'
+          role: isSuperAdmin ? 'admin' : (data.role || 'user')
         });
       }
     });

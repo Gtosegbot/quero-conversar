@@ -24,7 +24,20 @@ import {
   Loader2
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '../../firebase-config';
+import { functions, db } from '../../firebase-config';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  doc,
+  getCountFromServer
+} from 'firebase/firestore';
 import AdminDataManagement from './AdminDataManagement';
 import KnowledgeUpload from '../components/KnowledgeUpload';
 import { SimpleBarChart, SimpleLineChart } from '../components/ChartComponents';
@@ -293,6 +306,13 @@ const AdminDashboard: React.FC = () => {
     end_date: ''
   });
 
+  // Firestore References
+  const taskTemplatesRef = collection(db, 'task_templates');
+  const notificationsRef = collection(db, 'notifications');
+  const usersRef = collection(db, 'users');
+  const appointmentsRef = collection(db, 'appointments');
+  const reportsRef = collection(db, 'reports');
+
   useEffect(() => {
     loadAdminStats();
     loadTaskTemplates();
@@ -301,11 +321,22 @@ const AdminDashboard: React.FC = () => {
 
   const loadAdminStats = async () => {
     try {
-      const response = await fetch('/api/admin/dashboard-stats');
-      if (response.ok) {
-        const data = await response.json();
-        setAdminStats(data);
-      }
+      // Real-time counts (or estimated)
+      const usersSnap = await getCountFromServer(usersRef);
+      const professionalsSnap = await getCountFromServer(query(usersRef, where('role', '==', 'professional')));
+      const appointmentsSnap = await getCountFromServer(appointmentsRef);
+
+      // For "Messages Today", we might need a specific query or just estimate/skip for now to save reads
+      // For "Pending Reports"
+      const reportsSnap = await getCountFromServer(query(reportsRef, where('status', '==', 'pending')));
+
+      setAdminStats({
+        total_users: usersSnap.data().count,
+        total_professionals: professionalsSnap.data().count,
+        total_appointments: appointmentsSnap.data().count,
+        messages_today: 0, // Placeholder or implement specific logic
+        pending_reports: reportsSnap.data().count
+      });
     } catch (error) {
       console.error('Failed to load admin stats:', error);
     }
@@ -313,11 +344,10 @@ const AdminDashboard: React.FC = () => {
 
   const loadTaskTemplates = async () => {
     try {
-      const response = await fetch('/api/admin/task-templates');
-      if (response.ok) {
-        const data = await response.json();
-        setTaskTemplates(data.templates || []);
-      }
+      const q = query(taskTemplatesRef, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const templates = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TaskTemplate));
+      setTaskTemplates(templates);
     } catch (error) {
       console.error('Failed to load task templates:', error);
     }
@@ -325,11 +355,10 @@ const AdminDashboard: React.FC = () => {
 
   const loadNotifications = async () => {
     try {
-      const response = await fetch('/api/admin/notifications');
-      if (response.ok) {
-        const data = await response.json();
-        setNotifications(data.notifications || []);
-      }
+      const q = query(notificationsRef, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdminNotification));
+      setNotifications(notifs);
     } catch (error) {
       console.error('Failed to load notifications:', error);
     }
@@ -340,25 +369,21 @@ const AdminDashboard: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/admin/task-templates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTask)
+      await addDoc(taskTemplatesRef, {
+        ...newTask,
+        is_active: true,
+        createdAt: serverTimestamp()
       });
 
-      if (response.ok) {
-        setNewTask({
-          title: '',
-          description: '',
-          category: 'mental',
-          points: 50,
-          difficulty: 'easy'
-        });
-        loadTaskTemplates();
-        alert('Tarefa criada com sucesso!');
-      } else {
-        alert('Erro ao criar tarefa');
-      }
+      setNewTask({
+        title: '',
+        description: '',
+        category: 'mental',
+        points: 50,
+        difficulty: 'easy'
+      });
+      loadTaskTemplates();
+      alert('Tarefa criada com sucesso!');
     } catch (error) {
       console.error('Error creating task:', error);
       alert('Erro ao criar tarefa');
@@ -372,25 +397,21 @@ const AdminDashboard: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/admin/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newNotification)
+      await addDoc(notificationsRef, {
+        ...newNotification,
+        is_active: true,
+        createdAt: serverTimestamp()
       });
 
-      if (response.ok) {
-        setNewNotification({
-          page_section: 'chat',
-          title: '',
-          message: '',
-          start_date: '',
-          end_date: ''
-        });
-        loadNotifications();
-        alert('Recado criado com sucesso!');
-      } else {
-        alert('Erro ao criar recado');
-      }
+      setNewNotification({
+        page_section: 'chat',
+        title: '',
+        message: '',
+        start_date: '',
+        end_date: ''
+      });
+      loadNotifications();
+      alert('Recado criado com sucesso!');
     } catch (error) {
       console.error('Error creating notification:', error);
       alert('Erro ao criar recado');
@@ -401,15 +422,10 @@ const AdminDashboard: React.FC = () => {
 
   const toggleTaskActive = async (taskId: string, isActive: boolean) => {
     try {
-      const response = await fetch(`/api/admin/task-templates/${taskId}/toggle`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !isActive })
+      await updateDoc(doc(db, 'task_templates', taskId), {
+        is_active: !isActive
       });
-
-      if (response.ok) {
-        loadTaskTemplates();
-      }
+      loadTaskTemplates();
     } catch (error) {
       console.error('Error toggling task:', error);
     }
@@ -417,15 +433,10 @@ const AdminDashboard: React.FC = () => {
 
   const toggleNotificationActive = async (notificationId: string, isActive: boolean) => {
     try {
-      const response = await fetch(`/api/admin/notifications/${notificationId}/toggle`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_active: !isActive })
+      await updateDoc(doc(db, 'notifications', notificationId), {
+        is_active: !isActive
       });
-
-      if (response.ok) {
-        loadNotifications();
-      }
+      loadNotifications();
     } catch (error) {
       console.error('Error toggling notification:', error);
     }
@@ -435,13 +446,8 @@ const AdminDashboard: React.FC = () => {
     if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
 
     try {
-      const response = await fetch(`/api/admin/task-templates/${taskId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        loadTaskTemplates();
-      }
+      await deleteDoc(doc(db, 'task_templates', taskId));
+      loadTaskTemplates();
     } catch (error) {
       console.error('Error deleting task:', error);
     }
@@ -451,13 +457,8 @@ const AdminDashboard: React.FC = () => {
     if (!confirm('Tem certeza que deseja excluir este recado?')) return;
 
     try {
-      const response = await fetch(`/api/admin/notifications/${notificationId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        loadNotifications();
-      }
+      await deleteDoc(doc(db, 'notifications', notificationId));
+      loadNotifications();
     } catch (error) {
       console.error('Error deleting notification:', error);
     }

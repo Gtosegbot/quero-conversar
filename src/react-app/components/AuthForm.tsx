@@ -43,7 +43,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
           createdAt: new Date().toISOString(),
           plan: 'free',
           role: 'user',
-          referredBy: referralId || null // Store referrer ID
+          referredBy: referralId || null, // Store referrer ID
+          xp: 1,
+          level: 1
         };
         await setDoc(userRef, userData);
       } else {

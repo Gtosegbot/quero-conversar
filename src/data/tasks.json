@@ -3,350 +3,350 @@
         "title": "Respiração Consciente",
         "description": "Pare por 2 minutos e foque apenas na sua respiração. Inspire em 4s, segure 4s, expire 4s.",
         "category": "mental",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Hidratação Matinal",
         "description": "Beba um copo d'água logo ao acordar para despertar o corpo.",
         "category": "physical",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Gratidão Diária",
         "description": "Escreva 3 coisas pelas quais você é grato hoje.",
         "category": "spiritual",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Caminhada Leve",
         "description": "Faça uma caminhada de 15 minutos ao ar livre.",
         "category": "physical",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Desconexão Digital",
         "description": "Fique 30 minutos sem telas (celular, TV, computador) antes de dormir.",
         "category": "mental",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Elogio Sincero",
         "description": "Elogie genuinamente alguém do seu convívio hoje.",
         "category": "spiritual",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Organização Relâmpago",
         "description": "Arrume sua mesa de trabalho ou um cômodo por 10 minutos.",
         "category": "mental",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Alongamento Básico",
         "description": "Faça uma série simples de alongamentos ao acordar.",
         "category": "physical",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Leitura Rápida",
         "description": "Leia 5 páginas de um livro que você gosta.",
         "category": "mental",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Sorriso Consciente",
         "description": "Sorria para si mesmo no espelho por 30 segundos.",
         "category": "mental",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Afirmação Positiva",
         "description": "Repita uma frase positiva sobre você 3 vezes.",
         "category": "spiritual",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Contato com a Natureza",
         "description": "Observe uma planta, árvore ou o céu por 5 minutos.",
         "category": "spiritual",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Pausa para o Chá/Café",
         "description": "Aprecie uma bebida quente com calma, sem fazer outra coisa.",
         "category": "mental",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Postura Correta",
         "description": "Verifique e corrija sua postura 3 vezes ao longo do dia.",
         "category": "physical",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Silêncio Absoluto",
         "description": "Fique 5 minutos em completo silêncio.",
         "category": "spiritual",
-        "points": 50,
+        "points": 10,
         "difficulty": "easy"
     },
     {
         "title": "Meditação Guiada",
         "description": "Faça uma meditação guiada de 10 a 15 minutos.",
         "category": "spiritual",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Leitura Profunda",
         "description": "Leia um capítulo inteiro de um livro técnico ou de desenvolvimento pessoal.",
         "category": "mental",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Exercício Aeróbico",
         "description": "Faça 30 minutos de exercício que eleve sua frequência cardíaca.",
         "category": "physical",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Diário de Emoções",
         "description": "Escreva detalhadamente sobre como você se sentiu hoje e por quê.",
         "category": "mental",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Alimentação Consciente",
         "description": "Faça uma refeição completa sem distrações (sem celular/TV), focando no sabor.",
         "category": "physical",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Aprender Algo Novo",
         "description": "Assista a um vídeo educativo ou tutorial sobre um tema desconhecido.",
         "category": "mental",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Conexão Social",
         "description": "Ligue (voz ou vídeo) para um amigo ou parente distante.",
         "category": "spiritual",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Desafio da Água",
         "description": "Beba 2 litros de água ao longo do dia.",
         "category": "physical",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Planejamento Semanal",
         "description": "Organize sua agenda e metas para os próximos 7 dias.",
         "category": "mental",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Ato de Gentileza",
         "description": "Faça um favor para alguém sem que a pessoa peça.",
         "category": "spiritual",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Limpeza Digital",
         "description": "Organize seus arquivos ou e-mails por 20 minutos.",
         "category": "mental",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Cozinhar Saudável",
         "description": "Prepare uma refeição saudável do zero.",
         "category": "physical",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Visualização Criativa",
         "description": "Visualize seus objetivos alcançados com detalhes por 10 minutos.",
         "category": "mental",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Perdão",
         "description": "Reflita sobre uma mágoa e pratique o perdão (mentalmente ou por escrito).",
         "category": "spiritual",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Sono Reparador",
         "description": "Vá para a cama 30 minutos mais cedo que o habitual.",
         "category": "physical",
-        "points": 100,
+        "points": 25,
         "difficulty": "medium"
     },
     {
         "title": "Escuta Ativa (Liderança)",
         "description": "Em uma conversa, ouça sem interromper e faça perguntas para entender profundamente o outro.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Feedback Construtivo",
         "description": "Dê um feedback honesto e gentil para ajudar alguém a crescer.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Mentoria Voluntária",
         "description": "Dedique 30 minutos para ensinar algo que você sabe a alguém.",
         "category": "spiritual",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Gerenciar Conflito",
         "description": "Aborde uma situação desconfortável ou conflito pendente com calma e empatia.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Estudo de Liderança",
         "description": "Leia um artigo ou assista a um vídeo sobre liderança servidora ou inteligência emocional.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Apoio Emocional",
         "description": "Ofereça seu ombro amigo para alguém que está passando por um momento difícil.",
         "category": "spiritual",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Falar em Público (Treino)",
         "description": "Grave um vídeo de 3 minutos falando sobre um tema que domina (mesmo que não poste).",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Voluntariado / Doação",
         "description": "Separe itens para doação ou dedique tempo a uma causa social.",
         "category": "spiritual",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Desafio Físico Intenso",
         "description": "Supere seu limite em um treino (corra mais longe ou pegue mais peso, com segurança).",
         "category": "physical",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Jejum de Reclamação",
         "description": "Passe 24 horas sem reclamar de absolutamente nada. Se falhar, recomece.",
         "category": "spiritual",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Comunicação Não-Violenta",
         "description": "Estude os 4 passos da CNV e aplique em uma conversa hoje.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Liderar pelo Exemplo",
         "description": "Identifique um hábito ruim no seu grupo/família e seja o primeiro a mudá-lo.",
         "category": "spiritual",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Vulnerabilidade",
         "description": "Compartilhe uma dificuldade ou insegurança com alguém de confiança.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Empatia Radical",
         "description": "Tente entender o ponto de vista de alguém com quem você discorda totalmente.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Delegação Consciente",
         "description": "Se você lidera (em casa ou trabalho), delegue uma tarefa confiando plenamente no outro.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Limites Saudáveis",
         "description": "Diga 'não' para algo que drena sua energia, com educação e firmeza.",
         "category": "mental",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Investimento em Si",
         "description": "Faça algo que exige coragem (ex: marcar aquela consulta, iniciar aquele curso).",
         "category": "physical",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Gratidão Pública",
         "description": "Agradeça publicamente (rede social ou reunião) alguém que te ajudou.",
         "category": "spiritual",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Meditação Prolongada",
         "description": "Medite por 30 minutos ou mais.",
         "category": "spiritual",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     },
     {
         "title": "Dia de Detox",
         "description": "Evite açúcar, álcool e ultraprocessados por 24 horas.",
         "category": "physical",
-        "points": 200,
+        "points": 50,
         "difficulty": "hard"
     }
 ]
