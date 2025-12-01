@@ -25,12 +25,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.onUserCreated = exports.onNewMessage = exports.generateDailyPodcast = exports.generateStudy = exports.analyzeTrends = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const vertexai_1 = require("@google-cloud/vertexai");
 const text_to_speech_1 = require("@google-cloud/text-to-speech");
+const openai_1 = __importDefault(require("openai"));
 if (admin.apps.length === 0) {
     admin.initializeApp();
 }
@@ -38,7 +42,8 @@ const db = admin.firestore();
 const storage = admin.storage();
 // Initialize Vertex AI
 const vertexAI = new vertexai_1.VertexAI({ project: process.env.GCLOUD_PROJECT || "quero-conversar-app", location: "us-central1" });
-const model = vertexAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+const model = vertexAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+// OpenAI initialized lazily inside the function
 // Initialize TTS Client
 const ttsClient = new text_to_speech_1.TextToSpeechClient();
 const SYSTEM_PROMPT = `
@@ -46,6 +51,12 @@ Você é a Dra. Clara Mendes, uma psicóloga virtual empática e experiente.
 Sua missão é guiar o paciente em uma jornada de autoconhecimento.
 Utilize o contexto fornecido (Knowledge Base) para embasar suas respostas, mas mantenha sempre o tom acolhedor.
 Se o contexto incluir informações sobre Motivação ou Espiritualidade, integre-as naturalmente.
+
+IMPORTANTE:
+- Seja concisa. Evite respostas muito longas.
+- Use parágrafos curtos.
+- Foque em uma ou duas orientações práticas por vez.
+- Termine sempre com uma pergunta aberta para manter o diálogo.
 `;
 /**
  * 1. Analyze Community Trends (The "Ear")
@@ -187,9 +198,6 @@ exports.generateDailyPodcast = functions.https.onCall(async (data, context) => {
     }
 });
 /**
- * 4. Chat Response (Updated for Native RAG)
- */
-/**
  * 4. Chat Response (Updated for Native RAG + Web Search)
  */
 exports.onNewMessage = functions.firestore
@@ -202,12 +210,15 @@ exports.onNewMessage = functions.firestore
         console.log("[onNewMessage] Ignoring bot message.");
         return null;
     }
+    // Declare variables outside try block for scope access in catch
+    let userProfile = "";
+    let knowledgeContext = "";
+    let socialContext = "";
     try {
         // 1. Fetch User Context
         const conversationDoc = await db.doc(`conversations/${conversationId}`).get();
         const userId = conversationDoc.data()?.userId;
         console.log(`[onNewMessage] User ID: ${userId}`);
-        let userProfile = "";
         if (userId) {
             const userDoc = await db.collection("users").doc(userId).get();
             const userData = userDoc.data();
@@ -225,13 +236,12 @@ exports.onNewMessage = functions.firestore
             .orderBy("createdAt", "desc")
             .limit(3)
             .get();
-        const knowledgeContext = knowledgeSnap.docs.map(doc => {
+        knowledgeContext = knowledgeSnap.docs.map(doc => {
             const d = doc.data();
             return `ESTUDO CIENTÍFICO: ${d.title}\nRESUMO: ${d.summary}\nCONTEÚDO: ${d.content}\n`;
         }).join("\n\n---\n\n");
         console.log(`[onNewMessage] Retrieved ${knowledgeSnap.size} knowledge docs.`);
         // 3. RAG - Social Context (Community)
-        let socialContext = "";
         if (userId) {
             const communitySnap = await db.collection("community_messages")
                 .where("user_id", "==", userId)
@@ -262,10 +272,10 @@ exports.onNewMessage = functions.firestore
         // 5. Initialize Model with Tools (Web Search)
         // Note: Web Search requires Vertex AI setup in Google Cloud Console.
         const generativeModel = vertexAI.getGenerativeModel({
-            model: "gemini-1.5-flash-001",
-            tools: [{
-                    googleSearchRetrieval: {} // Enable Web Search Grounding
-                }]
+            model: "gemini-2.5-flash",
+            // tools: [{
+            //     googleSearchRetrieval: {} // Temporarily disabled for 1.0 Pro test
+            // }]
         });
         const chat = generativeModel.startChat({
             history: history,
@@ -299,14 +309,45 @@ exports.onNewMessage = functions.firestore
         return null;
     }
     catch (error) {
-        console.error("Error generating response:", error);
-        // Fallback message if AI fails
-        await db.collection(`conversations/${conversationId}/messages`).add({
-            type: "bot",
-            content: `Sinto muito, tive um pequeno lapso de conexão. (Erro Técnico: ${error instanceof Error ? error.message : String(error)})`,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-        return null;
+        console.error("Error generating response with Gemini:", error);
+        console.log("Attempting fallback to OpenAI (GPT-4o-mini)...");
+        try {
+            // Debug logging for API Key (Masked)
+            const configKey = functions.config().openai?.key;
+            const envKey = process.env.OPENAI_API_KEY;
+            console.log(`[OpenAI Debug] Config Key present: ${!!configKey}, Env Key present: ${!!envKey}`);
+            // Initialize OpenAI lazily
+            const openai = new openai_1.default({
+                apiKey: configKey || envKey,
+            });
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: `${SYSTEM_PROMPT}\n\n${userProfile}\n\nBASE DE CONHECIMENTO CIENTÍFICA:\n${knowledgeContext}\n\n${socialContext}\n\nINSTRUÇÕES: Você é a Dra. Clara. Use o contexto acima. Se falhar, seja empática.`
+                    },
+                    { role: "user", content: message.content }
+                ],
+            });
+            const response = completion.choices[0].message.content;
+            await db.collection(`conversations/${conversationId}/messages`).add({
+                type: "bot",
+                content: response,
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            return null;
+        }
+        catch (openaiError) {
+            console.error("OpenAI Fallback failed:", openaiError);
+            // Final Fallback message if BOTH fail
+            await db.collection(`conversations/${conversationId}/messages`).add({
+                type: "bot",
+                content: `Sinto muito, tive um lapso de conexão com meus dois centros de processamento. (Erro Técnico: ${error instanceof Error ? error.message : String(error)} | Fallback: ${openaiError instanceof Error ? openaiError.message : String(openaiError)})`,
+                createdAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+            return null;
+        }
     }
 });
 /**

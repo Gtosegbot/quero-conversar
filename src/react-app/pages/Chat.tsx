@@ -298,7 +298,7 @@ const Chat: React.FC = () => {
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-4">
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${message.type === 'user'
                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
@@ -318,7 +318,12 @@ const Chat: React.FC = () => {
                 )}
                 {message.type === 'bot' ? (
                   <p className="text-sm">
-                    <TypewriterEffect text={message.content} speed={50} />
+                    {/* Only use TypewriterEffect for the very last message to avoid re-typing history */}
+                    {index === messages.length - 1 ? (
+                      <TypewriterEffect text={message.content} speed={30} />
+                    ) : (
+                      <span className="whitespace-pre-line">{message.content}</span>
+                    )}
                   </p>
                 ) : (
                   <p className="text-sm whitespace-pre-line">{message.content}</p>

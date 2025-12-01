@@ -4,7 +4,7 @@ import { VertexAI } from '@google-cloud/vertexai';
 
 // Initialize Vertex AI
 const vertexAI = new VertexAI({ project: process.env.GCLOUD_PROJECT || 'quero-conversar-app', location: 'us-central1' });
-const model = vertexAI.getGenerativeModel({ model: 'gemini-1.5-pro-preview-0409' });
+const model = vertexAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 if (admin.apps.length === 0) {
     admin.initializeApp();

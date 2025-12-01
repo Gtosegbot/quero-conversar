@@ -29,7 +29,7 @@ const admin = __importStar(require("firebase-admin"));
 const vertexai_1 = require("@google-cloud/vertexai");
 // Initialize Vertex AI
 const vertexAI = new vertexai_1.VertexAI({ project: process.env.GCLOUD_PROJECT || 'quero-conversar-app', location: 'us-central1' });
-const model = vertexAI.getGenerativeModel({ model: 'gemini-1.5-pro-preview-0409' });
+const model = vertexAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 if (admin.apps.length === 0) {
     admin.initializeApp();
 }

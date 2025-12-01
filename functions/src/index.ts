@@ -2,6 +2,7 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { VertexAI } from "@google-cloud/vertexai";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
+import OpenAI from "openai";
 
 if (admin.apps.length === 0) {
     admin.initializeApp();
@@ -11,7 +12,9 @@ const storage = admin.storage();
 
 // Initialize Vertex AI
 const vertexAI = new VertexAI({ project: process.env.GCLOUD_PROJECT || "quero-conversar-app", location: "us-central1" });
-const model = vertexAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+const model = vertexAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+// OpenAI initialized lazily inside the function
 
 // Initialize TTS Client
 const ttsClient = new TextToSpeechClient();
@@ -21,6 +24,12 @@ Você é a Dra. Clara Mendes, uma psicóloga virtual empática e experiente.
 Sua missão é guiar o paciente em uma jornada de autoconhecimento.
 Utilize o contexto fornecido (Knowledge Base) para embasar suas respostas, mas mantenha sempre o tom acolhedor.
 Se o contexto incluir informações sobre Motivação ou Espiritualidade, integre-as naturalmente.
+
+IMPORTANTE:
+- Seja concisa. Evite respostas muito longas.
+- Use parágrafos curtos.
+- Foque em uma ou duas orientações práticas por vez.
+- Termine sempre com uma pergunta aberta para manter o diálogo.
 `;
 
 /**
@@ -184,9 +193,6 @@ export const generateDailyPodcast = functions.https.onCall(async (data, context)
 });
 
 /**
- * 4. Chat Response (Updated for Native RAG)
- */
-/**
  * 4. Chat Response (Updated for Native RAG + Web Search)
  */
 export const onNewMessage = functions.firestore
@@ -202,13 +208,17 @@ export const onNewMessage = functions.firestore
             return null;
         }
 
+        // Declare variables outside try block for scope access in catch
+        let userProfile = "";
+        let knowledgeContext = "";
+        let socialContext = "";
+
         try {
             // 1. Fetch User Context
             const conversationDoc = await db.doc(`conversations/${conversationId}`).get();
             const userId = conversationDoc.data()?.userId;
             console.log(`[onNewMessage] User ID: ${userId}`);
 
-            let userProfile = "";
             if (userId) {
                 const userDoc = await db.collection("users").doc(userId).get();
                 const userData = userDoc.data();
@@ -228,14 +238,13 @@ export const onNewMessage = functions.firestore
                 .limit(3)
                 .get();
 
-            const knowledgeContext = knowledgeSnap.docs.map(doc => {
+            knowledgeContext = knowledgeSnap.docs.map(doc => {
                 const d = doc.data();
                 return `ESTUDO CIENTÍFICO: ${d.title}\nRESUMO: ${d.summary}\nCONTEÚDO: ${d.content}\n`;
             }).join("\n\n---\n\n");
             console.log(`[onNewMessage] Retrieved ${knowledgeSnap.size} knowledge docs.`);
 
             // 3. RAG - Social Context (Community)
-            let socialContext = "";
             if (userId) {
                 const communitySnap = await db.collection("community_messages")
                     .where("user_id", "==", userId)
@@ -270,10 +279,10 @@ export const onNewMessage = functions.firestore
             // 5. Initialize Model with Tools (Web Search)
             // Note: Web Search requires Vertex AI setup in Google Cloud Console.
             const generativeModel = vertexAI.getGenerativeModel({
-                model: "gemini-1.5-flash-001",
-                tools: [{
-                    googleSearchRetrieval: {} // Enable Web Search Grounding
-                }]
+                model: "gemini-2.5-flash",
+                // tools: [{
+                //     googleSearchRetrieval: {} // Temporarily disabled for 1.0 Pro test
+                // }]
             });
 
             const chat = generativeModel.startChat({
@@ -312,14 +321,51 @@ export const onNewMessage = functions.firestore
             return null;
 
         } catch (error) {
-            console.error("Error generating response:", error);
-            // Fallback message if AI fails
-            await db.collection(`conversations/${conversationId}/messages`).add({
-                type: "bot",
-                content: `Sinto muito, tive um pequeno lapso de conexão. (Erro Técnico: ${error instanceof Error ? error.message : String(error)})`,
-                createdAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-            return null;
+            console.error("Error generating response with Gemini:", error);
+            console.log("Attempting fallback to OpenAI (GPT-4o-mini)...");
+
+            try {
+                // Debug logging for API Key (Masked)
+                const configKey = functions.config().openai?.key;
+                const envKey = process.env.OPENAI_API_KEY;
+                console.log(`[OpenAI Debug] Config Key present: ${!!configKey}, Env Key present: ${!!envKey}`);
+
+                // Initialize OpenAI lazily
+                const openai = new OpenAI({
+                    apiKey: configKey || envKey,
+                });
+
+                const completion = await openai.chat.completions.create({
+                    model: "gpt-4o-mini",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `${SYSTEM_PROMPT}\n\n${userProfile}\n\nBASE DE CONHECIMENTO CIENTÍFICA:\n${knowledgeContext}\n\n${socialContext}\n\nINSTRUÇÕES: Você é a Dra. Clara. Use o contexto acima. Se falhar, seja empática.`
+                        },
+                        { role: "user", content: message.content }
+                    ],
+                });
+
+                const response = completion.choices[0].message.content;
+
+                await db.collection(`conversations/${conversationId}/messages`).add({
+                    type: "bot",
+                    content: response,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+                return null;
+
+            } catch (openaiError) {
+                console.error("OpenAI Fallback failed:", openaiError);
+
+                // Final Fallback message if BOTH fail
+                await db.collection(`conversations/${conversationId}/messages`).add({
+                    type: "bot",
+                    content: `Sinto muito, tive um lapso de conexão com meus dois centros de processamento. (Erro Técnico: ${error instanceof Error ? error.message : String(error)} | Fallback: ${openaiError instanceof Error ? openaiError.message : String(openaiError)})`,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+                return null;
+            }
         }
     });
 
