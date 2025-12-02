@@ -29,13 +29,13 @@ const Plans: React.FC = () => {
       color: 'green',
       features: [
         '15 interações diárias com IA',
-        'Acesso à Dra. Clara (Groq)',
+        'Acesso à Dra. Clara (IA)',
         'Anamnese psicológica completa',
         'Comunidade de apoio',
         'Tarefas diárias motivacionais',
         'Relatórios básicos de progresso'
       ],
-      aiModels: ['Groq (Llama 3.1 8B)']
+      aiModels: ['Google Gemini Flash']
     },
     {
       id: 'premium',
@@ -48,7 +48,7 @@ const Plans: React.FC = () => {
       color: 'purple',
       features: [
         'Interações ilimitadas',
-        'IA Premium (GPT-4, Gemini, Claude)',
+        'IA Premium (GPT-4, Gemini Pro)',
         'Consultas com profissionais',
         'Acesso prioritário a novos recursos',
         'Relatórios avançados de progresso',
@@ -58,10 +58,8 @@ const Plans: React.FC = () => {
         'Planos personalizados de crescimento'
       ],
       aiModels: [
-        'OpenAI (GPT-4o, GPT-4.1)',
-        'Google Gemini Pro',
-        'Anthropic Claude',
-        'Groq (Modelos avançados)'
+        'OpenAI GPT-4o',
+        'Google Gemini Pro'
       ]
     }
   ];
@@ -76,7 +74,7 @@ const Plans: React.FC = () => {
     // For premium plan, redirect to payment
     const price = billingCycle === 'monthly' ? plans[1].monthlyPrice : plans[1].yearlyPrice;
     const planName = plans[1].name;
-    
+
     // Store payment data in sessionStorage and redirect
     sessionStorage.setItem('pendingPayment', JSON.stringify({
       type: 'subscription',
@@ -86,7 +84,7 @@ const Plans: React.FC = () => {
       billingCycle,
       description: `Assinatura ${planName} - ${billingCycle === 'monthly' ? 'Mensal' : 'Anual'}`
     }));
-    
+
     // Redirect to payment page
     window.location.href = '/payment';
   };
@@ -112,21 +110,19 @@ const Plans: React.FC = () => {
           <div className="inline-flex items-center bg-white rounded-lg p-1 shadow-lg">
             <button
               onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${
-                billingCycle === 'monthly'
+              className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${billingCycle === 'monthly'
                   ? 'bg-purple-600 text-white shadow-md'
                   : 'text-gray-600 hover:text-purple-600'
-              }`}
+                }`}
             >
               Mensal
             </button>
             <button
               onClick={() => setBillingCycle('yearly')}
-              className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-200 relative ${
-                billingCycle === 'yearly'
+              className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-200 relative ${billingCycle === 'yearly'
                   ? 'bg-purple-600 text-white shadow-md'
                   : 'text-gray-600 hover:text-purple-600'
-              }`}
+                }`}
             >
               Anual
               {yearlyDiscount > 0 && (
@@ -143,9 +139,8 @@ const Plans: React.FC = () => {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 ${
-                plan.popular ? 'ring-4 ring-purple-300' : ''
-              }`}
+              className={`relative bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 ${plan.popular ? 'ring-4 ring-purple-300' : ''
+                }`}
             >
               {plan.popular && (
                 <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-2 text-sm font-semibold">
@@ -158,14 +153,14 @@ const Plans: React.FC = () => {
                 {/* Plan Header */}
                 <div className="text-center mb-6">
                   <div className="flex justify-center mb-4">
-                    <PulsingHeart 
-                      color={plan.color === 'green' ? 'text-green-500' : 'text-purple-600'} 
-                      size="lg" 
+                    <PulsingHeart
+                      color={plan.color === 'green' ? 'text-green-500' : 'text-purple-600'}
+                      size="lg"
                     />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                   <p className="text-gray-600 mb-4">{plan.description}</p>
-                  
+
                   <div className="mb-4">
                     {plan.monthlyPrice === 0 ? (
                       <span className="text-4xl font-bold text-green-600">Grátis</span>
@@ -200,9 +195,8 @@ const Plans: React.FC = () => {
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
-                        <Check className={`w-5 h-5 mr-3 mt-0.5 ${
-                          plan.color === 'green' ? 'text-green-500' : 'text-purple-600'
-                        }`} />
+                        <Check className={`w-5 h-5 mr-3 mt-0.5 ${plan.color === 'green' ? 'text-green-500' : 'text-purple-600'
+                          }`} />
                         <span className="text-gray-700 text-sm">{feature}</span>
                       </li>
                     ))}
@@ -215,9 +209,8 @@ const Plans: React.FC = () => {
                   <ul className="space-y-2">
                     {plan.aiModels.map((model, index) => (
                       <li key={index} className="flex items-center">
-                        <div className={`w-2 h-2 rounded-full mr-3 ${
-                          plan.color === 'green' ? 'bg-green-500' : 'bg-purple-600'
-                        }`}></div>
+                        <div className={`w-2 h-2 rounded-full mr-3 ${plan.color === 'green' ? 'bg-green-500' : 'bg-purple-600'
+                          }`}></div>
                         <span className="text-gray-700 text-sm">{model}</span>
                       </li>
                     ))}
@@ -227,11 +220,10 @@ const Plans: React.FC = () => {
                 {/* CTA Button */}
                 <button
                   onClick={() => handleSelectPlan(plan.id)}
-                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center ${
-                    plan.color === 'green'
+                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center ${plan.color === 'green'
                       ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
                       : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
-                  }`}
+                    }`}
                 >
                   {plan.monthlyPrice === 0 ? 'Começar Grátis' : 'Assinar Agora'}
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -246,7 +238,7 @@ const Plans: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
             Compare os Recursos
           </h2>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -292,7 +284,7 @@ const Plans: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
             Dúvidas Frequentes
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <h3 className="font-semibold text-gray-900 mb-2">
@@ -302,7 +294,7 @@ const Plans: React.FC = () => {
                 Sim! Você pode cancelar sua assinatura a qualquer momento sem taxas ou complicações.
               </p>
             </div>
-            
+
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <h3 className="font-semibold text-gray-900 mb-2">
                 Como funciona o período de teste?
@@ -311,7 +303,7 @@ const Plans: React.FC = () => {
                 Comece gratuitamente e teste todos os recursos básicos. Upgrade quando sentir necessidade.
               </p>
             </div>
-            
+
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <h3 className="font-semibold text-gray-900 mb-2">
                 Meus dados estão seguros?
@@ -320,7 +312,7 @@ const Plans: React.FC = () => {
                 Absolutamente! Utilizamos as mais altas tecnologias de segurança e criptografia.
               </p>
             </div>
-            
+
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <h3 className="font-semibold text-gray-900 mb-2">
                 Preciso de conhecimento técnico?
