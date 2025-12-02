@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { CreditCard, DollarSign, CheckCircle, AlertCircle, Shield } from 'lucide-react';
 import PulsingHeart from './PulsingHeart';
+import { db } from '../../firebase-config';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 interface PaymentCheckoutProps {
   type: 'subscription' | 'appointment';
@@ -46,9 +48,6 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   const formatExpiry = (value: string) => {
     return value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2');
   };
-
-  import { db } from '../../firebase-config';
-  import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
   const handlePayment = async () => {
     setProcessing(true);
@@ -173,8 +172,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
           <button
             onClick={() => setSelectedMethod('card')}
             className={`p-4 rounded-lg border-2 flex items-center justify-center transition-colors ${selectedMethod === 'card'
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-200 hover:border-gray-300'
+              ? 'border-purple-500 bg-purple-50'
+              : 'border-gray-200 hover:border-gray-300'
               }`}
           >
             <CreditCard className="w-5 h-5 mr-2" />
@@ -183,8 +182,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
           <button
             onClick={() => setSelectedMethod('pix')}
             className={`p-4 rounded-lg border-2 flex items-center justify-center transition-colors ${selectedMethod === 'pix'
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-200 hover:border-gray-300'
+              ? 'border-purple-500 bg-purple-50'
+              : 'border-gray-200 hover:border-gray-300'
               }`}
           >
             <DollarSign className="w-5 h-5 mr-2" />
