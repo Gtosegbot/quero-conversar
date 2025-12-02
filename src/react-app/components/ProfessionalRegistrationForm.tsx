@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Mail,
-  User,
-  MapPin,
-  DollarSign,
-  Upload,
-  FileText,
-  ArrowRight,
+Upload,
   Loader2,
-  Calendar,
-  Award,
   Linkedin,
   Instagram,
   Globe
