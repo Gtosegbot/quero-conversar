@@ -254,13 +254,19 @@ const Profile: React.FC = () => {
                 </button>
               )}
               <button
-                onClick={() => setEditing(!editing)}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+                onClick={() => {
+                  setEditing(!editing);
+                  if (!editing) setActiveTab('profile');
+                }}
+                className={`bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center ${editing ? 'ring-2 ring-offset-2 ring-purple-600' : ''}`}
               >
                 <Edit className="w-4 h-4 mr-2" />
-                Editar
+                {editing ? 'Cancelar Edição' : 'Editar'}
               </button>
-              <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={() => alert('Configurações da conta em breve!')}
+                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <Settings className="w-5 h-5 text-gray-600" />
               </button>
             </div>

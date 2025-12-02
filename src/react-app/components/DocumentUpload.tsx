@@ -75,7 +75,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     for (const file of Array.from(files)) {
       try {
         // 1. Upload to Firebase Storage
-        const storagePath = `documents/${userId || 'anonymous'}/${Date.now()}_${file.name}`;
+        const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const storagePath = `documents/${userId || 'anonymous'}/${Date.now()}_${sanitizedName}`;
         const storageRef = ref(storage, storagePath);
 
         await uploadBytes(storageRef, file);
@@ -106,7 +107,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
       } catch (error) {
         console.error('Upload error:', error);
-        alert(`Erro ao enviar ${file.name}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        alert(`Erro ao enviar ${file.name}: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
       }
     }
 
