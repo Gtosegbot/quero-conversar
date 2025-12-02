@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import {
     Users, BarChart2, UserPlus, Settings, Mail, TrendingUp, Award,
     Target, BookOpen, Heart, MessageSquare, Calendar, Download,
-    AlertCircle, CheckCircle, Activity, Smile
+    AlertCircle, CheckCircle, Activity, Smile, X
 } from 'lucide-react';
 import { db } from '../../../firebase-config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import Feedback360 from './Feedback360';
 import OneOnOneScheduler from './OneOnOneScheduler';
 import ProductivityDashboard from './ProductivityDashboard';
+import EnterpriseDocsModal from './EnterpriseDocsModal';
 
 interface EnterpriseDashboardProps {
     user: any;
@@ -18,6 +19,8 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'team' | 'development' | 'reports' | 'productivity' | 'feedback' | 'meetings'>('overview');
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviting, setInviting] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showDocs, setShowDocs] = useState(false);
 
     const stats = { collaborators: 124, newThisMonth: 12, engagement: 78 };
     const teamMetrics = { wellnessScore: 8.2 };
@@ -58,10 +61,22 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                     <h1 className="text-2xl font-bold text-gray-900">Painel Corporativo</h1>
                     <p className="text-gray-600">Gerencie o bem-estar da sua equipe</p>
                 </div>
-                <button className="flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Configurações
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowDocs(true)}
+                        className="flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                    >
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        Guia Enterprise
+                    </button>
+                    <button
+                        onClick={() => setShowSettings(true)}
+                        className="flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                    >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Configurações
+                    </button>
+                </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-md p-2 flex flex-wrap gap-2">
@@ -254,6 +269,42 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                     Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
                 </p>
             </div>
+
+            {/* Settings Modal */}
+            {showSettings && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
+                            <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
+                                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
+                                <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
+                                <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
+                                    Enterprise Bulk
+                                </div>
+                            </div>
+                            <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Enterprise Docs Modal */}
+            <EnterpriseDocsModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
         </div>
     );
 };
