@@ -8,8 +8,8 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 interface DocumentUploadProps {
   appointmentId?: string;
   userType: 'patient' | 'professional';
-  userId?: number;
-  professionalId?: number;
+  userId?: string;
+  professionalId?: string;
 }
 
 interface Document {
@@ -189,8 +189,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       {/* Upload Area */}
       <div
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${dragOver
-            ? 'border-purple-500 bg-purple-50'
-            : 'border-gray-300 hover:border-purple-400'
+          ? 'border-purple-500 bg-purple-50'
+          : 'border-gray-300 hover:border-purple-400'
           }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}

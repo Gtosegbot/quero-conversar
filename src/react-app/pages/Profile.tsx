@@ -7,14 +7,20 @@ import {
   FileText,
   Video,
   Star,
-  Settings
+  Settings,
+  Loader2
 } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
 import DocumentUpload from '../components/DocumentUpload';
 import VideoLibrary from '../components/VideoLibrary';
 
+import { db, auth, storage } from '../../firebase-config';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { useNavigate } from 'react-router-dom';
+
 interface UserProfile {
-  id: number;
+  id: string;
   name: string;
   email: string;
   age?: number;
@@ -26,7 +32,7 @@ interface UserProfile {
 }
 
 interface ProfessionalProfile {
-  id: number;
+  id: string;
   specialty: string;
   bio: string;
   hourly_rate: number;
@@ -46,10 +52,6 @@ interface UserStats {
   energy_points: number;
 }
 
-import { db, auth } from '../../firebase-config';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
-import { useNavigate } from 'react-router-dom';
-
 const Profile: React.FC = () => {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -59,10 +61,14 @@ const Profile: React.FC = () => {
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'documents' | 'videos' | 'appointments'>('profile');
   const [isProfessional, setIsProfessional] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
 
@@ -80,14 +86,12 @@ const Profile: React.FC = () => {
           avatar: data.avatar || user.photoURL,
           bio: data.bio,
           phone: data.phone,
-          created_at: data.createdAt || new Date().toISOString()
-        } as any);
+          created_at: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString()
+        });
 
         // Check professional status
         if (data.role === 'professional') {
           setIsProfessional(true);
-          // In a real app, professional details might be in a separate collection or sub-collection
-          // For now, we assume they are merged or we'd fetch from 'professionals/{uid}'
           setProfessionalProfile({
             id: data.uid,
             specialty: data.specialty || 'Geral',
@@ -98,14 +102,16 @@ const Profile: React.FC = () => {
             location: data.location,
             languages: data.languages,
             popularity_score: data.popularityScore || 100
-          } as any);
+          });
         }
       }
       setLoading(false);
+    }, (error) => {
+      console.error("Error fetching user profile:", error);
+      setLoading(false);
     });
 
-    // 2. Stats Listener (Mocked or from a subcollection)
-    // For simplicity, we'll derive some stats or use placeholders if not in Firestore
+    // 2. Stats Listener (Mocked for now, but ready for real data)
     setUserStats({
       total_consultations: 0,
       total_videos_watched: 0,
@@ -130,6 +136,31 @@ const Profile: React.FC = () => {
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('Erro ao atualizar perfil.');
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    setUploadingAvatar(true);
+    try {
+      // Upload to Firebase Storage
+      const storageRef = ref(storage, `avatars/${user.uid}/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
+
+      // Update Firestore
+      await updateDoc(doc(db, 'users', user.uid), { avatar: downloadUrl });
+
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      alert("Erro ao atualizar foto de perfil.");
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -165,7 +196,9 @@ const Profile: React.FC = () => {
               {/* Avatar */}
               <div className="relative group">
                 <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
-                  {userProfile?.avatar ? (
+                  {uploadingAvatar ? (
+                    <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+                  ) : userProfile?.avatar ? (
                     <img
                       src={userProfile.avatar}
                       alt={userProfile.name}
@@ -181,27 +214,8 @@ const Profile: React.FC = () => {
                     type="file"
                     className="hidden"
                     accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        try {
-                          // Convert to Base64 for simple storage (limit to small files)
-                          // In production, use Firebase Storage: uploadBytes(ref(storage, ...), file)
-                          const reader = new FileReader();
-                          reader.onloadend = async () => {
-                            const base64String = reader.result as string;
-                            const user = auth.currentUser;
-                            if (user) {
-                              await updateDoc(doc(db, 'users', user.uid), { avatar: base64String });
-                            }
-                          };
-                          reader.readAsDataURL(file);
-                        } catch (err) {
-                          console.error("Error uploading avatar:", err);
-                          alert("Erro ao atualizar foto.");
-                        }
-                      }
-                    }}
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
                   />
                 </label>
               </div>
@@ -430,6 +444,19 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
     phone: profile?.phone || '',
   });
 
+  // Update form data when profile changes (e.g. initial load)
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || '',
+        email: profile.email || '',
+        age: profile.age || '',
+        bio: profile.bio || '',
+        phone: profile.phone || '',
+      });
+    }
+  }, [profile]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const submitData = {
@@ -562,7 +589,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({
 
 // Appointments List Component
 interface AppointmentsListProps {
-  userId?: number;
+  userId?: string;
   isProfessional: boolean;
 }
 

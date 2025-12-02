@@ -26,7 +26,7 @@ interface VideoContent {
 
 interface VideoLibraryProps {
   userPlan: 'free' | 'premium';
-  professionalId?: number;
+  professionalId?: string;
   isManagement?: boolean;
 }
 
@@ -325,7 +325,7 @@ const VideoLibrary: React.FC<VideoLibraryProps> = ({
 interface VideoUploadModalProps {
   onClose: () => void;
   onUploadComplete: () => void;
-  professionalId?: number;
+  professionalId?: string;
 }
 
 const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ onClose, onUploadComplete, professionalId }) => {
