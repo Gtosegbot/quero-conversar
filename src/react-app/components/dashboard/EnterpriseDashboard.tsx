@@ -1,14 +1,6 @@
-import React from 'react';
-import { Users, BarChart2, UserPlus, Settings } from 'lucide-react';
-
-interface EnterpriseDashboardProps {
-    user: any;
-    userStats: any;
-}
-
 import React, { useState, useEffect } from 'react';
 import { Users, BarChart2, UserPlus, Settings, Mail } from 'lucide-react';
-import { db } from '../../firebase-config';
+import { db } from '../../../firebase-config';
 import { collection, query, where, getCountFromServer, addDoc, serverTimestamp } from 'firebase/firestore';
 
 interface EnterpriseDashboardProps {
