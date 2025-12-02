@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-Upload,
+import {
+  Upload,
   Loader2,
   Linkedin,
   Instagram,
@@ -55,7 +56,6 @@ const ProfessionalRegistrationForm: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    console.log("ProfessionalRegistrationForm mounted");
     // Simulate a short initialization check to ensure Firebase is ready
     const timer = setTimeout(() => {
       setIsInitializing(false);
@@ -497,4 +497,3 @@ const ProfessionalRegistrationForm: React.FC = () => {
 };
 
 export default ProfessionalRegistrationForm;
-
