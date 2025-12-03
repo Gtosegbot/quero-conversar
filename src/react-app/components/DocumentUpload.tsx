@@ -24,6 +24,9 @@ interface Document {
   created_at: any;
   url: string;
   storagePath: string;
+  userId?: string;
+  professionalId?: string;
+  appointmentId?: string;
 }
 
 const DocumentUpload: React.FC<DocumentUploadProps> = ({
@@ -38,26 +41,37 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Construct query
-    const constraints = [];
-    if (appointmentId) constraints.push(where('appointmentId', '==', appointmentId));
-    if (userId) constraints.push(where('userId', '==', userId));
-    if (professionalId) constraints.push(where('professionalId', '==', professionalId));
-
-    // If no filters, don't fetch anything to be safe (or fetch all if appropriate)
-    if (constraints.length === 0) {
+    // If no userId, don't fetch anything
+    if (!userId) {
       setLoading(false);
       return;
     }
 
-    const q = query(collection(db, 'documents'), ...constraints);
+    // Query only by userId to ensure we get all user documents
+    const q = query(
+      collection(db, 'documents'),
+      where('userId', '==', userId)
+    );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Document[];
-      setDocuments(docs);
+
+      console.log('📄 Documents fetched:', docs.length, docs);
+
+      // Client-side filtering if needed
+      let filteredDocs = docs;
+      if (appointmentId) {
+        filteredDocs = filteredDocs.filter(doc => doc.appointmentId === appointmentId);
+      }
+      if (professionalId) {
+        filteredDocs = filteredDocs.filter(doc => doc.professionalId === professionalId);
+      }
+
+      console.log('📄 Filtered documents:', filteredDocs.length, filteredDocs);
+      setDocuments(filteredDocs);
       setLoading(false);
     }, (error) => {
       console.error("Error fetching documents:", error);
@@ -269,7 +283,13 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
                       {doc.original_filename}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {formatFileSize(doc.file_size)} • {doc.created_at?.toDate ? new Date(doc.created_at.toDate()).toLocaleDateString() : 'Data desconhecida'}
+                      {formatFileSize(doc.file_size)} • {
+                        doc.created_at?.toDate
+                          ? new Date(doc.created_at.toDate()).toLocaleDateString('pt-BR')
+                          : doc.created_at
+                            ? new Date(doc.created_at).toLocaleDateString('pt-BR')
+                            : 'Agora'
+                      }
                     </p>
                     {doc.description && (
                       <p className="text-xs text-gray-600 mt-1">{doc.description}</p>
