@@ -10,6 +10,7 @@ import UserDashboard from '../components/dashboard/UserDashboard';
 import PartnerDashboard from '../components/dashboard/PartnerDashboard';
 import ProfessionalDashboard from '../components/dashboard/ProfessionalDashboard';
 import EnterpriseDashboard from '../components/dashboard/EnterpriseDashboard';
+import NotificationBanner from '../components/NotificationBanner';
 
 interface UserStats {
   level: number;
@@ -35,7 +36,6 @@ const Dashboard: React.FC = () => {
     role: 'user'
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [notifications, setNotifications] = useState<any[]>([]); // Added notifications state
 
   // Auth & User Data Listener
   useEffect(() => {
@@ -55,7 +55,6 @@ const Dashboard: React.FC = () => {
               ...data,
               role: isSuperAdmin ? 'admin' : data.role,
               plan: isSuperAdmin ? 'enterprise' : data.plan,
-              // Ensure maxEnergy is correct for display if needed, or let EnterpriseDashboard handle it
             });
           } else {
             // Initialize user if not exists
@@ -96,9 +95,9 @@ const Dashboard: React.FC = () => {
 
   // Role-Based Rendering
   const renderDashboard = () => {
-    // Check for Enterprise Plan (Overrides role view if needed, or integrates)
+    // Check for Enterprise Plan
     if (userStats.plan === 'enterprise' && userStats.role === 'admin') {
-      return <EnterpriseDashboard user={user} userStats={userStats} />;
+      return <EnterpriseDashboard user={user} />;
     }
 
     switch (userStats.role) {
@@ -115,8 +114,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Common Header / Navigation could go here if shared */}
-
+        {/* Common Header */}
         <div className="mb-8 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -140,6 +138,10 @@ const Dashboard: React.FC = () => {
           )}
         </div>
 
+        {/* Admin Notifications - INTEGRAÇÃO DO SISTEMA DE AVISOS */}
+        <NotificationBanner pageSection="dashboard" />
+
+        {/* Role-Based Dashboard Content */}
         {renderDashboard()}
       </div>
     </div>
