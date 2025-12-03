@@ -62,6 +62,7 @@ const Profile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'documents' | 'videos' | 'appointments'>('profile');
   const [isProfessional, setIsProfessional] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -264,8 +265,9 @@ const Profile: React.FC = () => {
                 {editing ? 'Cancelar Edição' : 'Editar'}
               </button>
               <button
-                onClick={() => alert('Configurações da conta em breve!')}
+                onClick={() => setShowSettings(true)}
                 className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                title="Configurações"
               >
                 <Settings className="w-5 h-5 text-gray-600" />
               </button>
@@ -424,6 +426,163 @@ const Profile: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 flex justify-between items-center">
+              <h2 className="text-2xl font-bold">Configurações da Conta</h2>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <Settings className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Account Information */}
+              <section>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Informações da Conta</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">Nome</p>
+                      <p className="text-sm text-gray-600">{userProfile?.name}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">Email</p>
+                      <p className="text-sm text-gray-600">{userProfile?.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">Plano Atual</p>
+                      <p className="text-sm text-gray-600">
+                        {userProfile?.plan === 'premium' ? 'Premium' : 'Gratuito'}
+                      </p>
+                    </div>
+                    {userProfile?.plan === 'free' && (
+                      <button
+                        onClick={() => navigate('/checkout')}
+                        className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg hover:from-yellow-500 hover:to-orange-600 text-sm font-medium"
+                      >
+                        Fazer Upgrade
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+              {/* Notifications */}
+              <section>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Notificações</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
+                    <div>
+                      <p className="font-medium text-gray-900">Notificações por Email</p>
+                      <p className="text-sm text-gray-600">Receba atualizações importantes</p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="w-5 h-5 text-purple-600 rounded" />
+                  </label>
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
+                    <div>
+                      <p className="font-medium text-gray-900">Notificações Push</p>
+                      <p className="text-sm text-gray-600">Alertas no navegador</p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="w-5 h-5 text-purple-600 rounded" />
+                  </label>
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
+                    <div>
+                      <p className="font-medium text-gray-900">Lembretes de Consultas</p>
+                      <p className="text-sm text-gray-600">24h antes da consulta</p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="w-5 h-5 text-purple-600 rounded" />
+                  </label>
+                </div>
+              </section>
+
+              {/* Privacy */}
+              <section>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Privacidade</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
+                    <div>
+                      <p className="font-medium text-gray-900">Perfil Público</p>
+                      <p className="text-sm text-gray-600">Outros usuários podem ver seu perfil</p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="w-5 h-5 text-purple-600 rounded" />
+                  </label>
+                  <label className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer">
+                    <div>
+                      <p className="font-medium text-gray-900">Mostrar Status Online</p>
+                      <p className="text-sm text-gray-600">Exibir quando você está online</p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="w-5 h-5 text-purple-600 rounded" />
+                  </label>
+                </div>
+              </section>
+
+              {/* Account Actions */}
+              <section>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Ações da Conta</h3>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      if (confirm('Tem certeza que deseja sair?')) {
+                        auth.signOut();
+                        navigate('/');
+                      }
+                    }}
+                    className="w-full p-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-left font-medium"
+                  >
+                    Sair da Conta
+                  </button>
+                  <button
+                    onClick={() => alert('Função de exclusão de conta em desenvolvimento. Entre em contato com o suporte.')}
+                    className="w-full p-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-left font-medium"
+                  >
+                    Excluir Conta
+                  </button>
+                </div>
+              </section>
+
+              {/* Support */}
+              <section className="border-t pt-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Suporte</h3>
+                <div className="space-y-3">
+                  <a
+                    href="https://wa.me/5511913608217"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-center font-medium"
+                  >
+                    Falar com Suporte via WhatsApp
+                  </a>
+                  <button
+                    onClick={() => navigate('/policies')}
+                    className="w-full p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-center font-medium"
+                  >
+                    Termos de Uso e Privacidade
+                  </button>
+                </div>
+              </section>
+            </div>
+
+            <div className="sticky bottom-0 bg-gray-50 p-6 border-t">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 font-semibold"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
