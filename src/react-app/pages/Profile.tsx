@@ -24,7 +24,7 @@ interface UserProfile {
   name: string;
   email: string;
   age?: number;
-  plan: 'free' | 'premium';
+  plan: 'free' | 'premium' | 'enterprise';
   avatar?: string;
   bio?: string;
   phone?: string;
@@ -78,12 +78,17 @@ const Profile: React.FC = () => {
     const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
+
+        // Check if user is super admin
+        const superAdminEmails = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'];
+        const isSuperAdmin = superAdminEmails.some(email => user.email?.includes(email));
+
         setUserProfile({
           id: data.uid || user.uid,
           name: data.name || user.displayName || 'Usuário',
           email: data.email || user.email || '',
           age: data.age,
-          plan: data.plan || 'free',
+          plan: isSuperAdmin ? 'enterprise' : (data.plan || 'free'),
           avatar: data.avatar || user.photoURL,
           bio: data.bio,
           phone: data.phone,
@@ -462,7 +467,11 @@ const Profile: React.FC = () => {
                     <div>
                       <p className="font-medium text-gray-900">Plano Atual</p>
                       <p className="text-sm text-gray-600">
-                        {userProfile?.plan === 'premium' ? 'Premium' : 'Gratuito'}
+                        {userProfile?.plan === 'enterprise'
+                          ? 'Enterprise'
+                          : userProfile?.plan === 'premium'
+                            ? 'Premium'
+                            : 'Gratuito'}
                       </p>
                     </div>
                     {userProfile?.plan === 'free' && (
@@ -472,6 +481,11 @@ const Profile: React.FC = () => {
                       >
                         Fazer Upgrade
                       </button>
+                    )}
+                    {userProfile?.plan === 'enterprise' && (
+                      <span className="px-3 py-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-xs font-medium">
+                        Plano Corporativo
+                      </span>
                     )}
                   </div>
                 </div>

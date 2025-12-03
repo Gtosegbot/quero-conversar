@@ -61,6 +61,35 @@ const Plans: React.FC = () => {
         'OpenAI GPT-4o',
         'Google Gemini Pro'
       ]
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      description: 'Solução completa para empresas',
+      monthlyPrice: 0, // Custom pricing
+      yearlyPrice: 0,
+      monthlyLimit: null,
+      popular: false,
+      color: 'blue',
+      features: [
+        'Tudo do Premium +',
+        'Dashboard corporativo completo',
+        'Gerenciamento de equipe ilimitado',
+        'Programas de desenvolvimento personalizados',
+        'Dashboard de produtividade avançado',
+        'Sistema de Feedback 360°',
+        'Agendamento de sessões 1-on-1',
+        'Relatórios e analytics avançados',
+        'API de integração',
+        'Suporte dedicado 24/7',
+        'Onboarding personalizado',
+        'Treinamento da equipe incluído'
+      ],
+      aiModels: [
+        'OpenAI GPT-4o',
+        'Google Gemini Pro',
+        'Modelos customizados'
+      ]
     }
   ];
 
@@ -68,6 +97,15 @@ const Plans: React.FC = () => {
     if (planId === 'free') {
       // Redirect to dashboard for free plan
       window.location.href = '/dashboard';
+      return;
+    }
+
+    if (planId === 'enterprise') {
+      // Redirect to WhatsApp for Enterprise contact
+      const message = encodeURIComponent(
+        'Olá! Tenho interesse no Plano Enterprise da Quero Conversar. Gostaria de saber mais sobre as soluções corporativas.'
+      );
+      window.open(`https://wa.me/5511913608217?text=${message}`, '_blank');
       return;
     }
 
@@ -111,8 +149,8 @@ const Plans: React.FC = () => {
             <button
               onClick={() => setBillingCycle('monthly')}
               className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${billingCycle === 'monthly'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'text-gray-600 hover:text-purple-600'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'text-gray-600 hover:text-purple-600'
                 }`}
             >
               Mensal
@@ -120,8 +158,8 @@ const Plans: React.FC = () => {
             <button
               onClick={() => setBillingCycle('yearly')}
               className={`px-6 py-2 rounded-md text-sm font-semibold transition-all duration-200 relative ${billingCycle === 'yearly'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'text-gray-600 hover:text-purple-600'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'text-gray-600 hover:text-purple-600'
                 }`}
             >
               Anual
@@ -135,12 +173,12 @@ const Plans: React.FC = () => {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <div
               key={plan.id}
               className={`relative bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 ${plan.popular ? 'ring-4 ring-purple-300' : ''
-                }`}
+                } ${plan.id === 'enterprise' ? 'ring-4 ring-blue-300' : ''}`}
             >
               {plan.popular && (
                 <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-center py-2 text-sm font-semibold">
@@ -149,12 +187,23 @@ const Plans: React.FC = () => {
                 </div>
               )}
 
+              {plan.id === 'enterprise' && (
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-center py-2 text-sm font-semibold">
+                  <Star className="w-4 h-4 inline mr-1" />
+                  PARA EMPRESAS
+                </div>
+              )}
+
               <div className="p-8">
                 {/* Plan Header */}
                 <div className="text-center mb-6">
                   <div className="flex justify-center mb-4">
                     <PulsingHeart
-                      color={plan.color === 'green' ? 'text-green-500' : 'text-purple-600'}
+                      color={
+                        plan.color === 'green' ? 'text-green-500' :
+                          plan.color === 'blue' ? 'text-blue-600' :
+                            'text-purple-600'
+                      }
                       size="lg"
                     />
                   </div>
@@ -162,7 +211,14 @@ const Plans: React.FC = () => {
                   <p className="text-gray-600 mb-4">{plan.description}</p>
 
                   <div className="mb-4">
-                    {plan.monthlyPrice === 0 ? (
+                    {plan.id === 'enterprise' ? (
+                      <div>
+                        <span className="text-3xl font-bold text-blue-600">Personalizado</span>
+                        <p className="text-sm text-gray-600 mt-2">
+                          Entre em contato para um orçamento sob medida
+                        </p>
+                      </div>
+                    ) : plan.monthlyPrice === 0 ? (
                       <span className="text-4xl font-bold text-green-600">Grátis</span>
                     ) : (
                       <div>
@@ -195,7 +251,9 @@ const Plans: React.FC = () => {
                   <ul className="space-y-3">
                     {plan.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
-                        <Check className={`w-5 h-5 mr-3 mt-0.5 ${plan.color === 'green' ? 'text-green-500' : 'text-purple-600'
+                        <Check className={`w-5 h-5 mr-3 mt-0.5 ${plan.color === 'green' ? 'text-green-500' :
+                          plan.color === 'blue' ? 'text-blue-600' :
+                            'text-purple-600'
                           }`} />
                         <span className="text-gray-700 text-sm">{feature}</span>
                       </li>
@@ -209,7 +267,9 @@ const Plans: React.FC = () => {
                   <ul className="space-y-2">
                     {plan.aiModels.map((model, index) => (
                       <li key={index} className="flex items-center">
-                        <div className={`w-2 h-2 rounded-full mr-3 ${plan.color === 'green' ? 'bg-green-500' : 'bg-purple-600'
+                        <div className={`w-2 h-2 rounded-full mr-3 ${plan.color === 'green' ? 'bg-green-500' :
+                          plan.color === 'blue' ? 'bg-blue-600' :
+                            'bg-purple-600'
                           }`}></div>
                         <span className="text-gray-700 text-sm">{model}</span>
                       </li>
@@ -221,11 +281,17 @@ const Plans: React.FC = () => {
                 <button
                   onClick={() => handleSelectPlan(plan.id)}
                   className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center ${plan.color === 'green'
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700'
+                    : plan.color === 'blue'
+                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700'
                       : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
                     }`}
                 >
-                  {plan.monthlyPrice === 0 ? 'Começar Grátis' : 'Assinar Agora'}
+                  {plan.id === 'enterprise'
+                    ? 'Falar com Vendas'
+                    : plan.monthlyPrice === 0
+                      ? 'Começar Grátis'
+                      : 'Assinar Agora'}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </button>
               </div>
@@ -246,6 +312,7 @@ const Plans: React.FC = () => {
                   <th className="text-left py-4 px-6 font-semibold text-gray-900">Recursos</th>
                   <th className="text-center py-4 px-6 font-semibold text-green-600">Grátis</th>
                   <th className="text-center py-4 px-6 font-semibold text-purple-600">Premium</th>
+                  <th className="text-center py-4 px-6 font-semibold text-blue-600">Enterprise</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -253,24 +320,53 @@ const Plans: React.FC = () => {
                   <td className="py-4 px-6 text-gray-700">Interações com IA</td>
                   <td className="py-4 px-6 text-center">15/dia</td>
                   <td className="py-4 px-6 text-center">Ilimitadas</td>
+                  <td className="py-4 px-6 text-center">Ilimitadas</td>
                 </tr>
                 <tr>
                   <td className="py-4 px-6 text-gray-700">Modelos de IA Avançados</td>
                   <td className="py-4 px-6 text-center">❌</td>
+                  <td className="py-4 px-6 text-center">✅</td>
                   <td className="py-4 px-6 text-center">✅</td>
                 </tr>
                 <tr>
                   <td className="py-4 px-6 text-gray-700">Consultas com Profissionais</td>
                   <td className="py-4 px-6 text-center">❌</td>
                   <td className="py-4 px-6 text-center">✅</td>
+                  <td className="py-4 px-6 text-center">✅</td>
                 </tr>
                 <tr>
                   <td className="py-4 px-6 text-gray-700">Relatórios Avançados</td>
                   <td className="py-4 px-6 text-center">❌</td>
                   <td className="py-4 px-6 text-center">✅</td>
+                  <td className="py-4 px-6 text-center">✅</td>
                 </tr>
                 <tr>
                   <td className="py-4 px-6 text-gray-700">Suporte Prioritário</td>
+                  <td className="py-4 px-6 text-center">❌</td>
+                  <td className="py-4 px-6 text-center">✅</td>
+                  <td className="py-4 px-6 text-center">✅ 24/7</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">Dashboard Corporativo</td>
+                  <td className="py-4 px-6 text-center">❌</td>
+                  <td className="py-4 px-6 text-center">❌</td>
+                  <td className="py-4 px-6 text-center">✅</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">Gerenciamento de Equipe</td>
+                  <td className="py-4 px-6 text-center">❌</td>
+                  <td className="py-4 px-6 text-center">❌</td>
+                  <td className="py-4 px-6 text-center">✅</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">Feedback 360° e 1-on-1</td>
+                  <td className="py-4 px-6 text-center">❌</td>
+                  <td className="py-4 px-6 text-center">❌</td>
+                  <td className="py-4 px-6 text-center">✅</td>
+                </tr>
+                <tr>
+                  <td className="py-4 px-6 text-gray-700">API de Integração</td>
+                  <td className="py-4 px-6 text-center">❌</td>
                   <td className="py-4 px-6 text-center">❌</td>
                   <td className="py-4 px-6 text-center">✅</td>
                 </tr>

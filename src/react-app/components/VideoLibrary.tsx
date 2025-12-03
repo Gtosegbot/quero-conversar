@@ -25,7 +25,7 @@ interface VideoContent {
 }
 
 interface VideoLibraryProps {
-  userPlan: 'free' | 'premium';
+  userPlan: 'free' | 'premium' | 'enterprise';
   professionalId?: string;
   isManagement?: boolean;
 }
