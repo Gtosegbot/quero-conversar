@@ -89,7 +89,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         else if (file.type.includes('video')) documentType = 'video';
 
         // 3. Save metadata to Firestore
-        await addDoc(collection(db, 'documents'), {
+        const documentData: any = {
           original_filename: file.name,
           filename: file.name,
           file_size: file.size,
@@ -99,11 +99,15 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
           is_prescription: false,
           created_at: serverTimestamp(),
           url: downloadUrl,
-          storagePath: storagePath,
-          userId: userId,
-          professionalId: professionalId,
-          appointmentId: appointmentId
-        });
+          storagePath: storagePath
+        };
+
+        // Only add fields if they are defined
+        if (userId) documentData.userId = userId;
+        if (professionalId) documentData.professionalId = professionalId;
+        if (appointmentId) documentData.appointmentId = appointmentId;
+
+        await addDoc(collection(db, 'documents'), documentData);
 
       } catch (error) {
         console.error('Upload error:', error);

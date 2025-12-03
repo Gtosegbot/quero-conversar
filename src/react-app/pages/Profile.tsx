@@ -407,7 +407,7 @@ const Profile: React.FC = () => {
             {activeTab === 'documents' && (
               <DocumentUpload
                 userType={isProfessional ? 'professional' : 'patient'}
-                userId={userProfile?.id}
+                userId={auth.currentUser?.uid}
                 professionalId={isProfessional ? professionalProfile?.id : undefined}
               />
             )}
