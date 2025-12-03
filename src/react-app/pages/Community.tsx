@@ -10,6 +10,7 @@ import {
   Filter
 } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
+import NotificationBanner from '../components/NotificationBanner';
 
 interface CommunityRoom {
   id: string;

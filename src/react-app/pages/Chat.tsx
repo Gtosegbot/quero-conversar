@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Settings, Zap, AlertCircle, Bell } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
 import TypewriterEffect from '../components/TypewriterEffect';
+import NotificationBanner from '../components/NotificationBanner';
 import { db, auth } from '../../firebase-config';
 import {
   collection,
