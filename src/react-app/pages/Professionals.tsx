@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  Star, 
-  MapPin, 
-  Clock, 
-  DollarSign, 
-  Video, 
+import {
+  Star,
+  MapPin,
+  Clock,
+  DollarSign,
+  Video,
   MessageCircle,
   Award,
   Search
@@ -12,6 +12,7 @@ import {
 import PulsingHeart from '../components/PulsingHeart';
 import AppointmentScheduler from '../components/AppointmentScheduler';
 import VideoRoom from '../components/VideoRoom';
+import NotificationBanner from '../components/NotificationBanner';
 
 interface Professional {
   id: string;
@@ -157,10 +158,10 @@ const Professionals: React.FC = () => {
   const filteredProfessionals = professionals
     .filter(prof => {
       const matchesSearch = prof.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           prof.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           prof.bio.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSpecialty = selectedSpecialty === 'all' || 
-                              prof.specialty.toLowerCase().includes(selectedSpecialty.toLowerCase());
+        prof.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        prof.bio.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSpecialty = selectedSpecialty === 'all' ||
+        prof.specialty.toLowerCase().includes(selectedSpecialty.toLowerCase());
       return matchesSearch && matchesSpecialty;
     })
     .sort((a, b) => {
@@ -180,9 +181,9 @@ const Professionals: React.FC = () => {
     setShowScheduler(true);
   };
 
-  
 
-  
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-6">
@@ -209,7 +210,7 @@ const Professionals: React.FC = () => {
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
               />
             </div>
-            
+
             <select
               value={selectedSpecialty}
               onChange={(e) => setSelectedSpecialty(e.target.value)}
@@ -221,7 +222,7 @@ const Professionals: React.FC = () => {
                 </option>
               ))}
             </select>
-            
+
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
@@ -233,6 +234,9 @@ const Professionals: React.FC = () => {
             </select>
           </div>
         </div>
+
+        {/* Admin Notifications */}
+        <NotificationBanner pageSection="professionals" />
 
         {/* Professionals Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -258,7 +262,7 @@ const Professionals: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="text-right">
                   <div className="flex items-center">
                     {professional.isOnline && (
@@ -267,8 +271,8 @@ const Professionals: React.FC = () => {
                         <span className="text-xs text-green-600 font-medium">Online</span>
                       </div>
                     )}
-                    <PulsingHeart 
-                      color="text-orange-500" 
+                    <PulsingHeart
+                      color="text-orange-500"
                       size="sm"
                     />
                   </div>
@@ -286,21 +290,21 @@ const Professionals: React.FC = () => {
                     {professional.rating} ({professional.reviewCount} avaliações)
                   </span>
                 </div>
-                
+
                 <div className="flex items-center">
                   <Clock className="w-4 h-4 text-gray-400 mr-1" />
                   <span className="text-sm text-gray-600">
                     {professional.experience} anos de experiência
                   </span>
                 </div>
-                
+
                 <div className="flex items-center">
                   <DollarSign className="w-4 h-4 text-green-500 mr-1" />
                   <span className="text-sm font-medium text-gray-900">
                     R$ {professional.hourlyRate}/hora
                   </span>
                 </div>
-                
+
                 <div className="flex items-center">
                   <PulsingHeart color="text-purple-500" size="sm" className="mr-1" />
                   <span className="text-sm text-gray-600">
@@ -313,7 +317,7 @@ const Professionals: React.FC = () => {
               <div className="mb-4">
                 <div className="flex flex-wrap gap-2">
                   {professional.languages.map((lang, index) => (
-                    <span 
+                    <span
                       key={index}
                       className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
                     >
@@ -328,7 +332,7 @@ const Professionals: React.FC = () => {
                 <p className="text-sm font-medium text-gray-900 mb-2">Horários disponíveis hoje:</p>
                 <div className="flex flex-wrap gap-2">
                   {professional.availableSlots.map((slot, index) => (
-                    <span 
+                    <span
                       key={index}
                       className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-md"
                     >
@@ -347,8 +351,8 @@ const Professionals: React.FC = () => {
                   <Video className="w-4 h-4 mr-2" />
                   Agendar Consulta
                 </button>
-                
-                <button 
+
+                <button
                   onClick={() => alert('Função de chat em desenvolvimento')}
                   className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-all duration-200 flex items-center"
                 >
@@ -378,8 +382,8 @@ const Professionals: React.FC = () => {
             <h2 className="ml-3 text-xl font-bold text-gray-900">Para Profissionais</h2>
           </div>
           <p className="text-gray-700 mb-4">
-            <strong>Ganhe Popularidade Ajudando Gratuitamente:</strong> Quanto mais você participa 
-            da comunidade e ajuda outros usuários, mais sua popularidade cresce e mais você é 
+            <strong>Ganhe Popularidade Ajudando Gratuitamente:</strong> Quanto mais você participa
+            da comunidade e ajuda outros usuários, mais sua popularidade cresce e mais você é
             indicado para consultas pagas.
           </p>
           <div className="flex flex-wrap gap-4 text-sm">

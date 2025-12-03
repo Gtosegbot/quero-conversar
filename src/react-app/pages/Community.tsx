@@ -124,6 +124,9 @@ const Community: React.FC = () => {
           </div>
         </div>
 
+        {/* Admin Notifications */}
+        <NotificationBanner pageSection="community" />
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg p-6">

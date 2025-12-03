@@ -300,31 +300,12 @@ const Chat: React.FC = () => {
         </div>
       </div>
 
-      {/* Admin Notifications Banner */}
-      {notifications.length > 0 && (
-        <div className="bg-orange-50 border-b border-orange-100 p-3">
-          <div className="max-w-4xl mx-auto">
-            {notifications.map(notif => (
-              <div key={notif.id} className="flex items-start justify-between mb-2 last:mb-0">
-                <div className="flex items-start">
-                  <Bell className="w-5 h-5 text-orange-600 mr-2 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-orange-900">{notif.title}</p>
-                    <p className="text-sm text-orange-800">{notif.message}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}
-                  className="text-orange-500 hover:text-orange-700"
-                >
-                  <span className="sr-only">Fechar</span>
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
+      {/* Admin Notifications */}
+      <div className="max-w-4xl mx-auto px-4 pt-4">
+        <NotificationBanner pageSection="chat" />
+      </div>
+
 
       {/* Limit Warning */}
       {showLimitWarning && (
