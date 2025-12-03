@@ -173,6 +173,27 @@ const CommunityChatRoom: React.FC = () => {
     }
   };
 
+  const getHeartColor = (userId: string, userName: string) => {
+    // Check if user is admin by email
+    const user = auth.currentUser;
+    const superAdminEmails = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'];
+
+    if (user && superAdminEmails.some(email => user.email?.includes(email))) {
+      if (userId === user.uid) {
+        return 'text-yellow-500'; // Gold for admin (self)
+      }
+    }
+
+    // Check if the message is from an admin (by checking email in userName or userId)
+    if (superAdminEmails.some(email => userName.toLowerCase().includes(email.toLowerCase()))) {
+      return 'text-yellow-500'; // Gold for admin messages
+    }
+
+    // Default colors
+    if (userName === 'Você') return 'text-purple-600';
+    return 'text-blue-600';
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
@@ -248,7 +269,7 @@ const CommunityChatRoom: React.FC = () => {
             <div key={message.id} className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <PulsingHeart
-                  color={message.user_name === 'Você' ? 'text-purple-600' : 'text-blue-600'}
+                  color={getHeartColor(message.user_id, message.user_name)}
                   size="sm"
                 />
               </div>
