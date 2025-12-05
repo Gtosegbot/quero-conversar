@@ -370,7 +370,7 @@ exports.onUserCreated = functions.firestore
  * 6. Stripe Webhook
  */
 exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
-    const sig = req.headers["stripe-signature"];
+    // const sig = req.headers["stripe-signature"]; // Não usado ainda
     const event = req.body;
     try {
         if (event.type === "payment_intent.succeeded") {
@@ -387,4 +387,5 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
 });
 __exportStar(require("./payment-functions"), exports);
 __exportStar(require("./rag-functions"), exports);
+__exportStar(require("./admin-setup"), exports);
 //# sourceMappingURL=index.js.map

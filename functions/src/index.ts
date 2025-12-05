@@ -340,7 +340,7 @@ export const onUserCreated = functions.firestore
  * 6. Stripe Webhook
  */
 export const stripeWebhook = functions.https.onRequest(async (req, res) => {
-    const sig = req.headers["stripe-signature"];
+    // const sig = req.headers["stripe-signature"]; // Não usado ainda
     const event = req.body;
 
     try {

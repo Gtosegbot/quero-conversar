@@ -65,7 +65,7 @@ exports.chatWithDraClara = functions.https.onCall(async (data, context) => {
         if (fileId) {
             const docRef = db.collection('knowledge_base').doc(fileId);
             const docSnap = await docRef.get();
-            if (docSnap.exists()) {
+            if (docSnap.exists) {
                 const docData = docSnap.data();
                 contextText += `\n\n[DOCUMENTO ESPECÍFICO]\nTítulo: ${docData?.title}\nConteúdo: ${docData?.content}\n[FIM DO DOCUMENTO]\n\n`;
             }
