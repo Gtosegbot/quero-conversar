@@ -1,8 +1,156 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    
+    // ============================================
+    // FUNÇÕES AUXILIARES
+    // ============================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.admin == true ||
+         request.auth.token.email.matches('.*gtosegbot@.*') ||
+         request.auth.token.email.matches('.*admgtoseg@.*') ||
+         request.auth.token.email == 'disparoseguroback@gmail.com');
+    }
+    
+    function isValidFileType(allowedTypes) {
+      return request.resource.contentType.matches(allowedTypes);
+    }
+    
+    function isValidFileSize(maxSizeMB) {
+      return request.resource.size < maxSizeMB * 1024 * 1024;
+    }
+    
+    // ============================================
+    // DOCUMENTOS DE PROFISSIONAIS
+    // ============================================
+    
+    match /professional_docs/{userId}/{fileName} {
+      // Leitura: qualquer usuário autenticado (para moderação)
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas o próprio profissional
+      allow write: if isOwner(userId) && 
+                      isValidFileType('image/.*|application/pdf') &&
+                      isValidFileSize(10);
+      
+      // Deleção: próprio usuário ou admin
+      allow delete: if isOwner(userId) || isSuperAdmin();
+    }
+    
+    // ============================================
+    // DOCUMENTOS DE PARCEIROS
+    // ============================================
+    
+    match /partner_docs/{userId}/{fileName} {
+      // Leitura: qualquer usuário autenticado (para moderação)
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas o próprio parceiro
+      allow write: if isOwner(userId) && 
+                      isValidFileType('image/.*|application/pdf') &&
+                      isValidFileSize(10);
+      
+      // Deleção: próprio usuário ou admin
+      allow delete: if isOwner(userId) || isSuperAdmin();
+    }
+    
+    // ============================================
+    // BASE DE CONHECIMENTO (RAG)
+    // ============================================
+    
+    match /knowledge_base/{fileName} {
+      // Leitura: qualquer usuário autenticado
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas super admin
+      allow write: if isSuperAdmin() && 
+                      isValidFileType('application/pdf') &&
+                      isValidFileSize(50); // PDFs podem ser maiores
+      
+      // Deleção: apenas super admin
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // AVATARES DE USUÁRIOS
+    // ============================================
+    
+    match /avatars/{userId}/{fileName} {
+      // Leitura: qualquer usuário autenticado
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas o próprio usuário
+      allow write: if isOwner(userId) && 
+                      isValidFileType('image/.*') &&
+                      isValidFileSize(5);
+      
+      // Deleção: próprio usuário ou admin
+      allow delete: if isOwner(userId) || isSuperAdmin();
+    }
+    
+    // ============================================
+    // PODCASTS (Gerados pela IA)
+    // ============================================
+    
+    match /podcasts/{fileName} {
+      // Leitura: qualquer usuário autenticado
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas admin (gerado por Cloud Function)
+      allow write: if isSuperAdmin();
+      
+      // Deleção: apenas admin
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // DOCUMENTOS DE USUÁRIOS (Uploads gerais)
+    // ============================================
+    
+    match /user_documents/{userId}/{fileName} {
+      // Leitura: apenas o próprio usuário
+      allow read: if isOwner(userId) || isSuperAdmin();
+      
+      // Escrita: apenas o próprio usuário
+      allow write: if isOwner(userId) && 
+                      isValidFileType('image/.*|application/pdf|application/msword|application/vnd.*') &&
+                      isValidFileSize(20);
+      
+      // Deleção: próprio usuário ou admin
+      allow delete: if isOwner(userId) || isSuperAdmin();
+    }
+    
+    // ============================================
+    // VÍDEOS (Se houver)
+    // ============================================
+    
+    match /videos/{videoId}/{fileName} {
+      // Leitura: qualquer usuário autenticado
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas admin
+      allow write: if isSuperAdmin();
+      
+      // Deleção: apenas admin
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // REGRA PADRÃO - NEGAR TUDO
+    // ============================================
+    
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }

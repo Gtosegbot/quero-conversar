@@ -20,6 +20,9 @@ import ModerationDashboard from "@/react-app/pages/ModerationDashboard";
 import Policies from "@/react-app/pages/Policies";
 import Gallery from "@/react-app/pages/Gallery";
 import Upload from "@/react-app/pages/Upload";
+import EnterpriseSetup from "@/react-app/pages/EnterpriseSetup";
+import EnterpriseEmployees from "@/react-app/pages/EnterpriseEmployees";
+import InviteAccept from "@/react-app/pages/InviteAccept";
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 
@@ -113,6 +116,13 @@ export default function App() {
           <Route path="/upload" element={<Layout />}>
             <Route index element={<Upload />} />
           </Route>
+
+          {/* Enterprise Routes */}
+          <Route path="/enterprise/setup" element={<EnterpriseSetup />} />
+          <Route path="/enterprise/employees" element={<Layout />}>
+            <Route index element={<EnterpriseEmployees />} />
+          </Route>
+          <Route path="/invite/accept" element={<InviteAccept />} />
         </Routes>
       </Router>
     </ErrorBoundary>

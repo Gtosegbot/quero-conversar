@@ -1,8 +1,362 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // ============================================
+    // FUNÇÕES AUXILIARES
+    // ============================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return request.auth.token.admin == true;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email.matches('.*gtosegbot@.*') ||
+         request.auth.token.email.matches('.*admgtoseg@.*') ||
+         request.auth.token.email == 'disparoseguroback@gmail.com');
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isCompanyAdmin(companyId) {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.company_id == companyId &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.company_role == 'admin';
+    }
+    
+    function belongsToCompany(companyId) {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.company_id == companyId;
+    }
+    
+    // ============================================
+    // REGRA PADRÃO - NEGAR TUDO
+    // ============================================
+    
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
+    }
+    
+    // ============================================
+    // USUÁRIOS
+    // ============================================
+    
+    match /users/{userId} {
+      // Qualquer usuário autenticado pode ler perfis públicos
+      allow read: if isAuthenticated();
+      
+      // Apenas o próprio usuário pode editar seu perfil
+      allow write: if isOwner(userId) || isAdmin();
+    }
+    
+    // ============================================
+    // SALAS DA COMUNIDADE
+    // ============================================
+    
+    match /community_rooms/{roomId} {
+      // Qualquer usuário autenticado pode ler salas
+      allow read: if isAuthenticated();
+      
+      // Criar sala: usuário autenticado (será validado no frontend)
+      allow create: if isAuthenticated() && 
+        request.resource.data.createdBy == request.auth.uid;
+      
+      // Atualizar/Deletar: apenas criador ou admin
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.createdBy == request.auth.uid || isSuperAdmin());
+    }
+    
+    // ============================================
+    // MENSAGENS DA COMUNIDADE - ISOLAMENTO POR SALA
+    // ============================================
+    
+    match /community_messages/{messageId} {
+      // Leitura: qualquer usuário autenticado pode ler mensagens
+      // (o isolamento é feito pela query no frontend com where('roomId', '==', roomId))
+      allow read: if isAuthenticated();
+      
+      // Criação: apenas o próprio usuário pode criar mensagens
+      allow create: if isAuthenticated() && 
+        request.resource.data.user_id == request.auth.uid &&
+        request.resource.data.roomId != null &&
+        request.resource.data.content != null;
+      
+      // Atualização/Deleção: apenas o autor ou admin
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.user_id == request.auth.uid || isSuperAdmin());
+    }
+    
+    // ============================================
+    // APLICAÇÕES DE PROFISSIONAIS
+    // ============================================
+    
+    match /professional_applications/{applicationId} {
+      // Leitura: apenas o próprio candidato ou admin
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == applicationId || isSuperAdmin());
+      
+      // Criação: apenas o próprio usuário
+      allow create: if isAuthenticated() && 
+        request.auth.uid == applicationId &&
+        request.resource.data.userId == request.auth.uid;
+      
+      // Atualização/Deleção: apenas admin (para aprovação)
+      allow update, delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // APLICAÇÕES DE PARCEIROS
+    // ============================================
+    
+    match /partner_applications/{applicationId} {
+      // Leitura: apenas o próprio candidato ou admin
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == applicationId || isSuperAdmin());
+      
+      // Criação: apenas o próprio usuário
+      allow create: if isAuthenticated() && 
+        request.auth.uid == applicationId &&
+        request.resource.data.userId == request.auth.uid;
+      
+      // Atualização/Deleção: apenas admin (para aprovação)
+      allow update, delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // EMPRESAS - ISOLAMENTO POR EMPRESA
+    // ============================================
+    
+    match /companies/{companyId} {
+      // Leitura: apenas membros da empresa ou admin
+      allow read: if isAuthenticated() && 
+        (belongsToCompany(companyId) || isSuperAdmin());
+      
+      // Criação: qualquer usuário autenticado (wizard de setup)
+      allow create: if isAuthenticated() && 
+        request.resource.data.admin_uid == request.auth.uid;
+      
+      // Atualização: apenas admin da empresa ou super admin
+      allow update: if isAuthenticated() && 
+        (isCompanyAdmin(companyId) || isSuperAdmin());
+      
+      // Deleção: apenas super admin
+      allow delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // FUNCIONÁRIOS - ISOLAMENTO POR EMPRESA
+    // ============================================
+    
+    match /company_employees/{employeeId} {
+      // Leitura: apenas membros da mesma empresa ou admin
+      allow read: if isAuthenticated() && 
+        (belongsToCompany(resource.data.company_id) || isSuperAdmin());
+      
+      // Criação: admin da empresa ou aceite de convite
+      allow create: if isAuthenticated() && 
+        (isCompanyAdmin(request.resource.data.company_id) || 
+         request.resource.data.user_id == request.auth.uid);
+      
+      // Atualização: admin da empresa ou próprio funcionário (campos limitados)
+      allow update: if isAuthenticated() && 
+        (isCompanyAdmin(resource.data.company_id) || 
+         (resource.data.user_id == request.auth.uid && 
+          request.resource.data.company_id == resource.data.company_id));
+      
+      // Deleção: apenas admin da empresa ou super admin
+      allow delete: if isAuthenticated() && 
+        (isCompanyAdmin(resource.data.company_id) || isSuperAdmin());
+    }
+    
+    // ============================================
+    // CONVITES DE FUNCIONÁRIOS
+    // ============================================
+    
+    match /employee_invites/{inviteId} {
+      // Leitura: qualquer usuário autenticado (para aceitar convite via token)
+      allow read: if isAuthenticated();
+      
+      // Criação: apenas admin da empresa
+      allow create: if isAuthenticated() && 
+        isCompanyAdmin(request.resource.data.company_id) &&
+        request.resource.data.invited_by == request.auth.uid;
+      
+      // Atualização: admin da empresa ou usuário aceitando convite
+      allow update: if isAuthenticated() && 
+        (isCompanyAdmin(resource.data.company_id) || 
+         (resource.data.email == request.auth.token.email && 
+          request.resource.data.status == 'accepted'));
+      
+      // Deleção: apenas admin da empresa ou super admin
+      allow delete: if isAuthenticated() && 
+        (isCompanyAdmin(resource.data.company_id) || isSuperAdmin());
+    }
+    
+    // ============================================
+    // BASE DE CONHECIMENTO (RAG)
+    // ============================================
+    
+    match /knowledge_base/{docId} {
+      // Leitura: qualquer usuário autenticado
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas admin
+      allow write: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // INSIGHTS DO ADMIN (Curador IA)
+    // ============================================
+    
+    match /admin_insights/{insightId} {
+      // Leitura: apenas admin
+      allow read: if isSuperAdmin();
+      
+      // Escrita: apenas admin
+      allow write: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // PODCASTS
+    // ============================================
+    
+    match /podcasts/{podcastId} {
+      // Leitura: qualquer usuário autenticado
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas admin
+      allow write: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // NOTIFICAÇÕES
+    // ============================================
+    
+    match /notifications/{notificationId} {
+      // Leitura: qualquer usuário autenticado
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas admin
+      allow write: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // TEMPLATES DE TAREFAS
+    // ============================================
+    
+    match /task_templates/{templateId} {
+      // Leitura: qualquer usuário autenticado
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas admin
+      allow write: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // RELATÓRIOS DE MODERAÇÃO
+    // ============================================
+    
+    match /moderation_reports/{reportId} {
+      // Leitura: apenas admin
+      allow read: if isSuperAdmin();
+      
+      // Criação: qualquer usuário autenticado pode reportar
+      allow create: if isAuthenticated() && 
+        request.resource.data.reported_by == request.auth.uid;
+      
+      // Atualização/Deleção: apenas admin
+      allow update, delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // CHAT DE MODERADORES
+    // ============================================
+    
+    match /moderator_chat/{messageId} {
+      // Apenas admin
+      allow read, write: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // CONVERSAS (Chat com Dra. Clara)
+    // ============================================
+    
+    match /conversations/{conversationId} {
+      // Leitura: apenas o dono da conversa
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Criação: apenas o próprio usuário
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Atualização: apenas o dono
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Deleção: dono ou admin
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isSuperAdmin());
+      
+      // Mensagens dentro da conversa
+      match /messages/{messageId} {
+        // Leitura: apenas o dono da conversa
+        allow read: if isAuthenticated() && 
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid;
+        
+        // Criação: apenas o dono da conversa
+        allow create: if isAuthenticated() && 
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid;
+        
+        // Atualização/Deleção: não permitido (mensagens são imutáveis)
+        allow update, delete: if false;
+      }
+    }
+    
+    // ============================================
+    // AGENDAMENTOS
+    // ============================================
+    
+    match /appointments/{appointmentId} {
+      // Leitura: participantes do agendamento ou admin
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.professionalId == request.auth.uid || 
+         isSuperAdmin());
+      
+      // Criação: usuário autenticado
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Atualização: participantes ou admin
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.professionalId == request.auth.uid || 
+         isSuperAdmin());
+      
+      // Deleção: participantes ou admin
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.professionalId == request.auth.uid || 
+         isSuperAdmin());
+    }
+    
+    // ============================================
+    // RELATÓRIOS
+    // ============================================
+    
+    match /reports/{reportId} {
+      // Apenas admin
+      allow read, write: if isSuperAdmin();
     }
   }
 }

@@ -29,7 +29,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onUserCreated = exports.onNewMessage = exports.generateDailyPodcast = exports.generateStudy = exports.analyzeTrends = void 0;
+exports.stripeWebhook = exports.onUserCreated = exports.onNewMessage = exports.generateDailyPodcast = exports.generateStudy = exports.analyzeTrends = void 0;
 const functions = __importStar(require("firebase-functions"));
 const admin = __importStar(require("firebase-admin"));
 const vertexai_1 = require("@google-cloud/vertexai");
@@ -43,7 +43,6 @@ const storage = admin.storage();
 // Initialize Vertex AI
 const vertexAI = new vertexai_1.VertexAI({ project: process.env.GCLOUD_PROJECT || "quero-conversar-app", location: "us-central1" });
 const model = vertexAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-// OpenAI initialized lazily inside the function
 // Initialize TTS Client
 const ttsClient = new text_to_speech_1.TextToSpeechClient();
 const SYSTEM_PROMPT = `
@@ -77,7 +76,6 @@ exports.analyzeTrends = functions.https.onCall(async (data, context) => {
       
       Mensagens:
       ${messages}
-
       Retorne APENAS um JSON no formato:
       {
         "trends": [
@@ -282,19 +280,14 @@ exports.onNewMessage = functions.firestore
         });
         const fullPrompt = `
             ${SYSTEM_PROMPT}
-
             ${userProfile}
-
             BASE DE CONHECIMENTO CIENTÍFICA (Prioridade Alta):
             ${knowledgeContext}
-
             ${socialContext}
-
             INSTRUÇÕES ADICIONAIS:
             1. Se a resposta não estiver na Base de Conhecimento, use a Busca na Web (Google Search) para encontrar informações científicas confiáveis.
             2. Cite fontes quando possível (ex: "Segundo estudos...").
             3. Mantenha a persona da Dra. Clara: acolhedora, profissional, mas baseada em evidências.
-
             Usuário: ${message.content}
             `;
         console.log("[onNewMessage] Sending prompt to Gemini with Web Search...");
@@ -371,6 +364,25 @@ exports.onUserCreated = functions.firestore
     catch (error) {
         console.error("Error awarding referral XP:", error);
         return null;
+    }
+});
+/**
+ * 6. Stripe Webhook
+ */
+exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    const event = req.body;
+    try {
+        if (event.type === "payment_intent.succeeded") {
+            const paymentIntent = event.data.object;
+            console.log("Payment Succeeded:", paymentIntent.id);
+            // In a real implementation, you would update the payment status in Firestore
+        }
+        res.json({ received: true });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(400).send(`Webhook Error: ${err}`);
     }
 });
 __exportStar(require("./payment-functions"), exports);

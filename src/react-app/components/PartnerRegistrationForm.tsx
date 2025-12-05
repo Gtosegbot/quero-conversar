@@ -17,10 +17,10 @@ import {
   Linkedin
 } from 'lucide-react';
 import PulsingHeart from './PulsingHeart';
-import { auth, db, storage } from '../../firebase-config';
+import { auth, db } from '../../firebase-config';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { DocumentUploadService } from '../../services/DocumentUploadService';
 
 interface FormData {
   email: string;
@@ -41,6 +41,7 @@ const PartnerRegistrationForm: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -144,27 +145,56 @@ const PartnerRegistrationForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // 1. Create Auth User
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = userCredential.user;
+      let user = auth.currentUser;
+
+      // 1. Verificar se usuário já está logado
+      if (!user) {
+        // Se não estiver logado, criar nova conta
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        user = userCredential.user;
+      } else {
+        // Se já estiver logado, verificar se o email é o mesmo
+        if (user.email !== formData.email) {
+          throw new Error('Você já está logado com outro email. Por favor, faça logout primeiro ou use o email atual: ' + user.email);
+        }
+      }
 
       // 2. Update Profile
       await updateProfile(user, { displayName: formData.companyName });
 
-      // 3. Upload Documents
-      const uploadedDocs = [];
-      for (let i = 0; i < formData.documents.length; i++) {
-        const file = formData.documents[i];
-        const storageRef = ref(storage, `partner_docs/${user.uid}/${file.name}`);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
-        uploadedDocs.push({ name: file.name, url });
+      // 3. Upload Documents com DocumentUploadService
+      const uploadResults = await DocumentUploadService.uploadMultiple(
+        formData.documents,
+        `partner_docs/${user.uid}`,
+        (current, total) => setUploadProgress({ current, total })
+      );
+
+      // Verificar se houve falhas
+      const failedUploads = uploadResults.filter(r => !r.success);
+      const successfulUploads = uploadResults.filter(r => r.success);
+
+      if (failedUploads.length > 0) {
+        const errorMsg = `Falha no upload de ${failedUploads.length} arquivo(s):\n` +
+          failedUploads.map(f => `- ${f.name}: ${f.error}`).join('\n');
+
+        if (successfulUploads.length === 0) {
+          // Nenhum arquivo foi enviado - bloquear cadastro
+          throw new Error('Erro no upload de documentos. Nenhum arquivo foi enviado com sucesso.');
+        } else {
+          // Alguns arquivos foram enviados - avisar usuário
+          if (!confirm(errorMsg + '\n\nDeseja continuar com os documentos enviados com sucesso?')) {
+            throw new Error('Cadastro cancelado pelo usuário.');
+          }
+        }
       }
+
+      const uploadedDocs = successfulUploads.map(r => ({ name: r.name, url: r.url! }));
+      setUploadProgress({ current: 0, total: 0 }); // Reset progress
 
       // 4. Save Application to Firestore
       const applicationData = {
         userId: user.uid,
-        email: formData.email,
+        email: user.email || formData.email,
         responsibleName: formData.name,
         companyName: formData.companyName,
         cnpj: formData.cnpj,
@@ -435,6 +465,21 @@ const PartnerRegistrationForm: React.FC = () => {
           {currentStep === 3 && renderStep3()}
 
           {errors.general && <div className="mt-4 p-3 bg-red-100 text-red-700 rounded">{errors.general}</div>}
+
+          {/* Upload Progress Indicator */}
+          {uploadProgress.total > 0 && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800 mb-2">
+                Enviando documentos: {uploadProgress.current} de {uploadProgress.total}
+              </p>
+              <div className="w-full bg-blue-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-between mt-8">
             {currentStep > 1 && (

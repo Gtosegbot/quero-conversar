@@ -358,3 +358,4 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
 export * from './payment-functions';
 export * from './rag-functions';
+export * from './admin-setup';
