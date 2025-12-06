@@ -135,8 +135,21 @@ const PartnerRegistrationForm: React.FC = () => {
   };
 
   const nextStep = () => {
-    if (validateStep(currentStep)) {
+    console.log('🔍 [Partner] Tentando avançar do step', currentStep);
+    console.log('📝 [Partner] FormData atual:', formData);
+
+    const isValid = validateStep(currentStep);
+    console.log('✅ [Partner] Validação resultado:', isValid);
+    console.log('❌ [Partner] Erros encontrados:', errors);
+
+    if (isValid) {
+      console.log('✨ [Partner] Avançando para step', currentStep + 1);
       setCurrentStep(currentStep + 1);
+      setErrors({}); // Limpar erros ao avançar
+    } else {
+      console.error('⛔ [Partner] Validação falhou, não pode avançar');
+      // Scroll to top to show errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 

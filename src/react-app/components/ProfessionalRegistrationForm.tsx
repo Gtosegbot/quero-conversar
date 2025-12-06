@@ -148,8 +148,21 @@ const ProfessionalRegistrationForm: React.FC = () => {
   };
 
   const nextStep = () => {
-    if (validateStep(currentStep)) {
+    console.log('🔍 Tentando avançar do step', currentStep);
+    console.log('📝 FormData atual:', formData);
+
+    const isValid = validateStep(currentStep);
+    console.log('✅ Validação resultado:', isValid);
+    console.log('❌ Erros encontrados:', errors);
+
+    if (isValid) {
+      console.log('✨ Avançando para step', currentStep + 1);
       setCurrentStep(currentStep + 1);
+      setErrors({}); // Limpar erros ao avançar
+    } else {
+      console.error('⛔ Validação falhou, não pode avançar');
+      // Scroll to top to show errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
