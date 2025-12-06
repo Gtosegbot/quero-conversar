@@ -257,29 +257,6 @@ service cloud.firestore {
       // Leitura: qualquer usuário autenticado
       allow read: if isAuthenticated();
       
-      // Escrita: apenas admin
-      allow write: if isSuperAdmin();
-    }
-    
-    // ============================================
-    // RELATÓRIOS DE MODERAÇÃO
-    // ============================================
-    
-    match /moderation_reports/{reportId} {
-      // Leitura: apenas admin
-      allow read: if isSuperAdmin();
-      
-      // Criação: qualquer usuário autenticado pode reportar
-      allow create: if isAuthenticated() && 
-        request.resource.data.reported_by == request.auth.uid;
-      
-      // Atualização/Deleção: apenas admin
-      allow update, delete: if isSuperAdmin();
-    }
-    
-    // ============================================
-    // CHAT DE MODERADORES
-    // ============================================
     
     match /moderator_chat/{messageId} {
       // Apenas admin

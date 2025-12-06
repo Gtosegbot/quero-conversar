@@ -68,7 +68,7 @@ service firebase.storage {
     // BASE DE CONHECIMENTO (RAG)
     // ============================================
     
-    match /knowledge_base/{fileName} {
+    match /knowledge_base/{userId}/{fileName} {
       // Leitura: qualquer usuário autenticado
       allow read: if isAuthenticated();
       
@@ -79,6 +79,23 @@ service firebase.storage {
       
       // Deleção: apenas super admin
       allow delete: if isSuperAdmin();
+    }
+    
+    // ============================================
+    // DOCUMENTOS GERAIS (Perfil de usuário)
+    // ============================================
+    
+    match /documents/{userId}/{fileName} {
+      // Leitura: próprio usuário ou admin
+      allow read: if isOwner(userId) || isSuperAdmin();
+      
+      // Escrita: próprio usuário
+      allow write: if isOwner(userId) && 
+                      isValidFileType('image/.*|application/pdf') &&
+                      isValidFileSize(10);
+      
+      // Deleção: próprio usuário ou admin
+      allow delete: if isOwner(userId) || isSuperAdmin();
     }
     
     // ============================================

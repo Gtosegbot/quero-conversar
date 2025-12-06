@@ -119,6 +119,17 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         userData = userSnap.data();
       }
 
+      // Check anamnesis status from Firestore (more reliable than userData)
+      const anamnesisRef = doc(db, 'users', user.uid, 'anamnesis', 'initial');
+      const anamnesisSnap = await getDoc(anamnesisRef);
+
+      // Update userData with fresh anamnesis status
+      if (anamnesisSnap.exists() && !userData.anamnesisCompleted) {
+        userData.anamnesisCompleted = true;
+        // Update Firestore to sync
+        await setDoc(userRef, { anamnesisCompleted: true }, { merge: true });
+      }
+
       localStorage.setItem('user', JSON.stringify(userData));
 
       if (onSuccess) {
@@ -126,7 +137,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       }
 
       // Navigate based on anamnesis status
-      if (userData.anamnesisCompleted) {
+      if (userData.anamnesisCompleted || anamnesisSnap.exists()) {
         navigate('/dashboard');
       } else {
         navigate('/anamnesis');
