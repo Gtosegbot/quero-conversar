@@ -101,8 +101,14 @@ const PartnerRegistrationForm: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!formData.email) newErrors.email = 'Email é obrigatório';
-      if (!formData.password || formData.password.length < 6) newErrors.password = 'Senha deve ter min. 6 caracteres';
+      // Email só é obrigatório se usuário NÃO estiver logado
+      if (!isLoggedIn && !formData.email) newErrors.email = 'Email é obrigatório';
+
+      // Senha só é obrigatória se usuário NÃO estiver logado
+      if (!isLoggedIn && (!formData.password || formData.password.length < 6)) {
+        newErrors.password = 'Senha deve ter min. 6 caracteres';
+      }
+
       if (!formData.name) newErrors.name = 'Nome do responsável é obrigatório';
       if (!formData.companyName) newErrors.companyName = 'Nome da empresa é obrigatório';
       if (!formData.cnpj) newErrors.cnpj = 'CNPJ é obrigatório';

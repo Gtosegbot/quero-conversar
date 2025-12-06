@@ -111,8 +111,14 @@ const ProfessionalRegistrationForm: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!formData.email) newErrors.email = 'Email é obrigatório';
-      if (!formData.password || formData.password.length < 6) newErrors.password = 'Senha deve ter min. 6 caracteres';
+      // Email só é obrigatório se usuário NÃO estiver logado
+      if (!isLoggedIn && !formData.email) newErrors.email = 'Email é obrigatório';
+
+      // Senha só é obrigatória se usuário NÃO estiver logado
+      if (!isLoggedIn && (!formData.password || formData.password.length < 6)) {
+        newErrors.password = 'Senha deve ter min. 6 caracteres';
+      }
+
       if (!formData.name) newErrors.name = 'Nome é obrigatório';
       if (!formData.specialty) newErrors.specialty = 'Especialidade é obrigatória';
       if (!formData.councilType) newErrors.councilType = 'Conselho é obrigatório';
