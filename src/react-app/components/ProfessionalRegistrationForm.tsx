@@ -112,10 +112,11 @@ const ProfessionalRegistrationForm: React.FC = () => {
 
     if (step === 1) {
       // Email só é obrigatório se usuário NÃO estiver logado
-      if (!isLoggedIn && !formData.email) newErrors.email = 'Email é obrigatório';
+      const user = auth.currentUser;
+      if (!user && !formData.email) newErrors.email = 'Email é obrigatório';
 
       // Senha só é obrigatória se usuário NÃO estiver logado
-      if (!isLoggedIn && (!formData.password || formData.password.length < 6)) {
+      if (!user && (!formData.password || formData.password.length < 6)) {
         newErrors.password = 'Senha deve ter min. 6 caracteres';
       }
 
