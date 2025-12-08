@@ -321,20 +321,27 @@ const AdminDashboard: React.FC = () => {
 
   const loadAdminStats = async () => {
     try {
-      // Real-time counts (or estimated)
+      // Real-time counts
       const usersSnap = await getCountFromServer(usersRef);
       const professionalsSnap = await getCountFromServer(query(usersRef, where('role', '==', 'professional')));
       const appointmentsSnap = await getCountFromServer(appointmentsRef);
 
-      // For "Messages Today", we might need a specific query or just estimate/skip for now to save reads
-      // For "Pending Reports"
+      // Messages Today - count messages from today
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const messagesRef = collection(db, 'messages');
+      const messagesTodaySnap = await getCountFromServer(
+        query(messagesRef, where('createdAt', '>=', today))
+      );
+
+      // Pending Reports
       const reportsSnap = await getCountFromServer(query(reportsRef, where('status', '==', 'pending')));
 
       setAdminStats({
         total_users: usersSnap.data().count,
         total_professionals: professionalsSnap.data().count,
         total_appointments: appointmentsSnap.data().count,
-        messages_today: 0, // Placeholder or implement specific logic
+        messages_today: messagesTodaySnap.data().count,
         pending_reports: reportsSnap.data().count
       });
     } catch (error) {
@@ -1089,13 +1096,13 @@ const AdminDashboard: React.FC = () => {
                 Ações Rápidas
               </h2>
               <div className="space-y-3">
-                <button
-                  onClick={() => setActiveTab('users')}
-                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                <Link
+                  to="/admin/users"
+                  className="block w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="font-semibold text-gray-900">Usuários Recentes</div>
-                  <div className="text-sm text-gray-600">Ver novos cadastros</div>
-                </button>
+                  <div className="text-sm text-gray-600">Ver lista completa de usuários</div>
+                </Link>
                 <button
                   onClick={() => navigate('/moderation')}
                   className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -1177,9 +1184,12 @@ const AdminDashboard: React.FC = () => {
                   <h4 className="font-semibold text-green-900">Vídeos Educacionais</h4>
                   <p className="text-green-700 text-sm">Material educativo sobre saúde mental</p>
                 </div>
-                <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                <Link
+                  to="/admin/videos"
+                  className="block w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors text-center"
+                >
                   Gerenciar Biblioteca
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -1200,9 +1210,12 @@ const AdminDashboard: React.FC = () => {
                   <h4 className="font-semibold text-purple-900">Criar Nova Política</h4>
                   <p className="text-purple-700 text-sm">Adicionar novas diretrizes</p>
                 </div>
-                <button className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors">
+                <Link
+                  to="/policies"
+                  className="block w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors text-center"
+                >
                   Gerenciar Documentos
-                </button>
+                </Link>
               </div>
             </div>
           </div>

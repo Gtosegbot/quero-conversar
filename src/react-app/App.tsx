@@ -15,6 +15,8 @@ import ProfessionalRegistrationForm from "@/react-app/components/ProfessionalReg
 import PartnerRegistrationForm from "@/react-app/components/PartnerRegistrationForm";
 import Payment from "@/react-app/pages/Payment";
 import AdminDashboard from "@/react-app/pages/AdminDashboard";
+import AdminUsers from "@/react-app/pages/AdminUsers";
+import AdminVideos from "@/react-app/pages/AdminVideos";
 import ProfessionalChat from "@/react-app/pages/ProfessionalChat";
 import ModerationDashboard from "@/react-app/pages/ModerationDashboard";
 import Policies from "@/react-app/pages/Policies";
@@ -77,6 +79,8 @@ export default function App() {
           <Route path="/register-partner" element={<PartnerRegistrationForm />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/videos" element={<AdminVideos />} />
           <Route path="/moderation" element={<ModerationDashboard />} />
           <Route path="/policies" element={<Policies />} />
           <Route path="/policies/:type" element={<Policies />} />
