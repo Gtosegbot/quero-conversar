@@ -40,8 +40,8 @@ const KnowledgeUpload: React.FC = () => {
 
         try {
             const storage = getStorage();
-            // Path: knowledge-base/{userId}/{filename}
-            const storageRef = ref(storage, `knowledge-base/${user.uid}/${file.name}`);
+            // Path: knowledge_base/{userId}/{filename} - Updated path with underscore
+            const storageRef = ref(storage, `knowledge_base/${user.uid}/${file.name}`);
 
             await uploadBytes(storageRef, file);
 
