@@ -50,6 +50,23 @@ service cloud.firestore {
       // Apenas o próprio usuário pode editar seu perfil ou admin
       allow write: if isOwner(userId) || isAdmin();
     }
+
+    // ============================================
+    // PAGAMENTOS
+    // ============================================
+
+    match /payments/{paymentId} {
+      // Leitura: apenas o próprio usuário ou admin
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isSuperAdmin());
+      
+      // Criação: apenas o próprio usuário (registrando pagamento)
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Atualização/Deleção: apenas admin (histórico imutável para usuários)
+      allow update, delete: if isSuperAdmin();
+    }
     
     // ============================================
     // SALAS DA COMUNIDADE
