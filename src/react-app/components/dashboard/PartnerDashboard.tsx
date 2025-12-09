@@ -6,7 +6,8 @@ import {
     Plus,
     Trash2,
     Edit,
-    Loader2
+    Loader2,
+    DollarSign
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../../firebase-config';
@@ -19,13 +20,19 @@ interface PartnerDashboardProps {
 }
 
 const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) => {
-    const [activeTab, setActiveTab] = useState<'products' | 'content' | 'stats'>('products');
+    const [activeTab, setActiveTab] = useState<'products' | 'content' | 'stats' | 'financial'>('products');
     const [showProductForm, setShowProductForm] = useState(false);
     const [showContentForm, setShowContentForm] = useState(false);
 
     const [products, setProducts] = useState<any[]>([]);
     const [videos, setVideos] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [bankInfo, setBankInfo] = useState({
+        pixKey: '',
+        bankName: '',
+        accountNumber: '',
+        agency: ''
+    });
 
     // Fetch Data
     useEffect(() => {
@@ -67,6 +74,10 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
         }
     };
 
+    const handleSaveBankInfo = async () => {
+        alert('Dados salvos com sucesso! (Simulação)');
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center py-12">
@@ -93,10 +104,10 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
                 </div>
 
                 {/* Navigation Tabs */}
-                <div className="flex space-x-4 mt-6 border-b border-gray-200">
+                <div className="flex space-x-4 mt-6 border-b border-gray-200 overflow-x-auto">
                     <button
                         onClick={() => setActiveTab('products')}
-                        className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'products'
+                        className={`pb-2 px-4 font-medium transition-colors whitespace-nowrap ${activeTab === 'products'
                             ? 'text-orange-600 border-b-2 border-orange-600'
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
@@ -108,7 +119,7 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
                     </button>
                     <button
                         onClick={() => setActiveTab('content')}
-                        className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'content'
+                        className={`pb-2 px-4 font-medium transition-colors whitespace-nowrap ${activeTab === 'content'
                             ? 'text-orange-600 border-b-2 border-orange-600'
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
@@ -120,7 +131,7 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
                     </button>
                     <button
                         onClick={() => setActiveTab('stats')}
-                        className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'stats'
+                        className={`pb-2 px-4 font-medium transition-colors whitespace-nowrap ${activeTab === 'stats'
                             ? 'text-orange-600 border-b-2 border-orange-600'
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
@@ -128,6 +139,18 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
                         <div className="flex items-center">
                             <BarChart2 className="w-4 h-4 mr-2" />
                             Estatísticas
+                        </div>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('financial')}
+                        className={`pb-2 px-4 font-medium transition-colors whitespace-nowrap ${activeTab === 'financial'
+                            ? 'text-orange-600 border-b-2 border-orange-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        <div className="flex items-center">
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Dados Financeiros
                         </div>
                     </button>
                 </div>
@@ -258,6 +281,80 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
                         <BarChart2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900">Estatísticas Detalhadas</h3>
                         <p className="text-gray-500">Em breve você poderá ver gráficos detalhados de desempenho.</p>
+                    </div>
+                )}
+
+                {activeTab === 'financial' && (
+                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                            <DollarSign className="w-6 h-6 text-orange-600 mr-2" />
+                            Dados Financeiros e Recebimento
+                        </h2>
+
+                        <div className="bg-orange-50 border-l-4 border-orange-500 p-4 mb-6">
+                            <h3 className="font-bold text-orange-800 mb-2">Regras de Repasse para Parceiros</h3>
+                            <ul className="text-sm text-orange-700 space-y-1">
+                                <li>• A plataforma realiza o repasse das vendas de produtos e conteúdos.</li>
+                                <li>• <strong>Parceiros Não-Moderadores:</strong> Desconto de <strong>30%</strong> (Recebem 70%).</li>
+                                <li>• <strong>Parceiros Moderadores:</strong> Desconto de <strong>25%</strong> (Recebem 75%).</li>
+                                <li>• Os pagamentos são processados via PIX ou Stripe.</li>
+                            </ul>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Chave PIX (Preferencial)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={bankInfo.pixKey}
+                                    onChange={(e) => setBankInfo({ ...bankInfo, pixKey: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                    placeholder="CPF, E-mail, Celular ou Aleatória"
+                                />
+                            </div>
+
+                            <div className="border-t pt-4 mt-4">
+                                <p className="text-sm text-gray-500 mb-4 italic">Conta Bancária (Opcional)</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Banco</label>
+                                        <input
+                                            type="text"
+                                            value={bankInfo.bankName}
+                                            onChange={(e) => setBankInfo({ ...bankInfo, bankName: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Agência</label>
+                                        <input
+                                            type="text"
+                                            value={bankInfo.agency}
+                                            onChange={(e) => setBankInfo({ ...bankInfo, agency: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Conta Corrente</label>
+                                        <input
+                                            type="text"
+                                            value={bankInfo.accountNumber}
+                                            onChange={(e) => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleSaveBankInfo}
+                                className="w-full bg-orange-600 text-white py-3 rounded-lg font-bold hover:bg-orange-700 transition-colors mt-4"
+                            >
+                                Salvar Dados Financeiros
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

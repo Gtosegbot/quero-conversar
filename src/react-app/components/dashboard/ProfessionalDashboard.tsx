@@ -161,29 +161,10 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
 
                                                 {app.meetLink && (
                                                     <a
-                                                        href={app.meetLink}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-full"
-                                                        title="Iniciar Vídeo Chamada"
-                                                    >
-                                                        <Video className="w-5 h-5" />
-                                                    </a>
-                                                )}
+                )}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {activeTab === 'schedule' && (
-                    <ScheduleManager userId={user.uid} />
-                )}
-            </div>
-            );
+                                    );
 };
 
-            export default ProfessionalDashboard;
+                                    export default ProfessionalDashboard;
