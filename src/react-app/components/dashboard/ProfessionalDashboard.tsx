@@ -182,81 +182,8 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
                 {activeTab === 'schedule' && (
                     <ScheduleManager userId={user.uid} />
                 )}
-
-                {activeTab === 'financial' && (
-                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
-                        <div className="flex items-center mb-6">
-                            <div className="p-3 bg-green-100 rounded-full mr-4">
-                                <DollarSign className="w-6 h-6 text-green-600" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900">Dados para Recebimento</h3>
-                                <p className="text-gray-600 text-sm">Cadastre suas informações bancárias para receber pelas consultas.</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Chave Pix</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    placeholder="CPF, Email ou Telefone"
-                                    value={bankInfo.pixKey}
-                                    onChange={e => setBankInfo({ ...bankInfo, pixKey: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Banco</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        placeholder="Nome do Banco"
-                                        value={bankInfo.bankName}
-                                        onChange={e => setBankInfo({ ...bankInfo, bankName: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Agência</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                        placeholder="0000"
-                                        value={bankInfo.agency}
-                                        onChange={e => setBankInfo({ ...bankInfo, agency: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Conta Corrente</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    placeholder="00000-0"
-                                    value={bankInfo.accountNumber}
-                                    onChange={e => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
-                                />
-                            </div>
-
-                            <button
-                                onClick={handleSaveBankInfo}
-                                className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors mt-4"
-                            >
-                                Salvar Dados Financeiros
-                            </button>
-
-                            <p className="text-xs text-center text-gray-500 mt-4">
-                                * Seus dados são armazenados de forma segura e utilizados apenas para repasses.
-                            </p>
-                        </div>
-                    </div>
-                )}
             </div>
-        </div>
-    );
+            );
 };
 
-export default ProfessionalDashboard;
+            export default ProfessionalDashboard;

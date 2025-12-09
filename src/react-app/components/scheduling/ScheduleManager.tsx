@@ -100,58 +100,70 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({ userId }) => {
                     <Clock className="w-5 h-5 mr-2 text-blue-600" />
                     Configurar Disponibilidade
                 </h2>
-                <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center disabled:opacity-50"
-                >
-                    {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    Salvar Alterações
-                </button>
-            </div>
 
-            <div className="space-y-4">
-                {DAYS.map((day) => (
-                    <div key={day.key} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                        <div className="flex items-center w-1/3">
-                            <input
-                                type="checkbox"
-                                checked={schedule[day.key].enabled}
-                                onChange={() => handleDayToggle(day.key)}
-                                className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mr-3"
-                            />
-                            <span className={`font-medium ${schedule[day.key].enabled ? 'text-gray-900' : 'text-gray-400'}`}>
-                                {day.label}
-                            </span>
-                        </div>
+                <div className="bg-purple-50 p-4 rounded-lg mb-6 border-l-4 border-purple-500">
+                    <p className="text-sm text-purple-800 font-medium mb-1">ℹ️ Como funciona a agenda:</p>
+                    <ul className="text-sm text-purple-700 list-disc list-inside space-y-1">
+                        <li>Defina seus horários de atendimento abaixo.</li>
+                        <li><strong>Google Calendar & Meet:</strong> Ao confirmar uma consulta, um link do Google Meet será gerado automaticamente e enviado para seu e-mail e para o paciente.</li>
+                        <li><strong>Duração:</strong> As consultas têm duração padrão de 50 minutos.</li>
+                        <li><strong>Documentos:</strong> Você pode anexar prontuários, receitas e atestados na área de "Meus Pacientes" após a consulta.</li>
+                    </ul>
+                </div>
 
-                        <div className="flex items-center space-x-4">
-                            <div className="flex items-center">
-                                <span className="text-sm text-gray-500 mr-2">Das</span>
+                <div className="flex justify-end mb-4">
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center disabled:opacity-50"
+                    >
+                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                        Salvar Alterações
+                    </button>
+                </div>
+
+                <div className="space-y-4">
+                    {DAYS.map((day) => (
+                        <div key={day.key} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                            <div className="flex items-center w-1/3">
                                 <input
-                                    type="time"
-                                    value={schedule[day.key].start}
-                                    onChange={(e) => handleTimeChange(day.key, 'start', e.target.value)}
-                                    disabled={!schedule[day.key].enabled}
-                                    className="border rounded-md p-1 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                                    type="checkbox"
+                                    checked={schedule[day.key].enabled}
+                                    onChange={() => handleDayToggle(day.key)}
+                                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 mr-3"
                                 />
+                                <span className={`font-medium ${schedule[day.key].enabled ? 'text-gray-900' : 'text-gray-400'}`}>
+                                    {day.label}
+                                </span>
                             </div>
-                            <div className="flex items-center">
-                                <span className="text-sm text-gray-500 mr-2">Até</span>
-                                <input
-                                    type="time"
-                                    value={schedule[day.key].end}
-                                    onChange={(e) => handleTimeChange(day.key, 'end', e.target.value)}
-                                    disabled={!schedule[day.key].enabled}
-                                    className="border rounded-md p-1 text-sm disabled:bg-gray-100 disabled:text-gray-400"
-                                />
+
+                            <div className="flex items-center space-x-4">
+                                <div className="flex items-center">
+                                    <span className="text-sm text-gray-500 mr-2">Das</span>
+                                    <input
+                                        type="time"
+                                        value={schedule[day.key].start}
+                                        onChange={(e) => handleTimeChange(day.key, 'start', e.target.value)}
+                                        disabled={!schedule[day.key].enabled}
+                                        className="border rounded-md p-1 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                                    />
+                                </div>
+                                <div className="flex items-center">
+                                    <span className="text-sm text-gray-500 mr-2">Até</span>
+                                    <input
+                                        type="time"
+                                        value={schedule[day.key].end}
+                                        onChange={(e) => handleTimeChange(day.key, 'end', e.target.value)}
+                                        disabled={!schedule[day.key].enabled}
+                                        className="border rounded-md p-1 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
-        </div>
-    );
+            );
 };
 
-export default ScheduleManager;
+            export default ScheduleManager;
