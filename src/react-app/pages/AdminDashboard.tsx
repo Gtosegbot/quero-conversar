@@ -329,31 +329,77 @@ const AdminDashboard: React.FC = () => {
   const loadAdminStats = async () => {
     try {
       // Real-time counts
-      const usersSnap = await getCountFromServer(usersRef);
-      const professionalsSnap = await getCountFromServer(query(usersRef, where('role', '==', 'professional')));
-      const appointmentsSnap = await getCountFromServer(appointmentsRef);
+      let usersCount = 0;
+      let professionalsCount = 0;
+      let appointmentsCount = 0;
+      let messagesCount = 0;
+      let reportsCount = 0;
+      let errors = [];
 
-      // Messages Today - count messages from today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const messagesRef = collectionGroup(db, 'messages');
-      const messagesTodaySnap = await getCountFromServer(
-        query(messagesRef, where('createdAt', '>=', today))
-      );
+      // 1. Users
+      try {
+        const usersSnap = await getCountFromServer(usersRef);
+        usersCount = usersSnap.data().count;
+      } catch (e: any) {
+        console.error('Error fetching users:', e);
+        errors.push(`Users: ${e.message}`);
+      }
 
-      // Pending Reports
-      const reportsSnap = await getCountFromServer(query(reportsRef, where('status', '==', 'pending')));
+      // 2. Professionals
+      try {
+        const professionalsSnap = await getCountFromServer(query(usersRef, where('role', '==', 'professional')));
+        professionalsCount = professionalsSnap.data().count;
+      } catch (e: any) {
+        console.error('Error fetching professionals:', e);
+        errors.push(`Professionals: ${e.message}`);
+      }
+
+      // 3. Appointments
+      try {
+        const appointmentsSnap = await getCountFromServer(appointmentsRef);
+        appointmentsCount = appointmentsSnap.data().count;
+      } catch (e: any) {
+        console.error('Error fetching appointments:', e);
+        errors.push(`Appointments: ${e.message}`);
+      }
+
+      // 4. Messages (Collection Group)
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const messagesRef = collectionGroup(db, 'messages');
+        const messagesTodaySnap = await getCountFromServer(
+          query(messagesRef, where('createdAt', '>=', today))
+        );
+        messagesCount = messagesTodaySnap.data().count;
+      } catch (e: any) {
+        console.error('Error fetching messages:', e);
+        errors.push(`Messages: ${e.message}`);
+      }
+
+      // 5. Reports
+      try {
+        const reportsSnap = await getCountFromServer(query(reportsRef, where('status', '==', 'pending')));
+        reportsCount = reportsSnap.data().count;
+      } catch (e: any) {
+        console.error('Error fetching reports:', e);
+        errors.push(`Reports: ${e.message}`);
+      }
 
       setAdminStats({
-        total_users: usersSnap.data().count,
-        total_professionals: professionalsSnap.data().count,
-        total_appointments: appointmentsSnap.data().count,
-        messages_today: messagesTodaySnap.data().count,
-        pending_reports: reportsSnap.data().count
+        total_users: usersCount,
+        total_professionals: professionalsCount,
+        total_appointments: appointmentsCount,
+        messages_today: messagesCount,
+        pending_reports: reportsCount
       });
+
+      if (errors.length > 0) {
+        setError(`Falha em: ${errors.join(' | ')}`);
+      }
     } catch (error: any) {
-      console.error('Failed to load admin stats:', error);
-      setError(`Erro ao carregar estatísticas: ${error.message}`);
+      console.error('Critical failure in admin stats:', error);
+      setError(`Erro crítico: ${error.message}`);
     }
   };
 
