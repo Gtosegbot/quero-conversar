@@ -69,7 +69,7 @@ const Professionals: React.FC = () => {
             verified: data.verified || (data.role === 'professional'), // Trust role if verified
             languages: Array.isArray(data.languages) ? data.languages : ['Português'],
             availableSlots: data.availableSlots || ['09:00', '14:00', '16:00'], // Default slots if none
-            avatar: data.avatar || '🩺', // Default avatar
+            avatar: data.photoURL || data.avatar || '🩺', // Default avatar
             popularityScore: data.popularityScore || 80
           };
         });
@@ -187,8 +187,12 @@ const Professionals: React.FC = () => {
                 {/* Professional Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center text-2xl">
-                      {professional.avatar}
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center overflow-hidden">
+                      {professional.avatar.startsWith('http') ? (
+                        <img src={professional.avatar} alt={professional.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-2xl">{professional.avatar}</span>
+                      )}
                     </div>
                     <div className="ml-4">
                       <div className="flex items-center">
