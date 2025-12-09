@@ -30,6 +30,13 @@ const Upload: React.FC = () => {
         }
     }, [navigate]);
 
+    const getVideoId = (url: string) => {
+        try {
+            if (url.includes('youtu.be')) return new URL(url).pathname.slice(1);
+            return new URL(url).searchParams.get('v') || '';
+        } catch { return ''; }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -37,12 +44,19 @@ const Upload: React.FC = () => {
         try {
             const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-            await addDoc(collection(db, 'content_library'), {
-                ...formData,
-                authorId: user.uid,
-                authorName: user.displayName || 'Profissional',
-                createdAt: serverTimestamp(),
-                status: 'published' // Could be 'pending' if moderation needed
+            await addDoc(collection(db, 'partner_content'), {
+                partnerId: user.uid, // Changed from authorId to match schema
+                title: formData.title,
+                description: formData.description,
+                type: formData.type, // 'article' or 'video'
+                category: formData.category,
+                videoUrl: formData.type === 'video' ? formData.url : '', // Map based on type
+                link: formData.type === 'article' ? formData.url : '',
+                thumbnailUrl: formData.thumbnailUrl || (formData.type === 'video' ? `https://img.youtube.com/vi/${getVideoId(formData.url)}/hqdefault.jpg` : ''),
+                authorName: user.displayName || 'Parceiro',
+                views: 0,
+                likes: 0,
+                createdAt: serverTimestamp()
             });
 
             alert('Conteúdo publicado com sucesso!');
