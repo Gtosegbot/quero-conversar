@@ -161,10 +161,106 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
 
                                                 {app.meetLink && (
                                                     <a
-                )}
+                                                        href={app.meetLink}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 text-blue-600 hover:bg-blue-100 rounded-full"
+                                                        title="Iniciar Vídeo Chamada"
+                                                    >
+                                                        <Video className="w-5 h-5" />
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
-                                    );
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'schedule' && (
+                    <ScheduleManager userId={user.uid} />
+                )}
+
+                {activeTab === 'financial' && (
+                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                            <DollarSign className="w-6 h-6 text-green-600 mr-2" />
+                            Dados Financeiros e Recebimento
+                        </h2>
+
+                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                            <h3 className="font-bold text-blue-800 mb-2">Regras de Pagamento</h3>
+                            <ul className="text-sm text-blue-700 space-y-1">
+                                <li>• O usuário paga antecipadamente pela plataforma.</li>
+                                <li>• <strong>Moderadores Oficiais:</strong> Recebem <strong>80%</strong> do valor da consulta.</li>
+                                <li>• <strong>Profissionais Parceiros:</strong> Recebem <strong>75%</strong> do valor da consulta.</li>
+                                <li>• <strong>Pagamentos Ágeis:</strong> Consultas realizadas no mesmo dia podem ter o valor repassado até o final do dia corrente.</li>
+                                <li>• Os repasses são feitos via PIX (diário/semanal) ou Stripe.</li>
+                            </ul>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Chave PIX (Preferencial)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={bankInfo.pixKey}
+                                    onChange={(e) => setBankInfo({ ...bankInfo, pixKey: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="CPF, E-mail, Celular ou Aleatória"
+                                />
+                            </div>
+
+                            <div className="border-t pt-4 mt-4">
+                                <p className="text-sm text-gray-500 mb-4 italic">Conta Bancária (Opcional se houver PIX)</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Banco</label>
+                                        <input
+                                            type="text"
+                                            value={bankInfo.bankName}
+                                            onChange={(e) => setBankInfo({ ...bankInfo, bankName: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                            placeholder="Ex: Nubank, Itaú"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Agência</label>
+                                        <input
+                                            type="text"
+                                            value={bankInfo.agency}
+                                            onChange={(e) => setBankInfo({ ...bankInfo, agency: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Conta Corrente</label>
+                                        <input
+                                            type="text"
+                                            value={bankInfo.accountNumber}
+                                            onChange={(e) => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
+                                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleSaveBankInfo}
+                                className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors mt-4"
+                            >
+                                Salvar Dados Financeiros
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 };
 
-                                    export default ProfessionalDashboard;
+export default ProfessionalDashboard;
