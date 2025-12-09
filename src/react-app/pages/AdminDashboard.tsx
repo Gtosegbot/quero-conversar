@@ -1096,13 +1096,13 @@ const AdminDashboard: React.FC = () => {
                 Ações Rápidas
               </h2>
               <div className="space-y-3">
-                <Link
-                  to="/admin/users"
-                  className="block w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                <button
+                  onClick={() => navigate('/admin/users')}
+                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="font-semibold text-gray-900">Usuários Recentes</div>
                   <div className="text-sm text-gray-600">Ver lista completa de usuários</div>
-                </Link>
+                </button>
                 <button
                   onClick={() => navigate('/moderation')}
                   className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -1184,12 +1184,12 @@ const AdminDashboard: React.FC = () => {
                   <h4 className="font-semibold text-green-900">Vídeos Educacionais</h4>
                   <p className="text-green-700 text-sm">Material educativo sobre saúde mental</p>
                 </div>
-                <Link
-                  to="/admin/videos"
-                  className="block w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors text-center"
+                <button
+                  onClick={() => navigate('/admin/videos')}
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Gerenciar Biblioteca
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -1210,12 +1210,12 @@ const AdminDashboard: React.FC = () => {
                   <h4 className="font-semibold text-purple-900">Criar Nova Política</h4>
                   <p className="text-purple-700 text-sm">Adicionar novas diretrizes</p>
                 </div>
-                <Link
-                  to="/policies"
-                  className="block w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors text-center"
+                <button
+                  onClick={() => navigate('/policies')}
+                  className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Gerenciar Documentos
-                </Link>
+                </button>
               </div>
             </div>
           </div>
