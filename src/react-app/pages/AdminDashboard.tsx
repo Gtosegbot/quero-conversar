@@ -36,7 +36,8 @@ import {
   orderBy,
   serverTimestamp,
   doc,
-  getCountFromServer
+  getCountFromServer,
+  collectionGroup
 } from 'firebase/firestore';
 import AdminDataManagement from './AdminDataManagement';
 import KnowledgeUpload from '../components/KnowledgeUpload';
@@ -335,7 +336,7 @@ const AdminDashboard: React.FC = () => {
       // Messages Today - count messages from today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const messagesRef = collection(db, 'messages');
+      const messagesRef = collectionGroup(db, 'messages');
       const messagesTodaySnap = await getCountFromServer(
         query(messagesRef, where('createdAt', '>=', today))
       );

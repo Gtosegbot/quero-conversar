@@ -257,6 +257,9 @@ service cloud.firestore {
       // Leitura: qualquer usuário autenticado
       allow read: if isAuthenticated();
       
+      // Escrita: apenas admin
+      allow write: if isSuperAdmin();
+    }
     
     match /moderator_chat/{messageId} {
       // Apenas admin
@@ -268,9 +271,9 @@ service cloud.firestore {
     // ============================================
     
     match /conversations/{conversationId} {
-      // Leitura: apenas o dono da conversa
+      // Leitura: apenas o dono da conversa ou admin
       allow read: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
+        (resource.data.userId == request.auth.uid || isSuperAdmin());
       
       // Criação: apenas o próprio usuário
       allow create: if isAuthenticated() && 
@@ -286,9 +289,9 @@ service cloud.firestore {
       
       // Mensagens dentro da conversa
       match /messages/{messageId} {
-        // Leitura: apenas o dono da conversa
+        // Leitura: apenas o dono da conversa ou admin
         allow read: if isAuthenticated() && 
-          get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid;
+          (get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid || isSuperAdmin());
         
         // Criação: apenas o dono da conversa
         allow create: if isAuthenticated() && 
