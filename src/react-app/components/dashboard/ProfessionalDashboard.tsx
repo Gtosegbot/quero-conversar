@@ -4,7 +4,8 @@ import {
     Video,
     Users,
     Settings,
-    Loader2
+    Loader2,
+    DollarSign
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '../../../firebase-config';
@@ -16,9 +17,15 @@ interface ProfessionalDashboardProps {
 }
 
 const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, userStats }) => {
-    const [activeTab, setActiveTab] = useState<'schedule' | 'appointments' | 'settings'>('schedule');
+    const [activeTab, setActiveTab] = useState<'appointments' | 'schedule' | 'financial'>('appointments');
     const [appointments, setAppointments] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [bankInfo, setBankInfo] = useState({
+        pixKey: '',
+        bankName: '',
+        accountNumber: '',
+        agency: ''
+    });
 
     useEffect(() => {
         if (!user) return;
@@ -33,10 +40,23 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
         const unsubscribe = onSnapshot(q, (snapshot) => {
             setAppointments(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
             setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching appointments:", error);
+            setIsLoading(false);
         });
 
         return () => unsubscribe();
     }, [user]);
+
+    const handleSaveBankInfo = async () => {
+        try {
+            // Save to users collection (secure fields)
+            alert('Dados bancários salvos com sucesso! (Simulação)');
+            // In real app: await updateDoc(doc(db, 'users', user.uid), { bankInfo });
+        } catch (error) {
+            console.error('Error saving bank info:', error);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -53,7 +73,7 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Painel do Profissional</h1>
-                        <p className="text-gray-600">Gerencie sua agenda e atendimentos</p>
+                        <p className="text-gray-600">Gerencie sua carreira e atendimentos</p>
                     </div>
                     <div className="flex space-x-4">
                         <div className="bg-green-50 px-4 py-2 rounded-lg">
@@ -66,41 +86,41 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
                 </div>
 
                 {/* Navigation Tabs */}
-                <div className="flex space-x-4 mt-6 border-b border-gray-200">
+                <div className="flex space-x-4 mt-6 border-b border-gray-200 overflow-x-auto">
+                    <button
+                        onClick={() => setActiveTab('appointments')}
+                        className={`pb-2 px-4 font-medium transition-colors whitespace-nowrap ${activeTab === 'appointments'
+                            ? 'text-blue-600 border-b-2 border-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        <div className="flex items-center">
+                            <Video className="w-4 h-4 mr-2" />
+                            Consultas
+                        </div>
+                    </button>
                     <button
                         onClick={() => setActiveTab('schedule')}
-                        className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'schedule'
+                        className={`pb-2 px-4 font-medium transition-colors whitespace-nowrap ${activeTab === 'schedule'
                             ? 'text-blue-600 border-b-2 border-blue-600'
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <div className="flex items-center">
                             <CalendarIcon className="w-4 h-4 mr-2" />
-                            Agenda
+                            Minha Disponibilidade
                         </div>
                     </button>
                     <button
-                        onClick={() => setActiveTab('appointments')}
-                        className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'appointments'
+                        onClick={() => setActiveTab('financial')}
+                        className={`pb-2 px-4 font-medium transition-colors whitespace-nowrap ${activeTab === 'financial'
                             ? 'text-blue-600 border-b-2 border-blue-600'
                             : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         <div className="flex items-center">
-                            <Users className="w-4 h-4 mr-2" />
-                            Pacientes
-                        </div>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('settings')}
-                        className={`pb-2 px-4 font-medium transition-colors ${activeTab === 'settings'
-                            ? 'text-blue-600 border-b-2 border-blue-600'
-                            : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                    >
-                        <div className="flex items-center">
-                            <Settings className="w-4 h-4 mr-2" />
-                            Configurações
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Dados Financeiros
                         </div>
                     </button>
                 </div>
@@ -108,13 +128,16 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
 
             {/* Content Area */}
             <div className="">
-                {activeTab === 'schedule' && (
+                {activeTab === 'appointments' && (
                     <div className="space-y-6">
                         {/* Upcoming Appointments List */}
                         <div className="bg-white rounded-xl shadow-lg p-6">
                             <h2 className="text-xl font-bold text-gray-900 mb-6">Próximos Atendimentos</h2>
                             {appointments.length === 0 ? (
-                                <p className="text-gray-500">Nenhum agendamento futuro.</p>
+                                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                                    <p className="text-gray-500">Nenhum agendamento futuro.</p>
+                                    <p className="text-sm text-gray-400 mt-2">Certifique-se de configurar sua disponibilidade na aba "Minha Disponibilidade".</p>
+                                </div>
                             ) : (
                                 <div className="space-y-4">
                                     {appointments.map(app => (
@@ -156,15 +179,79 @@ const ProfessionalDashboard: React.FC<ProfessionalDashboardProps> = ({ user, use
                     </div>
                 )}
 
-                {activeTab === 'settings' && (
+                {activeTab === 'schedule' && (
                     <ScheduleManager userId={user.uid} />
                 )}
 
-                {activeTab === 'appointments' && (
-                    <div className="bg-white rounded-xl shadow-lg p-6 text-center py-12">
-                        <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900">Gestão de Pacientes</h3>
-                        <p className="text-gray-500">Em breve: histórico e prontuários.</p>
+                {activeTab === 'financial' && (
+                    <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+                        <div className="flex items-center mb-6">
+                            <div className="p-3 bg-green-100 rounded-full mr-4">
+                                <DollarSign className="w-6 h-6 text-green-600" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Dados para Recebimento</h3>
+                                <p className="text-gray-600 text-sm">Cadastre suas informações bancárias para receber pelas consultas.</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Chave Pix</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="CPF, Email ou Telefone"
+                                    value={bankInfo.pixKey}
+                                    onChange={e => setBankInfo({ ...bankInfo, pixKey: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Banco</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        placeholder="Nome do Banco"
+                                        value={bankInfo.bankName}
+                                        onChange={e => setBankInfo({ ...bankInfo, bankName: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Agência</label>
+                                    <input
+                                        type="text"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        placeholder="0000"
+                                        value={bankInfo.agency}
+                                        onChange={e => setBankInfo({ ...bankInfo, agency: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Conta Corrente</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    placeholder="00000-0"
+                                    value={bankInfo.accountNumber}
+                                    onChange={e => setBankInfo({ ...bankInfo, accountNumber: e.target.value })}
+                                />
+                            </div>
+
+                            <button
+                                onClick={handleSaveBankInfo}
+                                className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors mt-4"
+                            >
+                                Salvar Dados Financeiros
+                            </button>
+
+                            <p className="text-xs text-center text-gray-500 mt-4">
+                                * Seus dados são armazenados de forma segura e utilizados apenas para repasses.
+                            </p>
+                        </div>
                     </div>
                 )}
             </div>

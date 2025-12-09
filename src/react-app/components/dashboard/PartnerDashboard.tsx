@@ -35,12 +35,17 @@ const PartnerDashboard: React.FC<PartnerDashboardProps> = ({ user, userStats }) 
         const productsQuery = query(collection(db, 'products'), where('partnerId', '==', user.uid));
         const unsubProducts = onSnapshot(productsQuery, (snapshot) => {
             setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        }, (error) => {
+            console.error("Error fetching products:", error);
         });
 
         // 2. Fetch Content
         const contentQuery = query(collection(db, 'partner_content'), where('partnerId', '==', user.uid));
         const unsubContent = onSnapshot(contentQuery, (snapshot) => {
             setVideos(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching content:", error);
             setIsLoading(false);
         });
 
