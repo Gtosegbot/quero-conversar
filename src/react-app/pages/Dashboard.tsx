@@ -95,8 +95,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // Dashboard View Mode for Admins
-  const [adminViewMode, setAdminViewMode] = useState<'admin' | 'professional' | 'partner'>('admin');
+
 
   // Role-Based Rendering
   const renderDashboard = () => {
