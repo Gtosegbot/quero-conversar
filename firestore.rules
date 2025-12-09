@@ -337,6 +337,27 @@ service cloud.firestore {
          resource.data.professionalId == request.auth.uid || 
          isSuperAdmin());
     }
+
+    // ============================================
+    // DOCUMENTOS (Uploads de usuários/profissionais)
+    // ============================================
+
+    match /documents/{documentId} {
+      // Leitura: dono do documento, profissional vinculado ou admin
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.professionalId == request.auth.uid ||
+         isSuperAdmin());
+      
+      // Criação: qualquer usuário autenticado (vinculando a si mesmo)
+      allow create: if isAuthenticated() && 
+        (request.resource.data.userId == request.auth.uid ||
+         isSuperAdmin());
+
+      // Atualização/Deleção: dono ou admin
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isSuperAdmin());
+    }
     
     // ============================================
     // RELATÓRIOS
