@@ -93,13 +93,20 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Dashboard View Mode for Admins
+  const [adminViewMode, setAdminViewMode] = useState<'admin' | 'professional' | 'partner'>('admin');
+
   // Role-Based Rendering
   const renderDashboard = () => {
-    // Check for Enterprise Plan
-    if (userStats.plan === 'enterprise' && userStats.role === 'admin') {
+    // Admin Override View
+    if (userStats.role === 'admin' || userStats.role === 'super_admin') {
+      if (adminViewMode === 'professional') return <ProfessionalDashboard user={user} userStats={userStats} />;
+      if (adminViewMode === 'partner') return <PartnerDashboard user={user} userStats={userStats} />;
+      // Default Admin View (Enterprise)
       return <EnterpriseDashboard user={user} />;
     }
 
+    // Standard User Views
     switch (userStats.role) {
       case 'partner':
         return <PartnerDashboard user={user} userStats={userStats} />;
@@ -121,21 +128,41 @@ const Dashboard: React.FC = () => {
               Bem-vindo de volta, {user?.displayName?.split(' ')[0]}! 👋
             </h1>
             <p className="text-gray-600">
-              {userStats.role === 'professional' ? 'Sua agenda e pacientes estão prontos.' :
-                userStats.role === 'partner' ? 'Gerencie seus produtos e impacto.' :
-                  'Continue sua jornada de crescimento.'}
+              {adminViewMode === 'professional' ? 'Modo de Visualização: Profissional' :
+                adminViewMode === 'partner' ? 'Modo de Visualização: Parceiro' :
+                  userStats.role === 'professional' ? 'Sua agenda e pacientes estão prontos.' :
+                    userStats.role === 'partner' ? 'Gerencie seus produtos e impacto.' :
+                      'Continue sua jornada de crescimento.'}
             </p>
           </div>
 
-          {/* Admin/Moderator Link */}
-          {(user.email?.includes('gtosegbot@') || user.email?.includes('admgtoseg@')) && (
-            <button
-              onClick={() => navigate('/admin')}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              Painel Admin
-            </button>
-          )}
+          <div className="flex items-center gap-4">
+            {/* Admin View Switcher */}
+            {(userStats.role === 'admin' || user.email?.includes('gtosegbot@') || user.email?.includes('admgtoseg@')) && (
+              <div className="bg-white p-2 rounded-lg shadow-sm border border-purple-100">
+                <label className="text-xs text-purple-800 font-bold block mb-1">Visualizar como:</label>
+                <select
+                  value={adminViewMode}
+                  onChange={(e) => setAdminViewMode(e.target.value as any)}
+                  className="text-sm border-none bg-purple-50 rounded text-purple-900 focus:ring-0 cursor-pointer"
+                >
+                  <option value="admin">Administrador</option>
+                  <option value="professional">Profissional</option>
+                  <option value="partner">Parceiro</option>
+                </select>
+              </div>
+            )}
+
+            {/* Admin/Moderator Link */}
+            {(user.email?.includes('gtosegbot@') || user.email?.includes('admgtoseg@')) && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Painel Admin
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Admin Notifications - INTEGRAÇÃO DO SISTEMA DE AVISOS */}
