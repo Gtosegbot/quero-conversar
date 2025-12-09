@@ -24,7 +24,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { functions, db } from '../../firebase-config';
+import { functions, db, auth } from '../../firebase-config';
 import {
   collection,
   addDoc,
@@ -1115,7 +1115,13 @@ const AdminDashboard: React.FC = () => {
 
         {/* Debug Info Footer */}
         <div className="mt-12 pt-8 border-t border-gray-200 text-center text-gray-400 text-sm">
-          <p>Admin Debug Info: Connected as {user.email} | Firestore Status: {error ? 'Error' : 'Connected'} | App Version: 1.0.1</p>
+          <p>
+            Admin Debug Info:
+            LocalStorage: {user.email} |
+            FirebaseAuth: {auth.currentUser?.email || 'Not Auth'} |
+            Firestore Status: {error ? 'Error' : 'Connected'} |
+            App Version: 1.0.2
+          </p>
         </div>
       </div>
     </div>

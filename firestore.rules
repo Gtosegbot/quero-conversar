@@ -292,8 +292,9 @@ service cloud.firestore {
       // Mensagens dentro da conversa
       match /messages/{messageId} {
         // Leitura: apenas o dono da conversa ou admin
-        allow read: if isAuthenticated() && 
-          (get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid || isSuperAdmin());
+        // IMPORTANTE: isSuperAdmin() deve vir PRIMEIRO para evitar o get() custoso em queries de agregação
+        allow read: if isSuperAdmin() || (isAuthenticated() && 
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid);
         
         // Criação: apenas o dono da conversa
         allow create: if isAuthenticated() && 
