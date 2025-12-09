@@ -163,7 +163,8 @@ const ScheduleManager: React.FC<ScheduleManagerProps> = ({ userId }) => {
                     ))}
                 </div>
             </div>
-            );
+        </div>
+    );
 };
 
-            export default ScheduleManager;
+export default ScheduleManager;
