@@ -26,6 +26,8 @@ interface UserStats {
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  // Dashboard View Mode for Admins
+  const [adminViewMode, setAdminViewMode] = useState<'admin' | 'professional' | 'partner'>('admin');
   const [userStats, setUserStats] = useState<UserStats>({
     level: 1,
     energyPoints: 0,
