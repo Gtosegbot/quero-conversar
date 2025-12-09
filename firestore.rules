@@ -38,9 +38,16 @@ service cloud.firestore {
       return isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.company_id == companyId;
+    }
+
+    // ============================================
+    // USUÁRIOS
+    // ============================================
+
+    match /users/{userId} {
       allow read: if isAuthenticated();
       
-      // Apenas o próprio usuário pode editar seu perfil
+      // Apenas o próprio usuário pode editar seu perfil ou admin
       allow write: if isOwner(userId) || isAdmin();
     }
     
@@ -295,6 +302,40 @@ service cloud.firestore {
     }
     
     // ============================================
+    // PRODUTOS DE PARCEIROS
+    // ============================================
+
+    match /products/{productId} {
+      // Leitura: qualquer usuário (loja pública)
+      allow read: if isAuthenticated();
+      
+      // Criação: parceiros autenticados
+      allow create: if isAuthenticated() && 
+        request.resource.data.partnerId == request.auth.uid;
+      
+      // Atualização/Deleção: apenas o dono ou admin
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.partnerId == request.auth.uid || isSuperAdmin());
+    }
+
+    // ============================================
+    // CONTEÚDO DE PARCEIROS (Vídeos, etc)
+    // ============================================
+
+    match /partner_content/{contentId} {
+      // Leitura: qualquer usuário
+      allow read: if isAuthenticated();
+      
+      // Criação: parceiros autenticados
+      allow create: if isAuthenticated() && 
+        request.resource.data.partnerId == request.auth.uid;
+      
+      // Atualização/Deleção: apenas o dono ou admin
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.partnerId == request.auth.uid || isSuperAdmin());
+    }
+
+    // ============================================
     // AGENDAMENTOS
     // ============================================
     
@@ -320,6 +361,19 @@ service cloud.firestore {
         (resource.data.userId == request.auth.uid || 
          resource.data.professionalId == request.auth.uid || 
          isSuperAdmin());
+    }
+
+    // ============================================
+    // CONFIGURAÇÕES PROFISSIONAIS (Agenda)
+    // ============================================
+
+    match /professional_settings/{userId} {
+      // Leitura: qualquer usuário (para saber disponibilidade) ou admin
+      allow read: if isAuthenticated();
+      
+      // Escrita: apenas o próprio profissional e admin
+      allow write: if isAuthenticated() && 
+        (request.auth.uid == userId || isSuperAdmin());
     }
 
     // ============================================

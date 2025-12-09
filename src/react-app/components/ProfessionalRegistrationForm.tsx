@@ -251,7 +251,7 @@ const ProfessionalRegistrationForm: React.FC = () => {
 
       await setDoc(doc(db, 'professional_applications', user.uid), applicationData);
 
-      // 5. Create User Record
+      // 5. Create/Update User Record with Public Profile Data
       await setDoc(doc(db, 'users', user.uid), {
         name: formData.name,
         email: formData.email,
@@ -259,8 +259,24 @@ const ProfessionalRegistrationForm: React.FC = () => {
         level: 1,
         energyPoints: 0,
         maxEnergy: 1000,
-        createdAt: serverTimestamp()
-      });
+        createdAt: serverTimestamp(),
+        // Public Professional Profile Data
+        specialty: formData.specialty,
+        bio: formData.bio,
+        hourlyRate: Number(formData.hourlyRate),
+        location: formData.location || 'Online',
+        languages: formData.languages.split(',').map(l => l.trim()),
+        socialLinks: {
+          linkedin: formData.socialLinkedin,
+          instagram: formData.socialInstagram,
+          blog: formData.socialBlog
+        },
+        experienceYears: Number(formData.experienceYears),
+        isOnline: true, // Default to online after registration for engagement
+        rating: 5.0, // Initial boost
+        reviewCount: 0,
+        verified: false // Pending verification
+      }, { merge: true });
 
       alert('Cadastro enviado com sucesso! Nossa equipe verificará suas credenciais em até 48h.');
       navigate('/dashboard');

@@ -51,16 +51,34 @@ service firebase.storage {
     // DOCUMENTOS DE PARCEIROS
     // ============================================
     
+    // ============================================
+    // DOCUMENTOS DE PARCEIROS
+    // ============================================
+    
     match /partner_docs/{userId}/{fileName} {
-      // Leitura: qualquer usuário autenticado (para moderação)
       allow read: if isAuthenticated();
-      
-      // Escrita: apenas o próprio parceiro
-      allow write: if isOwner(userId) && 
-                      isValidFileType('image/.*|application/pdf') &&
-                      isValidFileSize(10);
-      
-      // Deleção: próprio usuário ou admin
+      allow write: if isOwner(userId) && isValidFileType('image/.*|application/pdf') && isValidFileSize(10);
+      allow delete: if isOwner(userId) || isSuperAdmin();
+    }
+
+    // ============================================
+    // IMAGENS DE PRODUTOS
+    // ============================================
+
+    match /products/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isValidFileType('image/.*') && isValidFileSize(5);
+      allow delete: if isOwner(userId) || isSuperAdmin();
+    }
+
+    // ============================================
+    // CONTEÚDO DE PARCEIROS (Thumbnails/Vídeos)
+    // ============================================
+
+    match /partner_content/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      // Permitir imagens e vídeos até 500MB (para vídeos curtos ou cursos)
+      allow write: if isOwner(userId) && isValidFileSize(500); 
       allow delete: if isOwner(userId) || isSuperAdmin();
     }
     

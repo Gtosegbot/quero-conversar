@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Video, X, Loader2, Link as LinkIcon } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getCountFromServer } from 'firebase/firestore';
 import { db } from '../../../firebase-config';
 
 interface ContentUploadFormProps {
@@ -23,6 +23,20 @@ const ContentUploadForm: React.FC<ContentUploadFormProps> = ({ userId, onSuccess
         setIsLoading(true);
 
         try {
+            // Check content limit (Max 15 items per partner for now)
+            const countQuery = query(
+                collection(db, 'partner_content'),
+                where('partnerId', '==', userId)
+            );
+            const snapshot = await getCountFromServer(countQuery);
+            const currentCount = snapshot.data().count;
+
+            if (currentCount >= 15) {
+                alert("Você atingiu o limite de 15 vídeos/conteúdos. Remova alguns itens antigos para publicar novos.");
+                setIsLoading(false);
+                return;
+            }
+
             // Basic validation for YouTube links
             let videoId = '';
             if (formData.videoUrl.includes('youtube.com') || formData.videoUrl.includes('youtu.be')) {
