@@ -1,0 +1,27 @@
+﻿
+> quero-conversar@1.0.0 build
+> vite build
+
+npm : 'vite' não é 
+reconhecido como um 
+comando interno
+No linha:1 
+caractere:1
++ npm run build > 
+build_error.log 2>&1
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: ('vite'    
+ não é re...coman    
+do interno:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+ou externo, um 
+programa operável ou 
+um arquivo em lotes.
