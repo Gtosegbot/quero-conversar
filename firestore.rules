@@ -271,6 +271,11 @@ service cloud.firestore {
     // ============================================
     // CONVERSAS (Chat com Dra. Clara)
     // ============================================
+
+    // Regra Global para Collection Group Queries de Mensagens (Admin Stats)
+    match /{path=**}/messages/{messageId} {
+      allow read: if isSuperAdmin();
+    }
     
     match /conversations/{conversationId} {
       // Leitura: apenas o dono da conversa ou admin
