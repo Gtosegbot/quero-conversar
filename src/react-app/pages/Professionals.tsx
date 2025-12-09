@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Star,
   MapPin,
@@ -194,7 +194,7 @@ const Professionals: React.FC = () => {
                       <div className="flex items-center">
                         <h3 className="text-xl font-bold text-gray-900">{professional.name}</h3>
                         {professional.verified && (
-                          <Award className="w-5 h-5 text-blue-500 ml-2" title="Profissional Verificado" />
+                          <Award className="w-5 h-5 text-blue-500 ml-2" />
                         )}
                       </div>
                       <p className="text-purple-600 font-medium">{professional.specialty}</p>
