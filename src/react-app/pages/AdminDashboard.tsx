@@ -62,7 +62,6 @@ interface AdminNotification {
   end_date: string;
 }
 
-
 const CuratorTab: React.FC = () => {
   const [trends, setTrends] = useState<any[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -273,6 +272,10 @@ const AdminDashboard: React.FC = () => {
     pending_reports: 0
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [userGrowthData, setUserGrowthData] = useState<{ label: string; value: number }[]>([]);
+  const [phaseDistributionData, setPhaseDistributionData] = useState<{ label: string; value: number; color?: string }[]>([]);
 
   // Check if user is authorized to access admin panel
   useEffect(() => {
@@ -287,6 +290,8 @@ const AdminDashboard: React.FC = () => {
       return;
     }
   }, [navigate]);
+
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   // Task form state
   const [newTask, setNewTask] = useState({
@@ -315,6 +320,7 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     loadAdminStats();
+    loadChartData();
     loadTaskTemplates();
     loadNotifications();
   }, []);
@@ -344,52 +350,48 @@ const AdminDashboard: React.FC = () => {
         messages_today: messagesTodaySnap.data().count,
         pending_reports: reportsSnap.data().count
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load admin stats:', error);
+      setError(`Erro ao carregar estatísticas: ${error.message}`);
     }
   };
 
-  const [userGrowthData, setUserGrowthData] = useState<{ label: string; value: number }[]>([]);
-  const [phaseDistributionData, setPhaseDistributionData] = useState<{ label: string; value: number; color?: string }[]>([]);
+  const loadChartData = async () => {
+    try {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const users = usersSnap.docs.map(doc => doc.data());
 
-  useEffect(() => {
-    const loadChartData = async () => {
-      try {
-        const usersSnap = await getDocs(collection(db, 'users'));
-        const users = usersSnap.docs.map(doc => doc.data());
+      // Process User Growth (Last 6 Months)
+      const last6Months = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - (5 - i));
+        return d.toLocaleString('default', { month: 'short' });
+      });
 
-        // Process User Growth (Last 6 Months)
-        const last6Months = Array.from({ length: 6 }, (_, i) => {
-          const d = new Date();
-          d.setMonth(d.getMonth() - (5 - i));
-          return d.toLocaleString('default', { month: 'short' });
-        });
+      // Mocking growth distribution based on total users for visualization if dates aren't perfect
+      // In production, we would use createdAt timestamps accurately
+      const growthData = last6Months.map((month, index) => ({
+        label: month,
+        value: Math.floor(users.length * ((index + 1) / 6)) // Smooth curve up to total
+      }));
+      setUserGrowthData(growthData);
 
-        // Mocking growth distribution based on total users for visualization if dates aren't perfect
-        // In production, we would use createdAt timestamps accurately
-        const growthData = last6Months.map((month, index) => ({
-          label: month,
-          value: Math.floor(users.length * ((index + 1) / 6)) // Smooth curve up to total
-        }));
-        setUserGrowthData(growthData);
+      // Process Phase Distribution
+      const p1 = users.filter(u => !u.level || u.level < 5).length;
+      const p2 = users.filter(u => u.level >= 5 && u.level < 10).length;
+      const p3 = users.filter(u => u.level >= 10).length;
 
-        // Process Phase Distribution
-        const p1 = users.filter(u => !u.level || u.level < 5).length;
-        const p2 = users.filter(u => u.level >= 5 && u.level < 10).length;
-        const p3 = users.filter(u => u.level >= 10).length;
+      setPhaseDistributionData([
+        { label: 'Fase 1 (Iniciante)', value: p1, color: 'bg-blue-400' },
+        { label: 'Fase 2 (Guardião)', value: p2, color: 'bg-purple-500' },
+        { label: 'Fase 3 (Líder)', value: p3, color: 'bg-red-500' },
+      ]);
 
-        setPhaseDistributionData([
-          { label: 'Fase 1 (Iniciante)', value: p1, color: 'bg-blue-400' },
-          { label: 'Fase 2 (Guardião)', value: p2, color: 'bg-purple-500' },
-          { label: 'Fase 3 (Líder)', value: p3, color: 'bg-red-500' },
-        ]);
-
-      } catch (error) {
-        console.error("Error loading chart data", error);
-      }
-    };
-    loadChartData();
-  }, []);
+    } catch (error: any) {
+      console.error("Error loading chart data", error);
+      setError(`Erro ao carregar gráficos: ${error.message}`);
+    }
+  };
 
   const loadTaskTemplates = async () => {
     try {
@@ -554,6 +556,17 @@ const AdminDashboard: React.FC = () => {
             </p>
           </div>
         </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+            <div className="flex items-center">
+              <AlertTriangle className="w-5 h-5 text-red-600 mr-2" />
+              <p className="text-red-700">{error}</p>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800 text-sm">Dismiss</button>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex space-x-1 mb-8 bg-white rounded-xl p-1 shadow-lg overflow-x-auto">
@@ -721,534 +734,325 @@ const AdminDashboard: React.FC = () => {
 
               {/* Recent Activity List */}
               <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                  <Settings className="w-6 h-6 text-purple-600 mr-2" />
-                  Atividade Recente
-                </h2>
+                <div className="flex items-center mb-4">
+                  <Sparkles className="w-6 h-6 text-purple-600 mr-2" />
+                  <h3 className="text-lg font-bold text-gray-900">Atividade Recente</h3>
+                </div>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                     <div className="flex items-center">
                       <Calendar className="w-5 h-5 text-blue-600 mr-3" />
-                      <span className="text-gray-700">Nova tarefa criada: "Pratique mindfulness"</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Nova tarefa criada: "Pratique mindfulness"</p>
+                      </div>
                     </div>
-                    <span className="text-sm text-gray-500">Há 2 horas</span>
+                    <span className="text-xs text-gray-500">Há 2 horas</span>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
                     <div className="flex items-center">
                       <Bell className="w-5 h-5 text-orange-600 mr-3" />
-                      <span className="text-gray-700">Recado enviado para comunidade</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Recado enviado para comunidade</p>
+                      </div>
                     </div>
-                    <span className="text-sm text-gray-500">Há 4 horas</span>
+                    <span className="text-xs text-gray-500">Há 4 horas</span>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                     <div className="flex items-center">
                       <Shield className="w-5 h-5 text-red-600 mr-3" />
-                      <span className="text-gray-700">Relatório de moderação resolvido</span>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Relatório de moderação resolvido</p>
+                      </div>
                     </div>
-                    <span className="text-sm text-gray-500">Há 6 horas</span>
+                    <span className="text-xs text-gray-500">Há 6 horas</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Link
-                to="/moderation"
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <div className="flex items-center mb-4">
-                  <Shield className="w-8 h-8 text-red-600 mr-3" />
-                  <h3 className="text-lg font-bold text-gray-900">Central de Moderação</h3>
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => setActiveTab('moderation')}>
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                  <Shield className="w-6 h-6 text-red-600" />
                 </div>
-                <p className="text-gray-600 mb-4">Gerencie relatórios e mantenha a comunidade segura</p>
-                {adminStats.pending_reports > 0 && (
-                  <div className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
-                    {adminStats.pending_reports} pendentes
-                  </div>
-                )}
-              </Link>
+                <h3 className="font-bold text-gray-900 mb-2">Central de Moderação</h3>
+                <p className="text-sm text-gray-600">Gerencie relatórios e mantenha a comunidade segura</p>
+              </div>
 
-              <button
-                onClick={() => setActiveTab('tasks')}
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-left"
-              >
-                <div className="flex items-center mb-4">
-                  <Calendar className="w-8 h-8 text-blue-600 mr-3" />
-                  <h3 className="text-lg font-bold text-gray-900">Gerenciar Tarefas</h3>
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => setActiveTab('tasks')}>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <Calendar className="w-6 h-6 text-blue-600" />
                 </div>
-                <p className="text-gray-600 mb-4">Crie e gerencie templates de tarefas diárias</p>
-                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {taskTemplates.length} templates ativos
-                </div>
-              </button>
+                <h3 className="font-bold text-gray-900 mb-2">Gerenciar Tarefas</h3>
+                <p className="text-sm text-gray-600">Crie e gerencie templates de tarefas diárias</p>
+              </div>
 
-              <button
-                onClick={() => setActiveTab('notifications')}
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-left"
-              >
-                <div className="flex items-center mb-4">
-                  <Bell className="w-8 h-8 text-orange-600 mr-3" />
-                  <h3 className="text-lg font-bold text-gray-900">Recados</h3>
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => setActiveTab('notifications')}>
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                  <Bell className="w-6 h-6 text-orange-600" />
                 </div>
-                <p className="text-gray-600 mb-4">Envie notificações para os usuários</p>
-                <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {notifications.filter(n => n.is_active).length} ativos
-                </div>
-              </button>
+                <h3 className="font-bold text-gray-900 mb-2">Recados</h3>
+                <p className="text-sm text-gray-600">Envie notificações para os usuários</p>
+              </div>
 
-              <Link
-                to="/policies"
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <div className="flex items-center mb-4">
-                  <FileText className="w-8 h-8 text-green-600 mr-3" />
-                  <h3 className="text-lg font-bold text-gray-900">Políticas</h3>
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/policies')}>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <FileText className="w-6 h-6 text-green-600" />
                 </div>
-                <p className="text-gray-600 mb-4">Visualize e gerencie políticas da plataforma</p>
-                <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                  Ativas
-                </div>
-              </Link>
+                <h3 className="font-bold text-gray-900 mb-2">Políticas</h3>
+                <p className="text-sm text-gray-600">Visualize e gerencie políticas da plataforma</p>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Task Management Tab */}
+        {/* Tasks Tab */}
         {activeTab === 'tasks' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Create New Task */}
+          <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <Plus className="w-6 h-6 text-green-600 mr-2" />
-                Criar Nova Tarefa
-              </h2>
-              <form onSubmit={handleCreateTask} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Título da Tarefa
-                  </label>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Criar Nova Tarefa</h2>
+              <form onSubmit={handleCreateTask} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Título da Tarefa</label>
                   <input
                     type="text"
+                    required
                     value={newTask.title}
                     onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Ex: Meditação Matinal"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descrição
-                  </label>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
                   <textarea
+                    required
                     value={newTask.description}
                     onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
                     rows={3}
-                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Detalhes sobre a tarefa..."
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Categoria
-                    </label>
-                    <select
-                      value={newTask.category}
-                      onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    >
-                      <option value="mental">Mental</option>
-                      <option value="physical">Físico</option>
-                      <option value="spiritual">Espiritual</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dificuldade
-                    </label>
-                    <select
-                      value={newTask.difficulty}
-                      onChange={(e) => setNewTask({ ...newTask, difficulty: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    >
-                      <option value="easy">Fácil</option>
-                      <option value="medium">Médio</option>
-                      <option value="hard">Difícil</option>
-                    </select>
-                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pontos (10-200)
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+                  <select
+                    value={newTask.category}
+                    onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="mental">Mental</option>
+                    <option value="physical">Físico</option>
+                    <option value="spiritual">Espiritual</option>
+                    <option value="social">Social</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Pontos (XP)</label>
                   <input
                     type="number"
-                    min="10"
-                    max="200"
                     value={newTask.points}
                     onChange={(e) => setNewTask({ ...newTask, points: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 transition-all duration-200"
-                >
-                  {isLoading ? 'Criando...' : 'Criar Tarefa'}
-                </button>
+                <div className="md:col-span-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center"
+                  >
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
+                    Criar Tarefa
+                  </button>
+                </div>
               </form>
             </div>
 
-            {/* Task List */}
-            <div className="bg-white rounded-xl shadow-lg p-6 max-h-[600px] overflow-y-auto">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <FileText className="w-6 h-6 text-blue-600 mr-2" />
-                Tarefas Existentes ({taskTemplates.length})
-              </h2>
-              <div className="space-y-4">
-                {taskTemplates.map((task) => (
-                  <div key={task.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{task.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                            {task.category}
-                          </span>
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                            {task.difficulty}
-                          </span>
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                            {task.points} pontos
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2 ml-4">
-                        <button
-                          onClick={() => toggleTaskActive(task.id, task.is_active)}
-                          className={`p-2 rounded ${task.is_active
-                            ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          title={task.is_active ? 'Desativar' : 'Ativar'}
-                        >
-                          {task.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={() => deleteTask(task.id)}
-                          className="p-2 rounded bg-red-100 text-red-600 hover:bg-red-200"
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {taskTemplates.map((task) => (
+                <div key={task.id} className="bg-white rounded-xl shadow p-6 border border-gray-100">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mb-2 ${task.category === 'mental' ? 'bg-purple-100 text-purple-800' :
+                        task.category === 'physical' ? 'bg-green-100 text-green-800' :
+                          task.category === 'spiritual' ? 'bg-blue-100 text-blue-800' :
+                            'bg-orange-100 text-orange-800'
+                        }`}>
+                        {task.category}
+                      </span>
+                      <h3 className="text-lg font-bold text-gray-900">{task.title}</h3>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => toggleTaskActive(task.id, task.is_active)}
+                        className={`p-2 rounded-lg transition-colors ${task.is_active ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'
+                          }`}
+                        title={task.is_active ? 'Desativar' : 'Ativar'}
+                      >
+                        {task.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                      </button>
+                      <button
+                        onClick={() => deleteTask(task.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <p className="text-gray-600 text-sm mb-4">{task.description}</p>
+                  <div className="flex items-center justify-between text-sm text-gray-500 border-t pt-4">
+                    <span>{task.points} XP</span>
+                    <span className="capitalize">{task.difficulty}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {/* Notifications Tab */}
         {activeTab === 'notifications' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Create New Notification */}
+          <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <Plus className="w-6 h-6 text-orange-600 mr-2" />
-                Criar Recado do Admin
-              </h2>
-              <form onSubmit={handleCreateNotification} className="space-y-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Criar Novo Recado</h2>
+              <form onSubmit={handleCreateNotification} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Título</label>
+                  <input
+                    type="text"
+                    required
+                    value={newNotification.title}
+                    onChange={(e) => setNewNotification({ ...newNotification, title: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Ex: Manutenção Programada"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Mensagem</label>
+                  <textarea
+                    required
+                    value={newNotification.message}
+                    onChange={(e) => setNewNotification({ ...newNotification, message: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Conteúdo do recado..."
+                  />
+                </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Página/Seção
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Seção da Página</label>
                   <select
                     value={newNotification.page_section}
                     onChange={(e) => setNewNotification({ ...newNotification, page_section: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   >
                     <option value="chat">Chat (Dra. Clara)</option>
-                    <option value="community">Comunidade</option>
-                    <option value="professionals">Profissionais</option>
                     <option value="dashboard">Dashboard</option>
-                    <option value="videos">Biblioteca de Vídeos</option>
+                    <option value="tasks">Tarefas</option>
+                    <option value="community">Comunidade</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Título do Recado
-                  </label>
-                  <input
-                    type="text"
-                    value={newNotification.title}
-                    onChange={(e) => setNewNotification({ ...newNotification, title: e.target.value })}
-                    placeholder="Ex: Palestra especial com Dr. João"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    required
-                  />
+                <div className="md:col-span-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-orange-600 text-white py-3 rounded-lg hover:bg-orange-700 transition-colors font-medium flex items-center justify-center"
+                  >
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Bell className="w-5 h-5 mr-2" />}
+                    Publicar Recado
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mensagem
-                  </label>
-                  <textarea
-                    value={newNotification.message}
-                    onChange={(e) => setNewNotification({ ...newNotification, message: e.target.value })}
-                    placeholder="Teremos uma palestra incrível do profissional X no dia Y, descrição e observações..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    rows={4}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Data de Início
-                    </label>
-                    <input
-                      type="date"
-                      value={newNotification.start_date}
-                      onChange={(e) => setNewNotification({ ...newNotification, start_date: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Data de Fim
-                    </label>
-                    <input
-                      type="date"
-                      value={newNotification.end_date}
-                      onChange={(e) => setNewNotification({ ...newNotification, end_date: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-red-700 disabled:opacity-50 transition-all duration-200"
-                >
-                  {isLoading ? 'Criando...' : 'Criar Recado'}
-                </button>
               </form>
             </div>
 
-            {/* Notifications List */}
-            <div className="bg-white rounded-xl shadow-lg p-6 max-h-[600px] overflow-y-auto">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <Bell className="w-6 h-6 text-orange-600 mr-2" />
-                Recados Ativos ({notifications.length})
-              </h2>
-              <div className="space-y-4">
-                {notifications.map((notification) => (
-                  <div key={notification.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                            {notification.page_section}
-                          </span>
-                          <span className={`text-xs px-2 py-1 rounded ${notification.is_active
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
-                            }`}>
-                            {notification.is_active ? 'Ativo' : 'Inativo'}
-                          </span>
-                        </div>
-                        <h3 className="font-semibold text-gray-900">{notification.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
-                        {notification.start_date && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            {notification.start_date} até {notification.end_date || 'indefinido'}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-2 ml-4">
-                        <button
-                          onClick={() => toggleNotificationActive(notification.id, notification.is_active)}
-                          className={`p-2 rounded ${notification.is_active
-                            ? 'bg-green-100 text-green-600 hover:bg-green-200'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`}
-                          title={notification.is_active ? 'Desativar' : 'Ativar'}
-                        >
-                          {notification.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={() => deleteNotification(notification.id)}
-                          className="p-2 rounded bg-red-100 text-red-600 hover:bg-red-200"
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+            <div className="space-y-4">
+              {notifications.map((notif) => (
+                <div key={notif.id} className="bg-white rounded-xl shadow p-6 border border-gray-100 flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center space-x-3 mb-2">
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md uppercase font-semibold">
+                        {notif.page_section}
+                      </span>
+                      <h3 className="text-lg font-bold text-gray-900">{notif.title}</h3>
                     </div>
+                    <p className="text-gray-600">{notif.message}</p>
                   </div>
-                ))}
-              </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => toggleNotificationActive(notif.id, notif.is_active)}
+                      className={`p-2 rounded-lg transition-colors ${notif.is_active ? 'text-green-600 hover:bg-green-50' : 'text-gray-400 hover:bg-gray-50'
+                        }`}
+                      title={notif.is_active ? 'Desativar' : 'Ativar'}
+                    >
+                      {notif.is_active ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                    </button>
+                    <button
+                      onClick={() => deleteNotification(notif.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Excluir"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {/* Users Tab */}
         {activeTab === 'users' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <Users className="w-6 h-6 text-blue-600 mr-2" />
-                Estatísticas de Usuários
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                  <span className="text-blue-800 font-medium">Total de Usuários</span>
-                  <span className="text-2xl font-bold text-blue-600">{adminStats.total_users}</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                  <span className="text-green-800 font-medium">Profissionais Ativos</span>
-                  <span className="text-2xl font-bold text-green-600">{adminStats.total_professionals}</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-                  <span className="text-purple-800 font-medium">Consultas Agendadas</span>
-                  <span className="text-2xl font-bold text-purple-600">{adminStats.total_appointments}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <UserCheck className="w-6 h-6 text-green-600 mr-2" />
-                Ações Rápidas
-              </h2>
-              <div className="space-y-3">
-                <button
-                  onClick={() => alert('📊 Lista de Usuários\n\nEsta funcionalidade mostrará todos os usuários cadastrados com filtros e busca. Em desenvolvimento.')}
-                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="font-semibold text-gray-900">Usuários Recentes</div>
-                  <div className="text-sm text-gray-600">Ver lista completa de usuários</div>
-                </button>
-                <button
-                  onClick={() => navigate('/moderation')}
-                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="font-semibold text-gray-900">Profissionais Pendentes</div>
-                  <div className="text-sm text-gray-600">Aprovar verificações</div>
-                </button>
-                <button
-                  onClick={() => alert('Funcionalidade de exportação em desenvolvimento')}
-                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="font-semibold text-gray-900">Exportar Dados</div>
-                  <div className="text-sm text-gray-600">Relatórios em CSV</div>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Moderation Tab */}
-        {activeTab === 'moderation' && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-              <Shield className="w-6 h-6 text-red-600 mr-2" />
-              Sistema de Moderação
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Link
-                to="/moderation"
-                className="p-6 bg-red-50 rounded-xl border border-red-200 hover:bg-red-100 transition-colors"
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <Users className="w-16 h-16 text-purple-200 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Gerenciamento de Usuários</h2>
+              <p className="text-gray-600 mb-6">Esta funcionalidade foi movida para uma página dedicada para melhor performance.</p>
+              <button
+                onClick={() => navigate('/admin/users')}
+                className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
               >
-                <div className="flex items-center mb-4">
-                  <Shield className="w-8 h-8 text-red-600 mr-3" />
-                  <h3 className="text-lg font-bold text-gray-900">Central de Moderação</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Acesse o sistema completo de moderação com chat exclusivo para moderadores
-                </p>
-                {adminStats.pending_reports > 0 && (
-                  <div className="bg-red-200 text-red-800 px-3 py-2 rounded-lg text-sm font-medium">
-                    ⚠️ {adminStats.pending_reports} relatórios pendentes
-                  </div>
-                )}
-              </Link>
-
-              <div className="p-6 bg-yellow-50 rounded-xl border border-yellow-200">
-                <div className="flex items-center mb-4">
-                  <AlertTriangle className="w-8 h-8 text-yellow-600 mr-3" />
-                  <h3 className="text-lg font-bold text-gray-900">Configurações</h3>
-                </div>
-                <p className="text-gray-600 mb-4">
-                  Configure moderadores, definir especialidades e gerenciar permissões
-                </p>
-                <button
-                  onClick={() => navigate('/moderation')}
-                  className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
-                >
-                  Configurar Moderação
-                </button>
-              </div>
+                Acessar Gerenciamento de Usuários
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </button>
             </div>
           </div>
         )}
 
         {/* Content Tab */}
         {activeTab === 'content' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <Video className="w-6 h-6 text-blue-600 mr-2" />
-                Biblioteca de Vídeos
-              </h2>
-              <div className="space-y-4">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-semibold text-blue-900">Vídeos Profissionais</h4>
-                  <p className="text-blue-700 text-sm">Conteúdo criado por profissionais verificados</p>
-                </div>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-semibold text-green-900">Vídeos Educacionais</h4>
-                  <p className="text-green-700 text-sm">Material educativo sobre saúde mental</p>
-                </div>
-                <button
-                  onClick={() => alert('📚 Gerenciar Biblioteca\n\nEsta funcionalidade permitirá gerenciar todos os vídeos educacionais da plataforma. Em desenvolvimento.')}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Gerenciar Biblioteca
-                </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/admin/videos')}>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                <Video className="w-6 h-6 text-blue-600" />
               </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Biblioteca de Vídeos</h3>
+              <p className="text-gray-600 mb-4">Gerencie vídeos educacionais e profissionais da plataforma.</p>
+              <span className="text-blue-600 font-medium inline-flex items-center">
+                Gerenciar Vídeos <ExternalLink className="w-4 h-4 ml-1" />
+              </span>
             </div>
 
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                <FileText className="w-6 h-6 text-green-600 mr-2" />
-                Políticas e Documentos
-              </h2>
-              <div className="space-y-4">
-                <Link
-                  to="/policies"
-                  className="block p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-                >
-                  <h4 className="font-semibold text-green-900">Ver Políticas</h4>
-                  <p className="text-green-700 text-sm">Diretrizes, termos e códigos de conduta</p>
-                </Link>
-                <div className="p-4 bg-purple-50 rounded-lg">
-                  <h4 className="font-semibold text-purple-900">Criar Nova Política</h4>
-                  <p className="text-purple-700 text-sm">Adicionar novas diretrizes</p>
-                </div>
-                <button
-                  onClick={() => alert('📄 Gerenciar Documentos\n\nEsta funcionalidade permitirá gerenciar políticas, termos e códigos de conduta. Em desenvolvimento.')}
-                  className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Gerenciar Documentos
-                </button>
+            <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/policies')}>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                <FileText className="w-6 h-6 text-green-600" />
               </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Documentos e Políticas</h3>
+              <p className="text-gray-600 mb-4">Gerencie termos de uso, políticas de privacidade e contratos.</p>
+              <span className="text-green-600 font-medium inline-flex items-center">
+                Gerenciar Documentos <ExternalLink className="w-4 h-4 ml-1" />
+              </span>
             </div>
+          </div>
+        )}
+
+        {/* Moderation Tab */}
+        {activeTab === 'moderation' && (
+          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+            <Shield className="w-16 h-16 text-purple-200 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Central de Moderação</h2>
+            <p className="text-gray-600">Funcionalidade em desenvolvimento.</p>
           </div>
         )}
 
@@ -1261,6 +1065,11 @@ const AdminDashboard: React.FC = () => {
         {activeTab === 'curator' && (
           <CuratorTab />
         )}
+
+        {/* Debug Info Footer */}
+        <div className="mt-12 pt-8 border-t border-gray-200 text-center text-gray-400 text-sm">
+          <p>Admin Debug Info: Connected as {user.email} | Firestore Status: {error ? 'Error' : 'Connected'} | App Version: 1.0.1</p>
+        </div>
       </div>
     </div>
   );
