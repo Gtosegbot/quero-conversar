@@ -33,9 +33,10 @@ const Gallery: React.FC = () => {
 
     const loadContent = async () => {
         try {
-            const [contentSnap, productsSnap] = await Promise.all([
+            const [contentSnap, productsSnap, videosSnap] = await Promise.all([
                 getDocs(query(collection(db, 'partner_content'), orderBy('createdAt', 'desc'))),
-                getDocs(query(collection(db, 'products'), orderBy('createdAt', 'desc')))
+                getDocs(query(collection(db, 'products'), orderBy('createdAt', 'desc'))),
+                getDocs(query(collection(db, 'videos'), orderBy('created_at', 'desc')))
             ]);
 
             const freeItems = contentSnap.docs.map(doc => ({
@@ -52,7 +53,32 @@ const Gallery: React.FC = () => {
                 isPaid: true
             })) as ContentItem[];
 
-            setContent([...freeItems, ...paidItems]);
+            const videoItems = videosSnap.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    title: data.title,
+                    description: data.description,
+                    type: 'video',
+                    category: data.category === 'professional' ? 'Profissional' :
+                        data.category === 'educational' ? 'Educacional' :
+                            data.category || 'Geral',
+                    url: data.url || data.youtube_url,
+                    videoUrl: data.url || data.youtube_url, // For compatibility
+                    thumbnailUrl: data.thumbnail_url,
+                    authorName: data.professional_name || 'Admin',
+                    createdAt: data.created_at,
+                    isPaid: data.is_premium, // Treat premium as "paid" or locked? 
+                    // For Gallery, isPaid usually implies a product with price. 
+                    // If it's just premium content for subscribers, we might handle it differently.
+                    // For now, let's treat it as free to view in list, but maybe lock on click?
+                    // The user wanted "secure payment flow", but these are admin videos.
+                    // Let's assume they are free or part of subscription (not individual purchase)
+                    price: 0
+                };
+            }) as ContentItem[];
+
+            setContent([...freeItems, ...paidItems, ...videoItems]);
         } catch (error) {
             console.error("Error loading content:", error);
         } finally {
