@@ -168,7 +168,11 @@ service cloud.firestore {
     
     match /company_employees/{employeeId} {
       // Leitura: apenas membros da mesma empresa ou admin
-      allow read: if isAuthenticated() && 
+      // Leitura: apenas membros da mesma empresa ou admin
+      allow get: if isAuthenticated() && 
+        (belongsToCompany(resource.data.company_id) || isSuperAdmin());
+      
+      allow list: if isAuthenticated() && 
         (belongsToCompany(resource.data.company_id) || isSuperAdmin());
       
       // Criação: admin da empresa ou aceite de convite
