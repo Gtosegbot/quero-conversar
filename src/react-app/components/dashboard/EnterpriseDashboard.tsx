@@ -5,7 +5,7 @@ import {
     AlertCircle, CheckCircle, Activity, Smile, X, Upload
 } from 'lucide-react';
 import { db } from '../../../firebase-config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import Feedback360 from './Feedback360';
 import OneOnOneScheduler from './OneOnOneScheduler';
 import ProductivityDashboard from './ProductivityDashboard';
@@ -23,6 +23,23 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
     const [inviting, setInviting] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showDocs, setShowDocs] = useState(false);
+    const [companyId, setCompanyId] = useState<string | null>(null);
+
+    React.useEffect(() => {
+        const fetchCompanyId = async () => {
+            if (user?.uid) {
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        setCompanyId(userDoc.data().company_id);
+                    }
+                } catch (error) {
+                    console.error("Error fetching company ID:", error);
+                }
+            }
+        };
+        fetchCompanyId();
+    }, [user]);
 
     const stats = { collaborators: 124, newThisMonth: 12, engagement: 78 };
     const teamMetrics = { wellnessScore: 8.2 };
@@ -35,11 +52,11 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inviteEmail) return;
+        if (!inviteEmail || !companyId) return;
         setInviting(true);
         try {
             await addDoc(collection(db, 'employee_invites'), {
-                company_id: user.uid,
+                company_id: companyId,
                 email: inviteEmail,
                 status: 'pending',
                 invited_by: user.uid,
@@ -222,8 +239,8 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                 </div>
             )}
 
-            {activeTab === 'productivity' && <ProductivityDashboard teamId={user.uid} />}
-            {activeTab === 'feedback' && <Feedback360 companyId={user.uid} />}
+            {activeTab === 'productivity' && companyId && <ProductivityDashboard teamId={companyId} />}
+            {activeTab === 'feedback' && companyId && <Feedback360 companyId={companyId} />}
             {activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} />}
 
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
@@ -273,9 +290,9 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
             <EnterpriseDocsModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
 
             {/* Real Reports Modal */}
-            {activeTab === 'reports' && (
+            {activeTab === 'reports' && companyId && (
                 <div className="fixed inset-0 z-40">
-                    <EnterpriseReports companyId={user.uid} onClose={() => setActiveTab('overview')} />
+                    <EnterpriseReports companyId={companyId} onClose={() => setActiveTab('overview')} />
                 </div>
             )}
         </div>
