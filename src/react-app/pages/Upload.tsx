@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload as UploadIcon, Check, AlertTriangle } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../firebase-config';
+import { db, auth } from '../../firebase-config';
 
 const Upload: React.FC = () => {
     const navigate = useNavigate();
@@ -42,15 +42,19 @@ const Upload: React.FC = () => {
         setLoading(true);
 
         try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Usuário não autenticado.');
+                return;
+            }
 
             await addDoc(collection(db, 'partner_content'), {
-                partnerId: user.uid, // Changed from authorId to match schema
+                partnerId: user.uid,
                 title: formData.title,
                 description: formData.description,
-                type: formData.type, // 'article' or 'video'
+                type: formData.type,
                 category: formData.category,
-                videoUrl: formData.type === 'video' ? formData.url : '', // Map based on type
+                videoUrl: formData.type === 'video' ? formData.url : '',
                 link: formData.type === 'article' ? formData.url : '',
                 thumbnailUrl: formData.thumbnailUrl || (formData.type === 'video' ? `https://img.youtube.com/vi/${getVideoId(formData.url)}/hqdefault.jpg` : ''),
                 authorName: user.displayName || 'Parceiro',
@@ -61,9 +65,9 @@ const Upload: React.FC = () => {
 
             alert('Conteúdo publicado com sucesso!');
             navigate('/gallery');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error uploading content:", error);
-            alert('Erro ao publicar conteúdo.');
+            alert('Erro ao publicar conteúdo: ' + (error.message || String(error)));
         } finally {
             setLoading(false);
         }

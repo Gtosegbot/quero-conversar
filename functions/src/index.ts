@@ -190,8 +190,44 @@ export const onNewMessage = functions.firestore
             const userId = conversationDoc.data()?.userId;
             console.log(`[onNewMessage] User ID: ${userId}`);
             if (userId) {
-                const userDoc = await db.collection("users").doc(userId).get();
+                const userRef = db.collection("users").doc(userId);
+                const userDoc = await userRef.get();
                 const userData = userDoc.data();
+
+                // --- INTERACTION LIMIT LOGIC ---
+                const isPremium = userData?.plan === 'premium' || userData?.plan === 'enterprise' || userData?.role === 'admin';
+                const now = new Date();
+                const todayStr = now.toISOString().split('T')[0];
+                const lastInteractionDate = userData?.lastInteractionDate?.toDate().toISOString().split('T')[0];
+
+                let currentInteractions = userData?.dailyInteractions;
+
+                // Reset if new day (or if never set)
+                if (lastInteractionDate !== todayStr || currentInteractions === undefined) {
+                    currentInteractions = isPremium ? 9999 : 15;
+                    await userRef.update({
+                        dailyInteractions: currentInteractions,
+                        lastInteractionDate: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+
+                // Check Limit (Skip for Admin/Premium/Enterprise effectively by high limit, but strict check for free)
+                if (currentInteractions <= 0 && !isPremium) {
+                    await db.collection(`conversations/${conversationId}/messages`).add({
+                        type: "bot",
+                        content: "Você atingiu seu limite diário de mensagens gratuitas (15/dia). Atualize para o Plano Premium para continuar conversando ilimitadamente! 🌟",
+                        createdAt: admin.firestore.FieldValue.serverTimestamp()
+                    });
+                    return null; // Stop execution
+                }
+
+                // Decrement Logic
+                await userRef.update({
+                    dailyInteractions: admin.firestore.FieldValue.increment(-1),
+                    lastInteractionDate: admin.firestore.FieldValue.serverTimestamp()
+                });
+                // -----------------------------
+
                 userProfile = `
                 PERFIL DO PACIENTE:
                 Nome: ${userData?.name || "Usuário"}

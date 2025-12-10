@@ -84,32 +84,48 @@ const Chat: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const userId = getUserId();
-    if (!userId) return;
-
-    // 1. Listen to User Profile (Plan & Role)
-    const userRef = doc(db, 'users', userId);
-    const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const superAdminEmails = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'];
-        const isSuperAdmin = superAdminEmails.some(email => data.email?.includes(email));
-        const isPremium = data.plan === 'premium' || data.plan === 'enterprise' || data.role === 'admin' || isSuperAdmin;
-
-        setUserContext({
-          name: data.name || 'Usuário',
-          dailyInteractions: data.dailyInteractions || 0,
-          maxDailyInteractions: isPremium ? 9999 : 15,
-          plan: isPremium ? 'premium' : 'free',
-          level: data.level || 1,
-          role: isSuperAdmin ? 'admin' : (data.role || 'user')
-        });
+    // Listen to Firebase Auth state changes
+    const unsubscribeAuth = auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        setIsLoading(false);
+        return;
       }
-    });
 
-    // 2. Setup Conversation
-    const setupConversation = async () => {
-      // Check for existing active conversation
+      const userId = user.uid;
+      console.log("Chat: Auth user detected:", userId);
+
+      // 1. Listen to User Profile (Plan & Role)
+      const userRef = doc(db, 'users', userId);
+      const unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+
+          // DEBUG: Inspect raw user data
+          console.log("[DEBUG] Firestore User Data:", data);
+
+          const superAdminEmails = ['gtosegbot@', 'admgtoseg@', 'disparoseguroback@gmail.com'];
+          // Fallback to Auth email if Firestore email is missing
+          const userEmail = data.email || user.email;
+          const isSuperAdmin = superAdminEmails.some(email => userEmail?.includes(email));
+          const isPremium = data.plan === 'premium' || data.plan === 'enterprise' || data.role === 'admin' || isSuperAdmin;
+
+          const newContext = {
+            name: data.name || 'Usuário',
+            dailyInteractions: data.dailyInteractions || 0,
+            maxDailyInteractions: isPremium ? 9999 : 15,
+            plan: (isPremium ? 'premium' : 'free') as 'premium' | 'free',
+            level: data.level || 1,
+            role: isSuperAdmin ? 'admin' : (data.role || 'user')
+          };
+
+          console.log("[DEBUG] Derived Context:", newContext);
+          setUserContext(newContext);
+        } else {
+          console.log("[DEBUG] User document not found in Firestore!");
+        }
+      });
+
+      // 2. Setup Conversation
       const conversationsRef = collection(db, 'conversations');
       const q = query(
         conversationsRef,
@@ -118,53 +134,63 @@ const Chat: React.FC = () => {
         limit(1)
       );
 
-      const querySnapshot = await getDocs(q);
+      try {
+        const querySnapshot = await getDocs(q);
+        let convId = '';
 
-      let convId = '';
+        if (!querySnapshot.empty) {
+          convId = querySnapshot.docs[0].id;
+          console.log("Chat: Found existing conversation:", convId);
+        } else {
+          console.log("Chat: Creating new conversation");
+          const newConv = await addDoc(conversationsRef, {
+            userId,
+            createdAt: serverTimestamp(),
+            status: 'active'
+          });
+          convId = newConv.id;
+        }
 
-      if (!querySnapshot.empty) {
-        convId = querySnapshot.docs[0].id;
-      } else {
-        // Create new conversation
-        const newConv = await addDoc(conversationsRef, {
-          userId,
-          createdAt: serverTimestamp(),
-          status: 'active'
+        setConversationId(convId);
+
+        // Listen to messages
+        const messagesRef = collection(db, 'conversations', convId, 'messages');
+        const messagesQuery = query(messagesRef, orderBy('createdAt', 'asc'));
+
+        const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
+          console.log(`Chat: Received ${snapshot.docs.length} messages`);
+          const loadedMessages: Message[] = snapshot.docs.map(doc => ({
+            id: doc.id,
+            type: doc.data().type,
+            content: doc.data().content,
+            timestamp: doc.data().createdAt?.toDate() || new Date(),
+            level: doc.data().level, // Ensure these fields exist in Firestore or are handled safely
+            role: doc.data().role
+          }));
+          setMessages(loadedMessages);
+
+          // If the last message is from bot, stop loading
+          const lastMsg = loadedMessages[loadedMessages.length - 1];
+          if (lastMsg && lastMsg.type === 'bot') {
+            setIsLoading(false);
+          }
+
+          setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+        }, (error) => {
+          console.error("Firestore Listen Error:", error);
+          alert("Erro de conexão com o chat: " + error.message);
         });
-        convId = newConv.id;
+
+        // Store cleanup for messages listener
+        return () => unsubscribeMessages();
+
+      } catch (err: any) {
+        console.error("Error setting up conversation:", err);
+        alert("Erro ao carregar conversa: " + (err.message || String(err)));
       }
+    });
 
-      setConversationId(convId);
-
-      // Listen to messages
-      const messagesRef = collection(db, 'conversations', convId, 'messages');
-      const messagesQuery = query(messagesRef, orderBy('createdAt', 'asc'));
-
-      const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
-        const loadedMessages: Message[] = snapshot.docs.map(doc => ({
-          id: doc.id,
-          type: doc.data().type,
-          content: doc.data().content,
-          timestamp: doc.data().createdAt?.toDate() || new Date(),
-          level: doc.data().level,
-          role: doc.data().role
-        }));
-        setMessages(loadedMessages);
-
-        // Scroll to bottom on new message
-        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-      });
-
-      return () => unsubscribeMessages();
-    };
-
-    let cleanupConversation: (() => void) | undefined;
-    setupConversation().then(cleanup => { cleanupConversation = cleanup; });
-
-    return () => {
-      unsubscribeUser();
-      if (cleanupConversation) cleanupConversation();
-    };
+    return () => unsubscribeAuth();
   }, []);
 
   const handleSendMessage = async () => {
@@ -204,6 +230,9 @@ const Chat: React.FC = () => {
     };
     setMessages(prev => [...prev, optimisticMessage]);
 
+    // Set loading to true (waiting for bot)
+    setIsLoading(true);
+
     try {
       let currentConversationId = conversationId;
 
@@ -228,7 +257,7 @@ const Chat: React.FC = () => {
         role: userContext.role
       });
 
-      setIsLoading(false);
+      // Keep isLoading = true. It will be set to false by the onSnapshot when a bot message appears.
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -280,6 +309,10 @@ const Chat: React.FC = () => {
             <div className="ml-3">
               <h1 className="text-xl font-bold text-gray-900">Dra. Clara Mendes</h1>
               <p className="text-sm text-gray-600">Sua psicóloga virtual empática</p>
+              {/* DEBUG INFO */}
+              <p className="text-xs text-red-500 font-mono mt-1">
+                DEBUG: User {auth.currentUser?.uid?.slice(0, 6)}... | Chat {conversationId?.slice(0, 6)}...
+              </p>
             </div>
           </div>
 
@@ -350,12 +383,7 @@ const Chat: React.FC = () => {
                 )}
                 {message.type === 'bot' ? (
                   <p className="text-sm">
-                    {/* Only use TypewriterEffect for the very last message to avoid re-typing history */}
-                    {index === messages.length - 1 ? (
-                      <TypewriterEffect text={message.content} speed={30} />
-                    ) : (
-                      <span className="whitespace-pre-line">{message.content}</span>
-                    )}
+                    <span className="whitespace-pre-line">{message.content}</span>
                   </p>
                 ) : (
                   <p className="text-sm whitespace-pre-line">{message.content}</p>
