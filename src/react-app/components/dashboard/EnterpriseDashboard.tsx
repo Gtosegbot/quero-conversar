@@ -65,9 +65,51 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                                     status: 'active'
                                 };
                                 const newCompanyRef = await addDoc(collection(db, 'companies'), newCompanyData);
-                                await updateDoc(userRef, { company_id: newCompanyRef.id });
+
+                                // Update user profile with company_id AND company_role
+                                await updateDoc(userRef, {
+                                    company_id: newCompanyRef.id,
+                                    company_role: 'admin'
+                                });
                                 setCompanyId(newCompanyRef.id);
                                 console.log("Created new company and linked:", newCompanyRef.id);
+
+                                // 3. Seed Mock Employees
+                                console.log("Seeding mock employees...");
+                                const mockEmployees = [
+                                    {
+                                        name: "João Silva",
+                                        email: "joao.silva@exemplo.com",
+                                        department: "Vendas",
+                                        role: "Vendedor",
+                                        status: "active",
+                                        joined_at: new Date().toISOString(),
+                                        company_id: newCompanyRef.id
+                                    },
+                                    {
+                                        name: "Maria Costa",
+                                        email: "maria.costa@exemplo.com",
+                                        department: "Marketing",
+                                        role: "Analista",
+                                        status: "invited",
+                                        joined_at: new Date().toISOString(),
+                                        company_id: newCompanyRef.id
+                                    },
+                                    {
+                                        name: "Pedro Santos",
+                                        email: "pedro.santos@exemplo.com",
+                                        department: "TI",
+                                        role: "Desenvolvedor",
+                                        status: "active",
+                                        joined_at: new Date().toISOString(),
+                                        company_id: newCompanyRef.id
+                                    }
+                                ];
+
+                                for (const emp of mockEmployees) {
+                                    await addDoc(collection(db, 'company_employees'), emp);
+                                }
+                                console.log("Mock employees seeded.");
                             }
                         }
                     }
