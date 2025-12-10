@@ -3,6 +3,7 @@ import * as admin from "firebase-admin";
 import { VertexAI } from "@google-cloud/vertexai";
 import { TextToSpeechClient } from "@google-cloud/text-to-speech";
 import OpenAI from "openai";
+import * as nodemailer from "nodemailer";
 
 if (admin.apps.length === 0) {
     admin.initializeApp();
@@ -14,6 +15,67 @@ const storage = admin.storage();
 // Initialize Vertex AI
 const vertexAI = new VertexAI({ project: process.env.GCLOUD_PROJECT || "quero-conversar-app", location: "us-central1" });
 const model = vertexAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+// Initialize SMTP Transporter
+// NOTE: User must set these env vars via `firebase functions:config:set smtp.email="email@gmail.com" smtp.password="app_password"`
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.SMTP_EMAIL || functions.config().smtp?.email,
+        pass: process.env.SMTP_PASSWORD || functions.config().smtp?.password
+    }
+});
+
+/**
+ * 3. Send Employee Invite Email (Real Email)
+ */
+export const sendEmployeeInvite = functions.firestore
+    .document("employee_invites/{inviteId}")
+    .onWrite(async (change, context) => {
+        const data = change.after.exists ? change.after.data() : null;
+        const previousData = change.before.exists ? change.before.data() : null;
+
+        // Exit if deleted or no email
+        if (!data || !data.email) return null;
+
+        // Check if it's a new invite OR a resend (invited_at changed)
+        const isNew = !previousData;
+        const isResend = previousData && data.invited_at && previousData.invited_at !== data.invited_at;
+
+        if (!isNew && !isResend) return null;
+
+        const mailOptions = {
+            from: '"Quero Conversar" <noreply@queroconversar.com>',
+            to: data.email,
+            subject: isResend ? "Lembrete: Convite para Quero Conversar Enterprise" : "Convite para Quero Conversar Enterprise",
+            html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #2563eb;">Você foi convidado!</h2>
+            <p>Olá,</p>
+            <p>Você foi convidado para participar do programa de bem-estar corporativo <strong>Quero Conversar</strong>.</p>
+            <p>Clique no botão abaixo para aceitar o convite e criar sua conta:</p>
+            <a href="https://quero-conversar.vercel.app/invite/${context.params.inviteId}" 
+               style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0;">
+               Aceitar Convite
+            </a>
+            <p style="color: #666; font-size: 14px;">Se o botão não funcionar, copie este link: https://quero-conversar.vercel.app/invite/${context.params.inviteId}</p>
+        </div>
+      `
+        };
+
+        try {
+            if (!process.env.SMTP_EMAIL && !functions.config().smtp?.email) {
+                console.warn("SMTP credentials missing. Email simulated:", mailOptions.to);
+                return null;
+            }
+            await transporter.sendMail(mailOptions);
+            console.log("Invite email sent to:", data.email);
+        } catch (error) {
+            console.error("Error sending invite email:", error);
+            return null;
+        }
+        return null; // Ensure all paths return
+    });
 
 // Initialize TTS Client
 const ttsClient = new TextToSpeechClient();

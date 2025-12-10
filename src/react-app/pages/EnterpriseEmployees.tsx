@@ -214,16 +214,26 @@ const EnterpriseEmployees: React.FC = () => {
                                     </div>
                                     <div className="flex space-x-2">
                                         <button
-                                            onClick={async () => {
+                                            onClick={async (e) => {
                                                 if (!confirm('Reenviar convite?')) return;
+                                                const btn = e.currentTarget;
+                                                const originalText = btn.innerText;
+                                                btn.innerText = 'Enviando...';
+
                                                 try {
                                                     await updateDoc(doc(db, 'employee_invites', invite.id), {
                                                         invited_at: serverTimestamp()
                                                     });
-                                                    alert('Convite reenviado!');
+                                                    btn.innerText = 'Reenviado!';
+                                                    btn.className = "text-green-600 font-medium text-sm";
+                                                    setTimeout(() => {
+                                                        btn.innerText = originalText;
+                                                        btn.className = "text-blue-600 hover:text-blue-800 text-sm";
+                                                    }, 3000);
                                                 } catch (err) {
                                                     console.error(err);
                                                     alert('Erro ao reenviar.');
+                                                    btn.innerText = originalText;
                                                 }
                                             }}
                                             className="text-blue-600 hover:text-blue-800 text-sm"

@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Building2, CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
 import PulsingHeart from '../components/PulsingHeart';
 import { db, auth } from '../../firebase-config';
 import {
-    collection, query, where, getDocs, addDoc,
+    collection, query, where, getDocs, addDoc, getDoc,
     updateDoc, doc, serverTimestamp
 } from 'firebase/firestore';
 import { EmployeeInvite } from '../../types/enterprise';
 
 const InviteAccept: React.FC = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const token = searchParams.get('token');
+    const { inviteId } = useParams();
 
     const [loading, setLoading] = useState(true);
     const [accepting, setAccepting] = useState(false);
@@ -21,38 +20,48 @@ const InviteAccept: React.FC = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        if (!token) {
-            setError('Token de convite inválido');
+        if (!inviteId) {
+            setError('Link de convite inválido');
             setLoading(false);
             return;
         }
 
         loadInvite();
-    }, [token]);
+    }, [inviteId]);
 
     const loadInvite = async () => {
         try {
-            const q = query(
-                collection(db, 'employee_invites'),
-                where('invite_token', '==', token),
-                where('status', '==', 'pending')
-            );
+            if (!inviteId) return;
 
-            const snapshot = await getDocs(q);
+            const inviteRef = doc(db, 'employee_invites', inviteId);
+            const inviteSnap = await getDoc(inviteRef);
 
-            if (snapshot.empty) {
-                setError('Convite não encontrado ou já foi aceito');
+            if (!inviteSnap.exists()) {
+                setError('Convite não encontrado ou já foi excluído');
                 setLoading(false);
                 return;
             }
 
             const inviteData = {
-                id: snapshot.docs[0].id,
-                ...snapshot.docs[0].data()
+                id: inviteSnap.id,
+                ...inviteSnap.data()
             } as EmployeeInvite;
 
+            if (inviteData.status !== 'pending') {
+                setError('Este convite já foi aceito');
+                setLoading(false);
+                return;
+            }
+
             // Check if expired
-            const expiresAt = new Date(inviteData.expires_at);
+            // Handle both Timestamp and string dates safely
+            let expiresAt;
+            if (inviteData.expires_at && typeof inviteData.expires_at === 'object' && 'toDate' in inviteData.expires_at) {
+                expiresAt = (inviteData.expires_at as any).toDate();
+            } else {
+                expiresAt = new Date(inviteData.expires_at);
+            }
+
             if (expiresAt < new Date()) {
                 setError('Este convite expirou');
                 setLoading(false);
@@ -62,11 +71,12 @@ const InviteAccept: React.FC = () => {
             setInvite(inviteData);
 
             // Load company name
-            const companyDoc = await getDocs(
-                query(collection(db, 'companies'), where('__name__', '==', inviteData.company_id))
-            );
-            if (!companyDoc.empty) {
-                setCompanyName(companyDoc.docs[0].data().name);
+            if (inviteData.company_id) {
+                const companyRef = doc(db, 'companies', inviteData.company_id);
+                const companySnap = await getDoc(companyRef);
+                if (companySnap.exists()) {
+                    setCompanyName(companySnap.data().name);
+                }
             }
 
             setLoading(false);
@@ -81,7 +91,7 @@ const InviteAccept: React.FC = () => {
         const user = auth.currentUser;
         if (!user) {
             // Redirect to login with return URL
-            navigate(`/login?redirect=/invite/accept?token=${token}`);
+            navigate(`/login?redirect=/invite/${inviteId}`);
             return;
         }
 

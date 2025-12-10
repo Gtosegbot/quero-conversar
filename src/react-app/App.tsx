@@ -126,7 +126,7 @@ export default function App() {
           <Route path="/enterprise/employees" element={<Layout />}>
             <Route index element={<EnterpriseEmployees />} />
           </Route>
-          <Route path="/invite/accept" element={<InviteAccept />} />
+          <Route path="/invite/:inviteId" element={<InviteAccept />} />
         </Routes>
       </Router>
     </ErrorBoundary>
