@@ -218,281 +218,282 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                     <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between">
                         <div>
                             <h4 className="text-lg font-semibold text-blue-900 mb-2">Personalize seus Treinamentos</h4>
-                            onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                            <button
+                                onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                             >
-                            Falar com Consultor
-                        </button>
-                    </div>
-                </div>
-                </div>
-    )
-}
-
-{ activeTab === 'productivity' && companyId && <ProductivityDashboard teamId={companyId} /> }
-{ activeTab === 'feedback' && companyId && <Feedback360 companyId={companyId} /> }
-{ activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} /> }
-
-<div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-    <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
-        <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
-        Dica de Gestão
-    </h4>
-    <p className="text-gray-700 text-sm">
-        Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
-    </p>
-</div>
-
-{/* Settings Modal */ }
-{
-    showSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
-                    <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
-                        <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
-                        <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
-                        <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
-                            Enterprise Bulk
-                        </div>
-                    </div>
-                    <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
-                        Salvar Alterações
-                    </button>
-                </div>
-            </div>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-lg p-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Painel Corporativo</h1>
-                    <p className="text-gray-600">Gerencie o bem-estar da sua equipe</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setShowDocs(true)}
-                        className="flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-                    >
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        Guia Enterprise
-                    </button>
-                    <button
-                        onClick={() => setShowSettings(true)}
-                        className="flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-                    >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Configurações
-                    </button>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-md p-2 flex flex-wrap gap-2">
-                {[
-                    { id: 'overview', icon: BarChart2, label: 'Visão Geral' },
-                    { id: 'team', icon: Users, label: 'Equipe' },
-                    { id: 'development', icon: Target, label: 'Desenvolvimento' },
-                    { id: 'productivity', icon: TrendingUp, label: 'Produtividade' },
-                    { id: 'feedback', icon: MessageSquare, label: 'Feedback 360°' },
-                    { id: 'meetings', icon: Calendar, label: 'Sessões 1-on-1' },
-                    { id: 'reports', icon: Download, label: 'Relatórios' }
-                ].map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.id ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100'
-                            }`}
-                    >
-                        <tab.icon className="w-4 h-4 inline mr-2" />
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {activeTab === 'overview' && (
-                <>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {[
-                            { title: 'Colaboradores', value: stats.collaborators, change: `+${stats.newThisMonth} este mês`, icon: Users, color: 'blue' },
-                            { title: 'Engajamento', value: `${stats.engagement}%`, change: 'Média de uso semanal', icon: TrendingUp, color: 'purple' },
-                            { title: 'Bem-Estar', value: `${teamMetrics.wellnessScore}/10`, change: 'Score médio da equipe', icon: Heart, color: 'green' }
-                        ].map((stat, idx) => (
-                            <div key={idx} className={`bg-white p-6 rounded-xl shadow-md border-l-4 border-${stat.color}-500`}>
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="font-bold text-gray-700">{stat.title}</h3>
-                                    <stat.icon className={`text-${stat.color}-600`} />
-                                </div>
-                                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                                <p className="text-sm text-gray-500">{stat.change}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-lg p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                            <UserPlus className="w-5 h-5 text-purple-600 mr-2" />
-                            Convidar Colaboradores
-                        </h3>
-                        <form onSubmit={handleInvite} className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1 relative">
-                                <Mail className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-                                <input
-                                    type="email"
-                                    placeholder="Email do colaborador"
-                                    value={inviteEmail}
-                                    onChange={(e) => setInviteEmail(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600"
-                                />
-                            </div>
-                            <button type="submit" disabled={inviting} className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50">
-                                {inviting ? 'Enviando...' : 'Enviar Convite'}
+                                Falar com Consultor
                             </button>
-                        </form>
-                    </div>
-                </>
-            )}
-
-            {activeTab === 'team' && (
-                <div className="rounded-xl overflow-hidden -m-1">
-                    <EnterpriseEmployees />
-                </div>
-            )}
-
-            {activeTab === 'development' && (
-                <div className="bg-white rounded-xl shadow-md p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                        <BookOpen className="w-5 h-5 text-blue-600 mr-2" />
-                        Programas de Treinamento
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[
-                            { name: 'Gestão de Estresse', modules: 8, hours: 4, progress: 65, enrolled: 42, active: true },
-                            { name: 'Comunicação Efetiva', modules: 6, hours: 3, progress: 82, enrolled: 38, active: true },
-                            { name: 'Mindfulness no Trabalho', modules: 5, hours: 2.5, interest: 28, active: false },
-                            { name: 'Equilíbrio Vida-Trabalho', modules: 7, hours: 3.5, interest: 35, active: false }
-                        ].map((program, idx) => (
-                            <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900">{program.name}</h4>
-                                        <p className="text-sm text-gray-500">{program.modules} módulos • {program.hours}h de conteúdo</p>
-                                    </div>
-                                    <span className={`px-2 py-1 ${program.active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} text-xs rounded`}>
-                                        {program.active ? 'Ativo' : 'Em breve'}
-                                    </span>
-                                </div>
-                                {program.active && (
-                                    <>
-                                        <div className="mb-3">
-                                            <div className="flex justify-between text-sm mb-1">
-                                                <span className="text-gray-600">Progresso da equipe</span>
-                                                <span className="font-medium">{program.progress}%</span>
-                                            </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${program.progress}%` }}></div>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-gray-600">{program.enrolled} colaboradores inscritos</p>
-                                    </>
-                                )}
-                                {!program.active && <p className="text-sm text-gray-600">{program.interest} pessoas interessadas</p>}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between">
-                        <div>
-                            <h4 className="text-lg font-semibold text-blue-900 mb-2">Personalize seus Treinamentos</h4>
-                            onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                            >
-                            Falar com Consultor
-                        </button>
-                    </div>
-                </div>
-                </div>
-    )
-}
-
-{ activeTab === 'productivity' && companyId && <ProductivityDashboard teamId={companyId} /> }
-{ activeTab === 'feedback' && companyId && <Feedback360 companyId={companyId} /> }
-{ activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} /> }
-
-<div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-    <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
-        <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
-        Dica de Gestão
-    </h4>
-    <p className="text-gray-700 text-sm">
-        Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
-    </p>
-</div>
-
-{/* Settings Modal */ }
-{
-    showSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
-                    <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
-                        <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
-                        <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
-                        <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
-                            Enterprise Bulk
                         </div>
                     </div>
-                    <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
-                        Salvar Alterações
-                    </button>
                 </div>
+            )
+            }
+
+            {activeTab === 'productivity' && companyId && <ProductivityDashboard teamId={companyId} />}
+            {activeTab === 'feedback' && companyId && <Feedback360 companyId={companyId} />}
+            {activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} />}
+
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
+                    Dica de Gestão
+                </h4>
+                <p className="text-gray-700 text-sm">
+                    Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
+                </p>
             </div>
-        </div>
-    )
-}
 
-{/* Enterprise Docs Modal */ }
-<EnterpriseDocsModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
-{/* Real Reports Modal */ }
-{
-    activeTab === 'reports' && companyId && (
-        <div className="fixed inset-0 z-40">
-            <EnterpriseReports companyId={companyId} onClose={() => setActiveTab('overview')} />
-        </div>
-    )
-}
+            {/* Settings Modal */}
+            {
+                showSettings && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
+                                <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
+                                    <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
+                                    <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
+                                    <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
+                                        Enterprise Bulk
+                                    </div>
+                                </div>
+                                <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-xl shadow-lg p-6">
+                            <div>
+                                <h1 className="text-2xl font-bold text-gray-900">Painel Corporativo</h1>
+                                <p className="text-gray-600">Gerencie o bem-estar da sua equipe</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setShowDocs(true)}
+                                    className="flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                                >
+                                    <BookOpen className="w-4 h-4 mr-2" />
+                                    Guia Enterprise
+                                </button>
+                                <button
+                                    onClick={() => setShowSettings(true)}
+                                    className="flex items-center px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                                >
+                                    <Settings className="w-4 h-4 mr-2" />
+                                    Configurações
+                                </button>
+                            </div>
+                        </div>
 
-{/* Content Upload Modal */ }
-{
-    showContentUpload && companyId && (
-        <ContentUploadForm
-            companyId={companyId}
-            onClose={() => setShowContentUpload(false)}
-        />
-    )
-}
+                        <div className="bg-white rounded-xl shadow-md p-2 flex flex-wrap gap-2">
+                            {[
+                                { id: 'overview', icon: BarChart2, label: 'Visão Geral' },
+                                { id: 'team', icon: Users, label: 'Equipe' },
+                                { id: 'development', icon: Target, label: 'Desenvolvimento' },
+                                { id: 'productivity', icon: TrendingUp, label: 'Produtividade' },
+                                { id: 'feedback', icon: MessageSquare, label: 'Feedback 360°' },
+                                { id: 'meetings', icon: Calendar, label: 'Sessões 1-on-1' },
+                                { id: 'reports', icon: Download, label: 'Relatórios' }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id as any)}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.id ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                >
+                                    <tab.icon className="w-4 h-4 inline mr-2" />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {activeTab === 'overview' && (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {[
+                                        { title: 'Colaboradores', value: stats.collaborators, change: `+${stats.newThisMonth} este mês`, icon: Users, color: 'blue' },
+                                        { title: 'Engajamento', value: `${stats.engagement}%`, change: 'Média de uso semanal', icon: TrendingUp, color: 'purple' },
+                                        { title: 'Bem-Estar', value: `${teamMetrics.wellnessScore}/10`, change: 'Score médio da equipe', icon: Heart, color: 'green' }
+                                    ].map((stat, idx) => (
+                                        <div key={idx} className={`bg-white p-6 rounded-xl shadow-md border-l-4 border-${stat.color}-500`}>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="font-bold text-gray-700">{stat.title}</h3>
+                                                <stat.icon className={`text-${stat.color}-600`} />
+                                            </div>
+                                            <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                                            <p className="text-sm text-gray-500">{stat.change}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="bg-white rounded-xl shadow-lg p-6">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                                        <UserPlus className="w-5 h-5 text-purple-600 mr-2" />
+                                        Convidar Colaboradores
+                                    </h3>
+                                    <form onSubmit={handleInvite} className="flex flex-col md:flex-row gap-4">
+                                        <div className="flex-1 relative">
+                                            <Mail className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+                                            <input
+                                                type="email"
+                                                placeholder="Email do colaborador"
+                                                value={inviteEmail}
+                                                onChange={(e) => setInviteEmail(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600"
+                                            />
+                                        </div>
+                                        <button type="submit" disabled={inviting} className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50">
+                                            {inviting ? 'Enviando...' : 'Enviar Convite'}
+                                        </button>
+                                    </form>
+                                </div>
+                            </>
+                        )}
+
+                        {activeTab === 'team' && (
+                            <div className="rounded-xl overflow-hidden -m-1">
+                                <EnterpriseEmployees />
+                            </div>
+                        )}
+
+                        {activeTab === 'development' && (
+                            <div className="bg-white rounded-xl shadow-md p-6">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                                    <BookOpen className="w-5 h-5 text-blue-600 mr-2" />
+                                    Programas de Treinamento
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[
+                                        { name: 'Gestão de Estresse', modules: 8, hours: 4, progress: 65, enrolled: 42, active: true },
+                                        { name: 'Comunicação Efetiva', modules: 6, hours: 3, progress: 82, enrolled: 38, active: true },
+                                        { name: 'Mindfulness no Trabalho', modules: 5, hours: 2.5, interest: 28, active: false },
+                                        { name: 'Equilíbrio Vida-Trabalho', modules: 7, hours: 3.5, interest: 35, active: false }
+                                    ].map((program, idx) => (
+                                        <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div>
+                                                    <h4 className="font-semibold text-gray-900">{program.name}</h4>
+                                                    <p className="text-sm text-gray-500">{program.modules} módulos • {program.hours}h de conteúdo</p>
+                                                </div>
+                                                <span className={`px-2 py-1 ${program.active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} text-xs rounded`}>
+                                                    {program.active ? 'Ativo' : 'Em breve'}
+                                                </span>
+                                            </div>
+                                            {program.active && (
+                                                <>
+                                                    <div className="mb-3">
+                                                        <div className="flex justify-between text-sm mb-1">
+                                                            <span className="text-gray-600">Progresso da equipe</span>
+                                                            <span className="font-medium">{program.progress}%</span>
+                                                        </div>
+                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                            <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${program.progress}%` }}></div>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600">{program.enrolled} colaboradores inscritos</p>
+                                                </>
+                                            )}
+                                            {!program.active && <p className="text-sm text-gray-600">{program.interest} pessoas interessadas</p>}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between">
+                                    <div>
+                                        <h4 className="text-lg font-semibold text-blue-900 mb-2">Personalize seus Treinamentos</h4>
+                                        onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                            >
+                                        Falar com Consultor
+                                    </button>
+                                </div>
+                            </div>
+                </div>
+                )
+            }
+
+            {activeTab === 'productivity' && companyId && <ProductivityDashboard teamId={companyId} />}
+            {activeTab === 'feedback' && companyId && <Feedback360 companyId={companyId} />}
+            {activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} />}
+
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                    <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
+                    Dica de Gestão
+                </h4>
+                <p className="text-gray-700 text-sm">
+                    Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
+                </p>
+            </div>
+
+            {/* Settings Modal */}
+            {
+                showSettings && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
+                                <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
+                                    <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
+                                    <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
+                                    <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
+                                        Enterprise Bulk
+                                    </div>
+                                </div>
+                                <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Enterprise Docs Modal */}
+            <EnterpriseDocsModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
+            {/* Real Reports Modal */}
+            {
+                activeTab === 'reports' && companyId && (
+                    <div className="fixed inset-0 z-40">
+                        <EnterpriseReports companyId={companyId} onClose={() => setActiveTab('overview')} />
+                    </div>
+                )
+            }
+
+            {/* Content Upload Modal */}
+            {
+                showContentUpload && companyId && (
+                    <ContentUploadForm
+                        companyId={companyId}
+                        onClose={() => setShowContentUpload(false)}
+                    />
+                )
+            }
         </div >
     );
 };
