@@ -65,262 +65,257 @@ const EnterpriseEmployees: React.FC = () => {
                         setInvites(invs);
                     });
 
-                    return () => {
-                        unsubEmp();
-                        unsubInv();
-                    };
-                };
+                } else {
+                    setLoading(false);
+                }
             } else {
                 setLoading(false);
             }
-        } else {
-            setLoading(false);
-        }
         });
 
-    return () => unsubUser();
-}, []);
+        return () => unsubUser();
+    }, []);
 
-const filteredEmployees = employees.filter(emp => {
-    const matchesSearch =
-        emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredEmployees = employees.filter(emp => {
+        const matchesSearch =
+            emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            emp.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesFilter =
-        filterStatus === 'all' || emp.status === filterStatus;
+        const matchesFilter =
+            filterStatus === 'all' || emp.status === filterStatus;
 
-    return matchesSearch && matchesFilter;
-});
+        return matchesSearch && matchesFilter;
+    });
 
-const getStatusBadge = (status: string) => {
-    const styles = {
-        active: 'bg-green-100 text-green-800',
-        invited: 'bg-yellow-100 text-yellow-800',
-        suspended: 'bg-red-100 text-red-800',
-        removed: 'bg-gray-100 text-gray-800'
+    const getStatusBadge = (status: string) => {
+        const styles = {
+            active: 'bg-green-100 text-green-800',
+            invited: 'bg-yellow-100 text-yellow-800',
+            suspended: 'bg-red-100 text-red-800',
+            removed: 'bg-gray-100 text-gray-800'
+        };
+        return styles[status as keyof typeof styles] || styles.active;
     };
-    return styles[status as keyof typeof styles] || styles.active;
-};
 
-const getStatusIcon = (status: string) => {
-    switch (status) {
-        case 'active': return <CheckCircle className="w-4 h-4" />;
-        case 'invited': return <Clock className="w-4 h-4" />;
-        case 'suspended': return <XCircle className="w-4 h-4" />;
-        default: return null;
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'active': return <CheckCircle className="w-4 h-4" />;
+            case 'invited': return <Clock className="w-4 h-4" />;
+            case 'suspended': return <XCircle className="w-4 h-4" />;
+            default: return null;
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
+                <div className="text-center">
+                    <PulsingHeart color="text-blue-600" size="xl" />
+                    <p className="mt-4 text-gray-600">Carregando funcionários...</p>
+                </div>
+            </div>
+        );
     }
-};
 
-if (loading) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
-            <div className="text-center">
-                <PulsingHeart color="text-blue-600" size="xl" />
-                <p className="mt-4 text-gray-600">Carregando funcionários...</p>
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-6">
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <Users className="w-8 h-8 text-blue-600 mr-3" />
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900">
+                                    Gerenciar Funcionários
+                                </h1>
+                                <p className="text-gray-600 mt-1">
+                                    {employees.length} funcionários • {invites.length} convites pendentes
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={() => setShowCSVUpload(true)}
+                                className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700"
+                            >
+                                <Upload className="w-5 h-5 mr-2" />
+                                Importar CSV
+                            </button>
+                            <button
+                                onClick={() => setShowInviteModal(true)}
+                                className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700"
+                            >
+                                <UserPlus className="w-5 h-5 mr-2" />
+                                Convidar Funcionário
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <div className="flex items-center space-x-4">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Buscar por nome ou email..."
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                            />
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                            <Filter className="w-5 h-5 text-gray-600" />
+                            <select
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                            >
+                                <option value="all">Todos</option>
+                                <option value="active">Ativos</option>
+                                <option value="invited">Convidados</option>
+                                <option value="suspended">Suspensos</option>
+                                <option value="removed">Removidos</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Pending Invites */}
+                {invites.length > 0 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
+                        <h3 className="font-semibold text-yellow-900 mb-3 flex items-center">
+                            <Clock className="w-5 h-5 mr-2" />
+                            Convites Pendentes ({invites.length})
+                        </h3>
+                        <div className="space-y-2">
+                            {invites.slice(0, 5).map((invite) => (
+                                <div key={invite.id} className="flex items-center justify-between bg-white rounded-lg p-3">
+                                    <div>
+                                        <p className="font-medium text-gray-900">{invite.email}</p>
+                                        <p className="text-sm text-gray-600">
+                                            Convidado em {new Date(invite.invited_at).toLocaleDateString('pt-BR')}
+                                        </p>
+                                    </div>
+                                    <div className="flex space-x-2">
+                                        <button className="text-blue-600 hover:text-blue-800 text-sm">
+                                            Reenviar
+                                        </button>
+                                        <button className="text-red-600 hover:text-red-800 text-sm">
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Employees Table */}
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                                        Funcionário
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                                        Departamento
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                                        Cargo
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                                        Desde
+                                    </th>
+                                    <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
+                                        Ações
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {filteredEmployees.map((employee) => (
+                                    <tr key={employee.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center">
+                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-full flex items-center justify-center mr-3">
+                                                    <span className="text-blue-600 font-semibold">
+                                                        {employee.name.charAt(0).toUpperCase()}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-gray-900">{employee.name}</p>
+                                                    <p className="text-sm text-gray-600">{employee.email}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-700">
+                                            {employee.department || '-'}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-700">
+                                            {employee.position || '-'}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(employee.status)}`}>
+                                                {getStatusIcon(employee.status)}
+                                                <span className="ml-1 capitalize">{employee.status}</span>
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-700">
+                                            {new Date(employee.joined_at).toLocaleDateString('pt-BR')}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button className="p-2 hover:bg-gray-100 rounded-lg">
+                                                <MoreVertical className="w-5 h-5 text-gray-600" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {filteredEmployees.length === 0 && (
+                            <div className="text-center py-12">
+                                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                                    Nenhum funcionário encontrado
+                                </h3>
+                                <p className="text-gray-500">
+                                    {searchTerm || filterStatus !== 'all'
+                                        ? 'Tente ajustar os filtros'
+                                        : 'Comece convidando funcionários'}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Invite Modal */}
+                {showInviteModal && (
+                    <InviteModal
+                        companyId={companyId!}
+                        onClose={() => setShowInviteModal(false)}
+                    />
+                )}
+
+                {/* CSV Upload Modal */}
+                {showCSVUpload && (
+                    <CSVUploadModal
+                        companyId={companyId!}
+                        onClose={() => setShowCSVUpload(false)}
+                    />
+                )}
             </div>
         </div>
     );
-}
-
-return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 p-6">
-        <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                        <Users className="w-8 h-8 text-blue-600 mr-3" />
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">
-                                Gerenciar Funcionários
-                            </h1>
-                            <p className="text-gray-600 mt-1">
-                                {employees.length} funcionários • {invites.length} convites pendentes
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex space-x-3">
-                        <button
-                            onClick={() => setShowCSVUpload(true)}
-                            className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700"
-                        >
-                            <Upload className="w-5 h-5 mr-2" />
-                            Importar CSV
-                        </button>
-                        <button
-                            onClick={() => setShowInviteModal(true)}
-                            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700"
-                        >
-                            <UserPlus className="w-5 h-5 mr-2" />
-                            Convidar Funcionário
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <div className="flex items-center space-x-4">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Buscar por nome ou email..."
-                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                        <Filter className="w-5 h-5 text-gray-600" />
-                        <select
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
-                        >
-                            <option value="all">Todos</option>
-                            <option value="active">Ativos</option>
-                            <option value="invited">Convidados</option>
-                            <option value="suspended">Suspensos</option>
-                            <option value="removed">Removidos</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {/* Pending Invites */}
-            {invites.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-6">
-                    <h3 className="font-semibold text-yellow-900 mb-3 flex items-center">
-                        <Clock className="w-5 h-5 mr-2" />
-                        Convites Pendentes ({invites.length})
-                    </h3>
-                    <div className="space-y-2">
-                        {invites.slice(0, 5).map((invite) => (
-                            <div key={invite.id} className="flex items-center justify-between bg-white rounded-lg p-3">
-                                <div>
-                                    <p className="font-medium text-gray-900">{invite.email}</p>
-                                    <p className="text-sm text-gray-600">
-                                        Convidado em {new Date(invite.invited_at).toLocaleDateString('pt-BR')}
-                                    </p>
-                                </div>
-                                <div className="flex space-x-2">
-                                    <button className="text-blue-600 hover:text-blue-800 text-sm">
-                                        Reenviar
-                                    </button>
-                                    <button className="text-red-600 hover:text-red-800 text-sm">
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Employees Table */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                                    Funcionário
-                                </th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                                    Departamento
-                                </th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                                    Cargo
-                                </th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                                    Status
-                                </th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
-                                    Desde
-                                </th>
-                                <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
-                                    Ações
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {filteredEmployees.map((employee) => (
-                                <tr key={employee.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center">
-                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-cyan-100 rounded-full flex items-center justify-center mr-3">
-                                                <span className="text-blue-600 font-semibold">
-                                                    {employee.name.charAt(0).toUpperCase()}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-gray-900">{employee.name}</p>
-                                                <p className="text-sm text-gray-600">{employee.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-700">
-                                        {employee.department || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-700">
-                                        {employee.position || '-'}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(employee.status)}`}>
-                                            {getStatusIcon(employee.status)}
-                                            <span className="ml-1 capitalize">{employee.status}</span>
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-700">
-                                        {new Date(employee.joined_at).toLocaleDateString('pt-BR')}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="p-2 hover:bg-gray-100 rounded-lg">
-                                            <MoreVertical className="w-5 h-5 text-gray-600" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {filteredEmployees.length === 0 && (
-                        <div className="text-center py-12">
-                            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                                Nenhum funcionário encontrado
-                            </h3>
-                            <p className="text-gray-500">
-                                {searchTerm || filterStatus !== 'all'
-                                    ? 'Tente ajustar os filtros'
-                                    : 'Comece convidando funcionários'}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Invite Modal */}
-            {showInviteModal && (
-                <InviteModal
-                    companyId={companyId!}
-                    onClose={() => setShowInviteModal(false)}
-                />
-            )}
-
-            {/* CSV Upload Modal */}
-            {showCSVUpload && (
-                <CSVUploadModal
-                    companyId={companyId!}
-                    onClose={() => setShowCSVUpload(false)}
-                />
-            )}
-        </div>
-    </div>
-);
 };
 
 // Invite Modal Component
