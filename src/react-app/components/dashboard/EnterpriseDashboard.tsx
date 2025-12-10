@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
     Users, BarChart2, UserPlus, Settings, Mail, TrendingUp, Award,
     Target, BookOpen, Heart, MessageSquare, Calendar, Download,
-    AlertCircle, CheckCircle, Activity, Smile, X
+    AlertCircle, CheckCircle, Activity, Smile, X, Upload
 } from 'lucide-react';
 import { db } from '../../../firebase-config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -192,6 +192,30 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                                 {!program.active && <p className="text-sm text-gray-600">{program.interest} pessoas interessadas</p>}
                             </div>
                         ))}
+                    </div>
+
+                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between">
+                        <div>
+                            <h4 className="text-lg font-semibold text-blue-900 mb-2">Personalize seus Treinamentos</h4>
+                            <p className="text-blue-700 mb-4 md:mb-0">
+                                Deseja adicionar cursos específicos para sua empresa ou contratar desenvolvimento de conteúdo?
+                            </p>
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => alert('Em breve: ferramenta de upload de SCORM/Vídeos')}
+                                className="px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-medium flex items-center"
+                            >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload de Conteúdo
+                            </button>
+                            <button
+                                onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                            >
+                                Falar com Consultor
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
