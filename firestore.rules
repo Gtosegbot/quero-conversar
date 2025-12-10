@@ -174,7 +174,8 @@ service cloud.firestore {
       // Criação: admin da empresa ou aceite de convite
       allow create: if isAuthenticated() && 
         (isCompanyAdmin(request.resource.data.company_id) || 
-         request.resource.data.user_id == request.auth.uid);
+         request.resource.data.user_id == request.auth.uid ||
+         isSuperAdmin());
       
       // Atualização: admin da empresa ou próprio funcionário (campos limitados)
       allow update: if isAuthenticated() && 
@@ -197,8 +198,9 @@ service cloud.firestore {
       
       // Criação: apenas admin da empresa
       allow create: if isAuthenticated() && 
-        isCompanyAdmin(request.resource.data.company_id) &&
-        request.resource.data.invited_by == request.auth.uid;
+        ((isCompanyAdmin(request.resource.data.company_id) && 
+          request.resource.data.invited_by == request.auth.uid) || 
+         isSuperAdmin());
       
       // Atualização: admin da empresa ou usuário aceitando convite
       allow update: if isAuthenticated() && 

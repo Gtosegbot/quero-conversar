@@ -11,6 +11,14 @@ const Payment: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check Authentication
+    const userString = localStorage.getItem('user');
+    if (!userString) {
+      sessionStorage.setItem('redirectAfterLogin', '/payment');
+      navigate('/login');
+      return;
+    }
+
     // Get payment data from sessionStorage
     const pendingPayment = sessionStorage.getItem('pendingPayment');
     if (pendingPayment) {

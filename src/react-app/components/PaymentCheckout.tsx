@@ -79,8 +79,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
         paymentMethod: selectedMethod,
         status: selectedMethod === 'pix' ? 'pending' : 'completed', // Card simulated as instant success
         createdAt: serverTimestamp(),
-        userId: JSON.parse(localStorage.getItem('user') || '{}').uid || 'anonymous',
-        userEmail: JSON.parse(localStorage.getItem('user') || '{}').email || 'anonymous',
+        userId: JSON.parse(localStorage.getItem('user') || '{}').uid,
+        userEmail: JSON.parse(localStorage.getItem('user') || '{}').email,
         cardDetails: selectedMethod === 'card' ? {
           last4: cardData.number.slice(-4),
           brand: 'mastercard' // Simulated
