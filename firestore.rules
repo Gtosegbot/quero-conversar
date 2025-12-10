@@ -146,17 +146,23 @@ service cloud.firestore {
     // ============================================
     
     match /companies/{companyId} {
-      // Leitura: apenas membros da empresa ou admin
+      // Leitura: membros da empresa, admins listados no array 'admins', ou super admin
       allow read: if isAuthenticated() && 
-        (belongsToCompany(companyId) || isSuperAdmin());
+        (belongsToCompany(companyId) || 
+         resource.data.admins.hasAny([request.auth.uid]) ||
+         resource.data.owner_id == request.auth.uid ||
+         isSuperAdmin());
       
-      // Criação: qualquer usuário autenticado (wizard de setup)
+      // Criação: qualquer usuário autenticado (wizard de setup ou self-healing)
       allow create: if isAuthenticated() && 
-        request.resource.data.admin_uid == request.auth.uid;
+        (request.resource.data.owner_id == request.auth.uid || 
+         request.resource.data.admin_uid == request.auth.uid);
       
       // Atualização: apenas admin da empresa ou super admin
       allow update: if isAuthenticated() && 
-        (isCompanyAdmin(companyId) || isSuperAdmin());
+        (isCompanyAdmin(companyId) || 
+         resource.data.admins.hasAny([request.auth.uid]) ||
+         isSuperAdmin());
       
       // Deleção: apenas super admin
       allow delete: if isSuperAdmin();
