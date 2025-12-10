@@ -40,10 +40,12 @@ const Payment: React.FC = () => {
     if (paymentData?.type === 'subscription') {
       localStorage.setItem('userPlan', paymentData.planId);
 
-      // In a real app, you'd make an API call to update the user's plan
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 3000);
+      // Only auto-redirect if NOT Pix (Pix requires manual confirmation or scanning)
+      if (result.method !== 'pix') {
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 3000);
+      }
     }
   };
 

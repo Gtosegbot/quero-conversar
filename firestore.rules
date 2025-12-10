@@ -218,7 +218,10 @@ service cloud.firestore {
     // ============================================
     
     match /employee_invites/{inviteId} {
-      allow read: if isAuthenticated();
+      // Allows anyone to read a specific invite if they have the ID (link)
+      // This is necessary for the InviteAccept page to show details before login
+      allow get: if true;
+      allow list: if isAuthenticated();
       
       // Criação: Simplificada para garantir que invite funcione se autenticado e tiver company_id
       allow create: if isAuthenticated() && 
@@ -443,8 +446,6 @@ service cloud.firestore {
       // Apenas admin
       allow read, write: if isSuperAdmin();
     }
-  }
-}
     // ============================================
     // AGENDAMENTOS 1-on-1
     // ============================================
@@ -456,3 +457,5 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() && 
         (resource.data.managerId == request.auth.uid || isSuperAdmin());
     }
+  }
+}

@@ -81,7 +81,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
 
     } catch (err: any) {
       console.error('Auth error:', err);
-      setError('Erro ao conectar com Google. Tente novamente.');
+      setError(`Erro Google: ${err.code || err.message || 'Falha na conexão'}`);
     } finally {
       setIsLoading(false);
     }
