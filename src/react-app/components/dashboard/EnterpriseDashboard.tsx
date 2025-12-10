@@ -38,10 +38,12 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
         if (!inviteEmail) return;
         setInviting(true);
         try {
-            await addDoc(collection(db, 'company_invites'), {
-                companyId: user.uid,
+            await addDoc(collection(db, 'employee_invites'), {
+                company_id: user.uid,
                 email: inviteEmail,
                 status: 'pending',
+                invited_by: user.uid,
+                invited_at: serverTimestamp(),
                 createdAt: serverTimestamp()
             });
             alert(`Convite enviado para ${inviteEmail}`);
