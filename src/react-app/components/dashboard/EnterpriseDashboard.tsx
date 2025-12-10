@@ -5,7 +5,7 @@ import {
     AlertCircle, CheckCircle, Activity, Smile, X, Upload
 } from 'lucide-react';
 import { db } from '../../../firebase-config';
-import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import Feedback360 from './Feedback360';
 import OneOnOneScheduler from './OneOnOneScheduler';
 import ProductivityDashboard from './ProductivityDashboard';
@@ -31,12 +31,48 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
         const fetchCompanyId = async () => {
             if (user?.uid) {
                 try {
-                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    const userRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userRef);
+
                     if (userDoc.exists()) {
-                        setCompanyId(userDoc.data().company_id);
+                        const userData = userDoc.data();
+                        if (userData.company_id) {
+                            setCompanyId(userData.company_id);
+                        } else {
+                            // Self-healing: User has no company_id
+                            console.log("User missing company_id. Attempting self-healing...");
+
+                            // 1. Check if user owns a company but link is missing
+                            const companiesRef = collection(db, 'companies');
+                            const q = query(companiesRef, where('admins', 'array-contains', user.uid));
+                            const querySnapshot = await getDocs(q);
+
+                            if (!querySnapshot.empty) {
+                                // Found existing company, link it
+                                const existingCompanyId = querySnapshot.docs[0].id;
+                                await updateDoc(userRef, { company_id: existingCompanyId });
+                                setCompanyId(existingCompanyId);
+                                console.log("Recovered company_id from existing company:", existingCompanyId);
+                            } else {
+                                // 2. No company found, create one
+                                console.log("No company found. Creating new company...");
+                                const newCompanyData = {
+                                    name: `${user.displayName || 'Minha'} Empresa`, // Default name
+                                    owner_id: user.uid,
+                                    admins: [user.uid],
+                                    plan: 'enterprise_trial',
+                                    createdAt: serverTimestamp(),
+                                    status: 'active'
+                                };
+                                const newCompanyRef = await addDoc(collection(db, 'companies'), newCompanyData);
+                                await updateDoc(userRef, { company_id: newCompanyRef.id });
+                                setCompanyId(newCompanyRef.id);
+                                console.log("Created new company and linked:", newCompanyRef.id);
+                            }
+                        }
                     }
                 } catch (error) {
-                    console.error("Error fetching company ID:", error);
+                    console.error("Error fetching/healing company ID:", error);
                 }
             }
         };
