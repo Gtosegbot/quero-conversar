@@ -145,7 +145,8 @@ const EnterpriseEmployees: React.FC = () => {
                             </button>
                             <button
                                 onClick={() => setShowInviteModal(true)}
-                                className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700"
+                                disabled={!companyId}
+                                className={`flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 ${!companyId ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <UserPlus className="w-5 h-5 mr-2" />
                                 Convidar Funcionário
@@ -299,9 +300,9 @@ const EnterpriseEmployees: React.FC = () => {
                 </div>
 
                 {/* Invite Modal */}
-                {showInviteModal && (
+                {showInviteModal && companyId && (
                     <InviteModal
-                        companyId={companyId!}
+                        companyId={companyId}
                         onClose={() => setShowInviteModal(false)}
                     />
                 )}

@@ -54,7 +54,15 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
 
     const handleInvite = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inviteEmail || !companyId) return;
+        if (!inviteEmail) {
+            alert("Por favor, insira um email.");
+            return;
+        }
+        if (!companyId) {
+            alert("Erro: ID da empresa não encontrado. Entre em contato com o suporte.");
+            console.error("Company ID is missing for user:", user.uid);
+            return;
+        }
         setInviting(true);
         try {
             await addDoc(collection(db, 'employee_invites'), {
@@ -218,12 +226,21 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                     <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between">
                         <div>
                             <h4 className="text-lg font-semibold text-blue-900 mb-2">Personalize seus Treinamentos</h4>
-                            <button
-                                onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                            >
-                                Falar com Consultor
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                                >
+                                    Falar com Consultor
+                                </button>
+                                <button
+                                    onClick={() => setShowContentUpload(true)}
+                                    className="px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-medium flex items-center"
+                                >
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Upload de Conteúdo
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
