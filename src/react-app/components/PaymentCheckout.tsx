@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard, DollarSign, CheckCircle, AlertCircle, Shield } from 'lucide-react';
 import PulsingHeart from './PulsingHeart';
-import { db } from '../../firebase-config';
+import { db, auth } from '../../firebase-config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 interface PaymentCheckoutProps {
@@ -79,13 +79,17 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
         paymentMethod: selectedMethod,
         status: selectedMethod === 'pix' ? 'pending' : 'completed', // Card simulated as instant success
         createdAt: serverTimestamp(),
-        userId: JSON.parse(localStorage.getItem('user') || '{}').uid,
-        userEmail: JSON.parse(localStorage.getItem('user') || '{}').email,
+        userId: auth.currentUser?.uid || JSON.parse(localStorage.getItem('user') || '{}').uid,
+        userEmail: auth.currentUser?.email || JSON.parse(localStorage.getItem('user') || '{}').email,
         cardDetails: selectedMethod === 'card' ? {
           last4: cardData.number.slice(-4),
           brand: 'mastercard' // Simulated
         } : null
       };
+
+      if (!paymentData.userId) {
+        throw new Error("Usuário não autenticado. Por favor, faça login novamente.");
+      }
 
       const docRef = await addDoc(collection(db, 'payments'), paymentData);
 
