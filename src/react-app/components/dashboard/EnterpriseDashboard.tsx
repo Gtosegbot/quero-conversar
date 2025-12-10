@@ -414,88 +414,89 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                                 <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6 flex flex-col md:flex-row items-center justify-between">
                                     <div>
                                         <h4 className="text-lg font-semibold text-blue-900 mb-2">Personalize seus Treinamentos</h4>
-                                        onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                            >
-                                        Falar com Consultor
-                                    </button>
-                                </div>
-                            </div>
-                </div>
-                )
-            }
-
-            {activeTab === 'productivity' && companyId && <ProductivityDashboard teamId={companyId} />}
-            {activeTab === 'feedback' && companyId && <Feedback360 companyId={companyId} />}
-            {activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} />}
-
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
-                    <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
-                    Dica de Gestão
-                </h4>
-                <p className="text-gray-700 text-sm">
-                    Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
-                </p>
-            </div>
-
-            {/* Settings Modal */}
-            {
-                showSettings && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
-                                <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
-                                    <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
-                                    <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
-                                    <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
-                                        Enterprise Bulk
+                                        <button
+                                            onClick={() => window.open('https://wa.me/5511913608217', '_blank')}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                                        >
+                                            Falar com Consultor
+                                        </button>
                                     </div>
                                 </div>
-                                <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
-                                    Salvar Alterações
-                                </button>
                             </div>
+                        )
+                        }
+
+                        {activeTab === 'productivity' && companyId && <ProductivityDashboard teamId={companyId} />}
+                        {activeTab === 'feedback' && companyId && <Feedback360 companyId={companyId} />}
+                        {activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} />}
+
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                            <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                                <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
+                                Dica de Gestão
+                            </h4>
+                            <p className="text-gray-700 text-sm">
+                                Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
+                            </p>
                         </div>
-                    </div>
-                )
-            }
 
-            {/* Enterprise Docs Modal */}
-            <EnterpriseDocsModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
-            {/* Real Reports Modal */}
-            {
-                activeTab === 'reports' && companyId && (
-                    <div className="fixed inset-0 z-40">
-                        <EnterpriseReports companyId={companyId} onClose={() => setActiveTab('overview')} />
-                    </div>
-                )
-            }
+                        {/* Settings Modal */}
+                        {
+                            showSettings && (
+                                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
+                                            <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
+                                                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
+                                                <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
+                                                <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
+                                                    Enterprise Bulk
+                                                </div>
+                                            </div>
+                                            <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                                Salvar Alterações
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        }
 
-            {/* Content Upload Modal */}
-            {
-                showContentUpload && companyId && (
-                    <ContentUploadForm
-                        companyId={companyId}
-                        onClose={() => setShowContentUpload(false)}
-                    />
-                )
-            }
-        </div >
-    );
+                        {/* Enterprise Docs Modal */}
+                        <EnterpriseDocsModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
+                        {/* Real Reports Modal */}
+                        {
+                            activeTab === 'reports' && companyId && (
+                                <div className="fixed inset-0 z-40">
+                                    <EnterpriseReports companyId={companyId} onClose={() => setActiveTab('overview')} />
+                                </div>
+                            )
+                        }
+
+                        {/* Content Upload Modal */}
+                        {
+                            showContentUpload && companyId && (
+                                <ContentUploadForm
+                                    companyId={companyId}
+                                    onClose={() => setShowContentUpload(false)}
+                                />
+                            )
+                        }
+                    </div >
+                );
 };
 
-export default EnterpriseDashboard;
+            export default EnterpriseDashboard;
