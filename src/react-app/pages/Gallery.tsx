@@ -219,12 +219,12 @@ const Gallery: React.FC = () => {
                                 </div>
 
                                 <div className="bg-gray-100 p-3 rounded-lg flex justify-between items-center text-sm font-mono text-gray-800">
-                                    <span>pix@queroconversar.com.br</span>
-                                    <span className="text-xs text-gray-500">(Chave Corporativa)</span>
+                                    <span>ff576050-99a7-4158-b4ea-1eb0db3098ac</span>
+                                    <span className="text-xs text-gray-500">(Chave Aleatória)</span>
                                 </div>
 
                                 <a
-                                    href={`https://wa.me/5511913608217?text=Olá, gostaria de confirmar o pagamento do curso: ${selectedProduct.title}`}
+                                    href={`https://wa.me/5511951947025?text=Olá, gostaria de confirmar o pagamento do curso: ${selectedProduct.title}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block w-full bg-green-600 text-white text-center py-3 rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center justify-center"

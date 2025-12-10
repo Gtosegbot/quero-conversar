@@ -105,7 +105,7 @@ const Plans: React.FC = () => {
       const message = encodeURIComponent(
         'Olá! Tenho interesse no Plano Enterprise da Quero Conversar. Gostaria de saber mais sobre as soluções corporativas.'
       );
-      window.open(`https://wa.me/5511913608217?text=${message}`, '_blank');
+      window.open(`https://wa.me/5511951947025?text=${message}`, '_blank');
       return;
     }
 

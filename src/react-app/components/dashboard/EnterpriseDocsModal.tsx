@@ -239,8 +239,8 @@ const EnterpriseDocsModal: React.FC<EnterpriseDocsModalProps> = ({ isOpen, onClo
                             <a href="mailto:enterprise@queroconversar.com.br" className="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100">
                                 Falar com Especialista
                             </a>
-                            <a href="https://wa.me/5511913608217" target="_blank" rel="noopener noreferrer" className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600">
-                                WhatsApp: (11) 91360-8217
+                            <a href="https://wa.me/5511951947025" target="_blank" rel="noopener noreferrer" className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-600">
+                                WhatsApp: (11) 95194-7025
                             </a>
                         </div>
                     </div>

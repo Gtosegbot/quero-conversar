@@ -337,8 +337,10 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ onClose, onUploadCo
     youtube_url: '',
     is_premium: false,
     duration_minutes: 0,
+    thumbnail_url: '',
   });
   const [file, setFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const categories = [
@@ -366,6 +368,21 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ onClose, onUploadCo
         downloadUrl = await getDownloadURL(storageRef);
       }
 
+      // 1b. Upload Thumbnail if applicable
+      let thumbnailUrl = formData.thumbnail_url;
+      if (thumbnailFile) {
+        const thumbPath = `thumbnails/${professionalId || 'admin'}/${Date.now()}_${thumbnailFile.name}`;
+        const thumbRef = ref(storage, thumbPath);
+        await uploadBytes(thumbRef, thumbnailFile);
+        thumbnailUrl = await getDownloadURL(thumbRef);
+      } else if (videoType === 'youtube' && formData.youtube_url && !thumbnailUrl) {
+        // Auto-extract YouTube thumbnail
+        const videoIdMatch = formData.youtube_url.match(/(?:youtu\.be\/|youtube\.com\/.*v=)([^&]+)/);
+        if (videoIdMatch && videoIdMatch[1]) {
+          thumbnailUrl = `https://img.youtube.com/vi/${videoIdMatch[1]}/maxresdefault.jpg`;
+        }
+      }
+
       // 2. Save to Firestore
       await addDoc(collection(db, 'videos'), {
         title: formData.title,
@@ -375,6 +392,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ onClose, onUploadCo
         is_premium: formData.is_premium,
         youtube_url: formData.youtube_url,
         url: downloadUrl,
+        thumbnail_url: thumbnailUrl,
         duration_minutes: formData.duration_minutes,
         professionalId: professionalId,
         professional_name: 'Você', // Should fetch real name
@@ -512,6 +530,22 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ onClose, onUploadCo
                 />
               </div>
             )}
+
+            {/* Thumbnail Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Capa do Vídeo (Thumbnail)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setThumbnailFile(e.target.files?.[0] || null)}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {videoType === 'youtube' ? 'Se não enviar, tentaremos pegar a capa do YouTube automaticamente.' : 'Opcional. Se não enviar, será exibido um ícone padrão.'}
+              </p>
+            </div>
 
             {/* Duration */}
             <div>

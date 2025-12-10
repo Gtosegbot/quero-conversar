@@ -309,10 +309,7 @@ const Chat: React.FC = () => {
             <div className="ml-3">
               <h1 className="text-xl font-bold text-gray-900">Dra. Clara Mendes</h1>
               <p className="text-sm text-gray-600">Sua psicóloga virtual empática</p>
-              {/* DEBUG INFO */}
-              <p className="text-xs text-red-500 font-mono mt-1">
-                DEBUG: User {auth.currentUser?.uid?.slice(0, 6)}... | Chat {conversationId?.slice(0, 6)}...
-              </p>
+
             </div>
           </div>
 

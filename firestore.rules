@@ -385,6 +385,18 @@ service cloud.firestore {
     }
 
     // ============================================
+    // VÍDEOS (Biblioteca)
+    // ============================================
+
+    match /videos/{videoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        (request.resource.data.professionalId == request.auth.uid || isSuperAdmin());
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.professionalId == request.auth.uid || isSuperAdmin());
+    }
+
+    // ============================================
     // DOCUMENTOS (Uploads de usuários/profissionais)
     // ============================================
 
@@ -409,7 +421,7 @@ service cloud.firestore {
     // RELATÓRIOS
     // ============================================
     
-    match /reports/{reportId} {
+    match /moderation_reports/{reportId} {
       // Apenas admin
       allow read, write: if isSuperAdmin();
     }

@@ -29,21 +29,54 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ user, role, isM
 
         const loadFinancials = async () => {
             try {
-                // Mocking transactions for now as we don't have a real payment flow yet
-                // In production, this would query the 'transactions' collection
-                const mockTransactions: Transaction[] = [
-                    { id: '1', amount: 150.00, date: new Date(), description: 'Consulta - Maria Silva', status: 'completed' },
-                    { id: '2', amount: 150.00, date: new Date(Date.now() - 86400000), description: 'Consulta - João Santos', status: 'completed' },
-                    { id: '3', amount: 150.00, date: new Date(Date.now() - 172800000), description: 'Consulta - Ana Costa', status: 'pending' },
-                ];
+                // Query payments where the user is the recipient (Professional or Partner)
+                // We assume the user ID matches professionalId or partnerId in the payment record
+                const paymentsRef = collection(db, 'payments');
 
-                setTransactions(mockTransactions);
+                // Construct query based on role
+                let q;
+                if (role === 'professional') {
+                    q = query(paymentsRef, where('professionalId', '==', user.uid), orderBy('createdAt', 'desc'));
+                } else if (role === 'partner') {
+                    q = query(paymentsRef, where('partnerId', '==', user.uid), orderBy('createdAt', 'desc'));
+                } else if (isModerator) {
+                    // Moderators might see everything or specific commission? 
+                    // For now, let's assuming they act as professional/partner or we query by modId if it exists?
+                    // Falling back to a safe query or empty if not professional/partner
+                    q = query(paymentsRef, where('professionalName', '==', user.name || ''), orderBy('createdAt', 'desc')); // Fallback
+                } else {
+                    // Default: filter by receiver ID (generic)
+                    q = query(paymentsRef, where('recipientId', '==', user.uid), orderBy('createdAt', 'desc'));
+                }
+
+                // If no specific role logic matches, we might want to try querying by professionalId anyway just in case
+                if (!q) {
+                    q = query(paymentsRef, where('professionalId', '==', user.uid), orderBy('createdAt', 'desc'));
+                }
+
+                // For admin/dev purposes (if user wants to see ALL for testing):
+                // q = query(paymentsRef, orderBy('createdAt', 'desc')); // UNCOMMENT TO SEE ALL TRANSACTIONS DURING TEST
+
+                const snapshot = await getDocs(q);
+
+                const loadedTransactions: Transaction[] = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        amount: data.amount,
+                        date: data.createdAt?.toDate() || new Date(),
+                        description: data.description || 'Transação',
+                        status: data.status
+                    };
+                });
+
+                setTransactions(loadedTransactions);
 
                 // Calculate Totals based on Split Logic
                 let total = 0;
                 let pending = 0;
 
-                mockTransactions.forEach(t => {
+                loadedTransactions.forEach(t => {
                     const split = calculateSplit(t.amount, role, isModerator);
                     if (t.status === 'completed') {
                         total += split.userAmount;
@@ -57,6 +90,8 @@ const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ user, role, isM
                 setIsLoading(false);
             } catch (error) {
                 console.error("Error loading financials:", error);
+                // Fallback to empty to avoid crashing if query fails (e.g. missing index)
+                setTransactions([]);
                 setIsLoading(false);
             }
         };

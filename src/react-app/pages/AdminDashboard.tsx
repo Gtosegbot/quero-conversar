@@ -317,7 +317,7 @@ const AdminDashboard: React.FC = () => {
   const notificationsRef = collection(db, 'notifications');
   const usersRef = collection(db, 'users');
   const appointmentsRef = collection(db, 'appointments');
-  const reportsRef = collection(db, 'reports');
+  const reportsRef = collection(db, 'moderation_reports');
 
   useEffect(() => {
     loadAdminStats();
@@ -819,7 +819,7 @@ const AdminDashboard: React.FC = () => {
 
             {/* Quick Actions Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => setActiveTab('moderation')}>
+              <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/moderation')}>
                 <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
                   <Shield className="w-6 h-6 text-red-600" />
                 </div>
@@ -1099,7 +1099,14 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
             <Shield className="w-16 h-16 text-purple-200 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Central de Moderação</h2>
-            <p className="text-gray-600">Funcionalidade em desenvolvimento.</p>
+            <p className="text-gray-600 mb-6">Acesse o painel completo de moderação.</p>
+            <button
+              onClick={() => navigate('/moderation')}
+              className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+            >
+              Acessar Moderação
+              <ExternalLink className="w-4 h-4 ml-2" />
+            </button>
           </div>
         )}
 

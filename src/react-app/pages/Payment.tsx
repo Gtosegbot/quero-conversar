@@ -170,6 +170,8 @@ const Payment: React.FC = () => {
           planName={paymentData.planName}
           billingCycle={paymentData.billingCycle}
           professionalName={paymentData.professionalName}
+          professionalId={paymentData.professionalId}
+          partnerId={paymentData.partnerId}
           appointmentDate={paymentData.appointmentDate}
           onSuccess={handlePaymentSuccess}
           onCancel={handleCancel}

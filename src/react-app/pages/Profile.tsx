@@ -578,7 +578,7 @@ const Profile: React.FC = () => {
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Suporte</h3>
                 <div className="space-y-3">
                   <a
-                    href="https://wa.me/5511913608217"
+                    href="https://wa.me/5511951947025"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-center font-medium"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Video, Plus, Trash2 } from 'lucide-react';
-import { collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase-config';
 
 interface VideoContent {
@@ -10,7 +10,7 @@ interface VideoContent {
     description: string;
     url: string;
     category: string;
-    createdAt: any;
+    created_at: any;
 }
 
 const AdminVideos: React.FC = () => {
@@ -33,10 +33,15 @@ const AdminVideos: React.FC = () => {
             const videosRef = collection(db, 'videos');
             const snapshot = await getDocs(videosRef);
 
-            const videosData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as VideoContent));
+            const videosData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    // Handle both field names for compatibility
+                    created_at: data.created_at || data.createdAt
+                } as VideoContent;
+            });
 
             setVideos(videosData);
         } catch (error) {
@@ -52,7 +57,11 @@ const AdminVideos: React.FC = () => {
             const videosRef = collection(db, 'videos');
             await addDoc(videosRef, {
                 ...newVideo,
-                createdAt: new Date()
+                video_type: 'youtube', // Default to youtube for admin simplified interface
+                view_count: 0,
+                rating: 0,
+                is_premium: false,
+                created_at: serverTimestamp() // Correct field name for ordering
             });
 
             setNewVideo({ title: '', description: '', url: '', category: 'professional' });

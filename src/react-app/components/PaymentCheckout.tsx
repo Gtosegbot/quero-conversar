@@ -11,6 +11,8 @@ interface PaymentCheckoutProps {
   planName?: string;
   billingCycle?: 'monthly' | 'yearly';
   professionalName?: string;
+  professionalId?: string;
+  partnerId?: string;
   appointmentDate?: string;
   onSuccess: (data: any) => void;
   onCancel: () => void;
@@ -23,6 +25,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
   planName,
   billingCycle,
   professionalName,
+  professionalId,
+  partnerId,
   appointmentDate,
   onSuccess,
   onCancel,
@@ -69,6 +73,8 @@ const PaymentCheckout: React.FC<PaymentCheckoutProps> = ({
         planName: planName || null,
         billingCycle: billingCycle || null,
         professionalName: professionalName || null,
+        professionalId: professionalId || null,
+        partnerId: partnerId || null,
         appointmentDate: appointmentDate || null,
         paymentMethod: selectedMethod,
         status: selectedMethod === 'pix' ? 'pending' : 'completed', // Card simulated as instant success
