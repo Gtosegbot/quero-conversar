@@ -327,7 +327,7 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
 
             {activeTab === 'productivity' && companyId && <ProductivityDashboard teamId={companyId} />}
             {activeTab === 'feedback' && companyId && <Feedback360 companyId={companyId} />}
-            {activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} />}
+            {activeTab === 'meetings' && companyId && <OneOnOneScheduler managerId={user.uid} companyId={companyId} />}
 
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
                 <h4 className="font-semibold text-gray-900 mb-2 flex items-center">

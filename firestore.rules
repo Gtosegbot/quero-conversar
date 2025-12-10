@@ -445,3 +445,14 @@ service cloud.firestore {
     }
   }
 }
+    // ============================================
+    // AGENDAMENTOS 1-on-1
+    // ============================================
+
+    match /one_on_one_sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      // Only manager or admin can update/delete
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.managerId == request.auth.uid || isSuperAdmin());
+    }

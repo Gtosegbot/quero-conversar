@@ -5,54 +5,20 @@ import { collection, query, where, getDocs, addDoc, onSnapshot, orderBy, serverT
 
 interface OneOnOneSchedulerProps {
     managerId: string;
+    companyId: string;
 }
 
-interface Employee {
-    id: string;
-    userId: string;
-    name: string;
-    email: string;
-    role: string;
-}
+// ... existing interfaces ...
 
-interface Session {
-    id: string;
-    employeeId: string;
-    employeeName: string;
-    managerId: string;
-    date: string;
-    time: string;
-    type: 'video' | 'presencial';
-    agenda: string;
-    status: 'scheduled' | 'completed' | 'cancelled';
-    meetLink?: string;
-    googleCalendarUrl?: string;
-}
-
-const OneOnOneScheduler: React.FC<OneOnOneSchedulerProps> = ({ managerId }) => {
-    const [employees, setEmployees] = useState<Employee[]>([]);
-    const [sessions, setSessions] = useState<Session[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-
-    // Form State
-    const [meeting, setMeeting] = useState({
-        employeeId: '',
-        date: '',
-        time: '',
-        type: 'video' as 'video' | 'presencial',
-        agenda: ''
-    });
+const OneOnOneScheduler: React.FC<OneOnOneSchedulerProps> = ({ managerId, companyId }) => {
+    // ... state ...
 
     // Load Data
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // 1. Fetch Employees
-                // Note: In a real app we might paginate or search. Here fetching all for the company/manager.
-                // Assuming managerId is the companyId or we query by company_id if manager is admin
-                // For simplicity, let's query company_employees where company_id == managerId
-                const empQuery = query(collection(db, 'company_employees'), where('company_id', '==', managerId));
+                // 1. Fetch Employees using companyId
+                const empQuery = query(collection(db, 'company_employees'), where('company_id', '==', companyId));
                 const empSnap = await getDocs(empQuery);
                 const empList = empSnap.docs.map(doc => ({
                     id: doc.id,
@@ -60,11 +26,11 @@ const OneOnOneScheduler: React.FC<OneOnOneSchedulerProps> = ({ managerId }) => {
                 })) as Employee[];
                 setEmployees(empList);
 
-                // 2. Listen to Sessions
+                // 2. Listen to Sessions using managerId
                 const sessionQuery = query(
                     collection(db, 'one_on_one_sessions'),
                     where('managerId', '==', managerId),
-                    orderBy('date', 'asc') // Requires index? If error, fallback to client sort
+                    orderBy('date', 'asc')
                 );
 
                 const unsubscribe = onSnapshot(sessionQuery, (snapshot) => {

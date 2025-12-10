@@ -199,7 +199,16 @@ const EnterpriseEmployees: React.FC = () => {
                                     <div>
                                         <p className="font-medium text-gray-900">{invite.email}</p>
                                         <p className="text-sm text-gray-600">
-                                            Convidado em {new Date(invite.invited_at).toLocaleDateString('pt-BR')}
+                                            Convidado em {(() => {
+                                                const date = invite.invited_at;
+                                                if (!date) return '-';
+                                                // Handle Firestore Timestamp
+                                                if (typeof date === 'object' && 'toDate' in date) {
+                                                    return (date as any).toDate().toLocaleDateString('pt-BR');
+                                                }
+                                                // Handle Date string or number
+                                                return new Date(date).toLocaleDateString('pt-BR');
+                                            })()}
                                         </p>
                                     </div>
                                     <div className="flex space-x-2">
