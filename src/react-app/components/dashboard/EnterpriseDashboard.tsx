@@ -138,111 +138,117 @@ const EnterpriseDashboard: React.FC<EnterpriseDashboardProps> = ({ user }) => {
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-600"
                                     required
                                 />
-                            </div>
-                            <button type="submit" disabled={inviting} className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50">
-                                {inviting ? 'Enviando...' : 'Enviar Convite'}
-                            </button>
-                            <BookOpen className="w-5 h-5 text-blue-600 mr-2" />
-                            Programas de Treinamento
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {[
-                                { name: 'Gestão de Estresse', modules: 8, hours: 4, progress: 65, enrolled: 42, active: true },
-                                { name: 'Comunicação Efetiva', modules: 6, hours: 3, progress: 82, enrolled: 38, active: true },
-                                { name: 'Mindfulness no Trabalho', modules: 5, hours: 2.5, interest: 28, active: false },
-                                { name: 'Equilíbrio Vida-Trabalho', modules: 7, hours: 3.5, interest: 35, active: false }
-                            ].map((program, idx) => (
-                                <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div>
-                                            <h4 className="font-semibold text-gray-900">{program.name}</h4>
-                                            <p className="text-sm text-gray-500">{program.modules} módulos • {program.hours}h de conteúdo</p>
-                                        </div>
-                                        <span className={`px-2 py-1 ${program.active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} text-xs rounded`}>
-                                            {program.active ? 'Ativo' : 'Em breve'}
-                                        </span>
-                                    </div>
-                                    {program.active && (
-                                        <>
-                                            <div className="mb-3">
-                                                <div className="flex justify-between text-sm mb-1">
-                                                    <span className="text-gray-600">Progresso da equipe</span>
-                                                    <span className="font-medium">{program.progress}%</span>
-                                                </div>
-                                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${program.progress}%` }}></div>
-                                                </div>
-                                            </div>
-                                            <p className="text-sm text-gray-600">{program.enrolled} colaboradores inscritos</p>
-                                        </>
-                                    )}
-                                    {!program.active && <p className="text-sm text-gray-600">{program.interest} pessoas interessadas</p>}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                            </>
             )}
 
-                    {activeTab === 'productivity' && <ProductivityDashboard teamId={user.uid} />}
-                    {activeTab === 'feedback' && <Feedback360 companyId={user.uid} />}
-                    {activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} />}
-
-
-
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-                        <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
-                            <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
-                            Dica de Gestão
-                        </h4>
-                        <p className="text-gray-700 text-sm">
-                            Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
-                        </p>
-                    </div>
-
-                    {/* Settings Modal */}
-                    {showSettings && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
-                                    <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
-                                        <X className="w-5 h-5" />
-                                    </button>
+                            {activeTab === 'team' && (
+                                <div className="rounded-xl overflow-hidden -m-1">
+                                    <EnterpriseEmployees />
                                 </div>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
-                                        <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
+                            )}
+
+                            {activeTab === 'development' && (
+                                <div className="bg-white rounded-xl shadow-md p-6">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                                        <BookOpen className="w-5 h-5 text-blue-600 mr-2" />
+                                        Programas de Treinamento
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {[
+                                            { name: 'Gestão de Estresse', modules: 8, hours: 4, progress: 65, enrolled: 42, active: true },
+                                            { name: 'Comunicação Efetiva', modules: 6, hours: 3, progress: 82, enrolled: 38, active: true },
+                                            { name: 'Mindfulness no Trabalho', modules: 5, hours: 2.5, interest: 28, active: false },
+                                            { name: 'Equilíbrio Vida-Trabalho', modules: 7, hours: 3.5, interest: 35, active: false }
+                                        ].map((program, idx) => (
+                                            <div key={idx} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div>
+                                                        <h4 className="font-semibold text-gray-900">{program.name}</h4>
+                                                        <p className="text-sm text-gray-500">{program.modules} módulos • {program.hours}h de conteúdo</p>
+                                                    </div>
+                                                    <span className={`px-2 py-1 ${program.active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} text-xs rounded`}>
+                                                        {program.active ? 'Ativo' : 'Em breve'}
+                                                    </span>
+                                                </div>
+                                                {program.active && (
+                                                    <>
+                                                        <div className="mb-3">
+                                                            <div className="flex justify-between text-sm mb-1">
+                                                                <span className="text-gray-600">Progresso da equipe</span>
+                                                                <span className="font-medium">{program.progress}%</span>
+                                                            </div>
+                                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                                                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${program.progress}%` }}></div>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-sm text-gray-600">{program.enrolled} colaboradores inscritos</p>
+                                                    </>
+                                                )}
+                                                {!program.active && <p className="text-sm text-gray-600">{program.interest} pessoas interessadas</p>}
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
-                                        <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
-                                        <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
-                                            Enterprise Bulk
+                                </div>
+                            )}
+
+                            {activeTab === 'productivity' && <ProductivityDashboard teamId={user.uid} />}
+                            {activeTab === 'feedback' && <Feedback360 companyId={user.uid} />}
+                            {activeTab === 'meetings' && <OneOnOneScheduler managerId={user.uid} />}
+
+                            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                                <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                                    <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
+                                    Dica de Gestão
+                                </h4>
+                                <p className="text-gray-700 text-sm">
+                                    Incentive sua equipe a completar o check-in diário de humor. Equipes que monitoram o bem-estar têm 40% menos turnover e 35% mais produtividade.
+                                </p>
+                            </div>
+
+                            {/* Settings Modal */}
+                            {showSettings && (
+                                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="text-xl font-bold text-gray-900">Configurações</h3>
+                                            <button onClick={() => setShowSettings(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Nome da Empresa</label>
+                                                <input type="text" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.displayName || 'Minha Empresa'} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Email de Contato</label>
+                                                <input type="email" className="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder={user.email} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Plano Atual</label>
+                                                <div className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold">
+                                                    Enterprise Bulk
+                                                </div>
+                                            </div>
+                                            <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                                Salvar Alterações
+                                            </button>
                                         </div>
                                     </div>
-                                    <button className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
-                                        Salvar Alterações
-                                    </button>
                                 </div>
-                            </div>
-                        </div>
-                    )}
+                            )}
 
-                    {/* Enterprise Docs Modal */}
-                    <EnterpriseDocsModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
+                            {/* Enterprise Docs Modal */}
+                            <EnterpriseDocsModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
 
-                    {/* Real Reports Modal */}
-                    {activeTab === 'reports' && (
-                        <div className="fixed inset-0 z-40">
-                            <EnterpriseReports companyId={user.uid} onClose={() => setActiveTab('overview')} />
-                        </div>
-                    )}
-                </div>
-            );
+                            {/* Real Reports Modal */}
+                            {activeTab === 'reports' && (
+                                <div className="fixed inset-0 z-40">
+                                    <EnterpriseReports companyId={user.uid} onClose={() => setActiveTab('overview')} />
+                                </div>
+                            )}
+                    </div>
+                    );
 };
 
-            export default EnterpriseDashboard;
+                    export default EnterpriseDashboard;
