@@ -20,6 +20,7 @@ const EnterpriseEmployees: React.FC = () => {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [showCSVUpload, setShowCSVUpload] = useState(false);
+    const [actionMenu, setActionMenu] = useState<string | null>(null);
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -212,10 +213,35 @@ const EnterpriseEmployees: React.FC = () => {
                                         </p>
                                     </div>
                                     <div className="flex space-x-2">
-                                        <button className="text-blue-600 hover:text-blue-800 text-sm">
+                                        <button
+                                            onClick={async () => {
+                                                if (!confirm('Reenviar convite?')) return;
+                                                try {
+                                                    await updateDoc(doc(db, 'employee_invites', invite.id), {
+                                                        invited_at: serverTimestamp()
+                                                    });
+                                                    alert('Convite reenviado!');
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert('Erro ao reenviar.');
+                                                }
+                                            }}
+                                            className="text-blue-600 hover:text-blue-800 text-sm"
+                                        >
                                             Reenviar
                                         </button>
-                                        <button className="text-red-600 hover:text-red-800 text-sm">
+                                        <button
+                                            onClick={async () => {
+                                                if (!confirm('Cancelar convite?')) return;
+                                                try {
+                                                    await deleteDoc(doc(db, 'employee_invites', invite.id));
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert('Erro ao cancelar.');
+                                                }
+                                            }}
+                                            className="text-red-600 hover:text-red-800 text-sm"
+                                        >
                                             Cancelar
                                         </button>
                                     </div>
@@ -226,8 +252,8 @@ const EnterpriseEmployees: React.FC = () => {
                 )}
 
                 {/* Employees Table */}
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div className="overflow-x-auto">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden pb-12">
+                    <div className="overflow-x-auto overflow-y-visible">
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
@@ -282,10 +308,35 @@ const EnterpriseEmployees: React.FC = () => {
                                         <td className="px-6 py-4 text-gray-700">
                                             {new Date(employee.joined_at).toLocaleDateString('pt-BR')}
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="p-2 hover:bg-gray-100 rounded-lg">
+                                        <td className="px-6 py-4 text-right relative">
+                                            <button
+                                                onClick={() => setActionMenu(actionMenu === employee.id ? null : employee.id)}
+                                                className="p-2 hover:bg-gray-100 rounded-lg"
+                                            >
                                                 <MoreVertical className="w-5 h-5 text-gray-600" />
                                             </button>
+                                            {actionMenu === employee.id && (
+                                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-100">
+                                                    <div className="py-1">
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (!confirm('Remover funcionário?')) return;
+                                                                try {
+                                                                    await deleteDoc(doc(db, 'company_employees', employee.id));
+                                                                    setActionMenu(null);
+                                                                } catch (err) {
+                                                                    console.error(err);
+                                                                    alert('Erro ao remover.');
+                                                                }
+                                                            }}
+                                                            className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                        >
+                                                            <Trash2 className="w-4 h-4 mr-2" />
+                                                            Remover
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
