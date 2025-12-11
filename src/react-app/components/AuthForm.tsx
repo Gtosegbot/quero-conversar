@@ -27,12 +27,22 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       const user = result.user;
 
       // Check if user exists in Firestore
+      // Check if user exists in Firestore
       const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
+      console.log('Auth success. Checking Firestore user...', user.uid);
+
+      let userSnap;
+      try {
+        userSnap = await getDoc(userRef);
+      } catch (readErr) {
+        console.error('Error READING user doc:', readErr);
+        throw readErr;
+      }
 
       let userData;
 
       if (!userSnap.exists()) {
+        console.log('User not found. Creating new user doc...');
         // Check for referral code in URL
         const urlParams = new URLSearchParams(window.location.search);
         const referralId = urlParams.get('ref');
@@ -50,8 +60,14 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
           xp: 1,
           level: 1
         };
-        await setDoc(userRef, userData);
+        try {
+          await setDoc(userRef, userData);
+        } catch (writeErr) {
+          console.error('Error WRITING user doc:', writeErr);
+          throw writeErr;
+        }
       } else {
+        console.log('User found. Logging in...');
         userData = userSnap.data();
       }
 

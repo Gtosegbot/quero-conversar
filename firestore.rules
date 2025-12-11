@@ -11,16 +11,16 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return request.auth.token.admin == true;
+      return request.auth.token.get('admin', false) == true;
     }
     
     function isSuperAdmin() {
       return isAuthenticated() && 
-        (request.auth.token.email == 'gtosegbot@gmail.com' || 
-         request.auth.token.email == 'admgtoseg@gmail.com' || 
-         request.auth.token.email.matches('.*gtosegbot@.*') ||
-         request.auth.token.email.matches('.*admgtoseg@.*') ||
-         request.auth.token.email == 'disparoseguroback@gmail.com');
+        (request.auth.token.get('email', '') == 'gtosegbot@gmail.com' || 
+         request.auth.token.get('email', '') == 'admgtoseg@gmail.com' || 
+         request.auth.token.get('email', '').matches('.*gtosegbot@.*') ||
+         request.auth.token.get('email', '').matches('.*admgtoseg@.*') ||
+         request.auth.token.get('email', '') == 'disparoseguroback@gmail.com');
     }
     
     function isOwner(userId) {
