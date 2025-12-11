@@ -97,6 +97,13 @@ const InviteAccept: React.FC = () => {
 
         if (!invite) return;
 
+        // Check for email mismatch
+        if (invite.email && user.email && invite.email.toLowerCase() !== user.email.toLowerCase()) {
+            if (!confirm(`Atenção: Você está logado como ${user.email}, mas este convite foi enviado para ${invite.email}. Deseja aceitar o convite e vincular esta conta a empresa?`)) {
+                return;
+            }
+        }
+
         setAccepting(true);
         try {
             // Get current user data
@@ -121,10 +128,12 @@ const InviteAccept: React.FC = () => {
             });
 
             // Create employee record
+            // Use invite.email explicitly? No, use the user's actual email, but use invite metadata.
+            // But if mismatch is accepted, we should probably update the invite status to note who accepted it.
             await addDoc(collection(db, 'company_employees'), {
                 company_id: invite.company_id,
                 user_id: user.uid,
-                email: user.email,
+                email: user.email, // The actual user email
                 name: user.displayName || invite.name || 'Funcionário',
                 status: 'active',
                 role: 'employee',
@@ -145,7 +154,9 @@ const InviteAccept: React.FC = () => {
             const inviteRef = doc(db, 'employee_invites', invite.id);
             await updateDoc(inviteRef, {
                 status: 'accepted',
-                accepted_at: serverTimestamp()
+                accepted_at: serverTimestamp(),
+                accepted_by_user_id: user.uid, // Track who accepted
+                accepted_by_email: user.email
             });
 
             // Update company employee count

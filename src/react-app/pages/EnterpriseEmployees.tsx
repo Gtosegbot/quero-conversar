@@ -316,7 +316,14 @@ const EnterpriseEmployees: React.FC = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-gray-700">
-                                            {new Date(employee.joined_at).toLocaleDateString('pt-BR')}
+                                            {(() => {
+                                                const date = employee.joined_at;
+                                                if (!date) return '-';
+                                                if (typeof date === 'object' && 'toDate' in date) {
+                                                    return (date as any).toDate().toLocaleDateString('pt-BR');
+                                                }
+                                                return new Date(date).toLocaleDateString('pt-BR');
+                                            })()}
                                         </td>
                                         <td className="px-6 py-4 text-right relative">
                                             <button
